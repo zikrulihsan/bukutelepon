@@ -1,0 +1,175 @@
+import { Router } from "express";
+import { prisma } from "../../utils/prisma";
+import { authenticate, AuthenticatedRequest } from "../../middleware/authenticate";
+import { requireRole } from "../../middleware/requireRole";
+import { AppError } from "../../middleware/errorHandler";
+
+const router = Router();
+
+// All admin routes require authentication + ADMIN role
+router.use(authenticate);
+router.use(requireRole("ADMIN"));
+
+// GET /api/admin/stats
+router.get("/stats", async (_req, res, next) => {
+  try {
+    const [totalContacts, pendingContacts, totalUsers, totalReviews] = await Promise.all([
+      prisma.contact.count(),
+      prisma.contact.count({ where: { status: "PENDING" } }),
+      prisma.profile.count(),
+      prisma.review.count(),
+    ]);
+
+    res.json({
+      success: true,
+      data: { totalContacts, pendingContacts, totalUsers, totalReviews },
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// GET /api/admin/contacts?status=PENDING
+router.get("/contacts", async (req, res, next) => {
+  try {
+    const status = req.query.status as string | undefined;
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 20;
+
+    const where: Record<string, unknown> = {};
+    if (status) where.status = status;
+
+    const [contacts, total] = await Promise.all([
+      prisma.contact.findMany({
+        where,
+        include: { city: true, category: true, submittedBy: true },
+        skip: (page - 1) * limit,
+        take: limit,
+        orderBy: { createdAt: "desc" },
+      }),
+      prisma.contact.count({ where }),
+    ]);
+
+    res.json({
+      success: true,
+      data: contacts,
+      meta: { page, limit, total, totalPages: Math.ceil(total / limit) },
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// PATCH /api/admin/contacts/:id/approve
+router.patch("/contacts/:id/approve", async (req: AuthenticatedRequest, res, next) => {
+  try {
+    const contact = await prisma.contact.update({
+      where: { id: req.params.id as string },
+      data: { status: "APPROVED" },
+    });
+
+    res.json({ success: true, data: contact });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// PATCH /api/admin/contacts/:id/reject
+router.patch("/contacts/:id/reject", async (req: AuthenticatedRequest, res, next) => {
+  try {
+    const contact = await prisma.contact.update({
+      where: { id: req.params.id as string },
+      data: { status: "REJECTED" },
+    });
+
+    res.json({ success: true, data: contact });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// GET /api/admin/reviews?status=PENDING
+router.get("/reviews", async (req, res, next) => {
+  try {
+    const status = req.query.status as string | undefined;
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 20;
+
+    const where: Record<string, unknown> = {};
+    if (status) where.status = status;
+
+    const [reviews, total] = await Promise.all([
+      prisma.review.findMany({
+        where,
+        include: { contact: true, author: true },
+        skip: (page - 1) * limit,
+        take: limit,
+        orderBy: { createdAt: "desc" },
+      }),
+      prisma.review.count({ where }),
+    ]);
+
+    res.json({
+      success: true,
+      data: reviews,
+      meta: { page, limit, total, totalPages: Math.ceil(total / limit) },
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// PATCH /api/admin/reviews/:id/approve
+router.patch("/reviews/:id/approve", async (_req, res, next) => {
+  try {
+    const review = await prisma.review.update({
+      where: { id: _req.params.id as string },
+      data: { status: "APPROVED" },
+    });
+
+    res.json({ success: true, data: review });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// PATCH /api/admin/reviews/:id/reject
+router.patch("/reviews/:id/reject", async (_req, res, next) => {
+  try {
+    const review = await prisma.review.update({
+      where: { id: _req.params.id as string },
+      data: { status: "REJECTED" },
+    });
+
+    res.json({ success: true, data: review });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// GET /api/admin/users
+router.get("/users", async (req, res, next) => {
+  try {
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 20;
+
+    const [users, total] = await Promise.all([
+      prisma.profile.findMany({
+        skip: (page - 1) * limit,
+        take: limit,
+        orderBy: { createdAt: "desc" },
+      }),
+      prisma.profile.count(),
+    ]);
+
+    res.json({
+      success: true,
+      data: users,
+      meta: { page, limit, total, totalPages: Math.ceil(total / limit) },
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+export default router;

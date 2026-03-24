@@ -1,0 +1,138 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum TrustLevel {
+  UNVERIFIED
+  EMAIL_VERIFIED
+  PHONE_VERIFIED
+  ID_VERIFIED
+}
+
+enum ContactStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum ReviewStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model Profile {
+  id              String     @id
+  email           String     @unique
+  name            String
+  phone           String?    @unique
+  role            Role       @default(USER)
+  trustLevel      TrustLevel @default(UNVERIFIED)
+  hasContributed  Boolean    @default(false)
+  contributedAt   DateTime?
+  isActive        Boolean    @default(true)
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+
+  contacts        Contact[]  @relation("SubmittedContacts")
+  claimedContacts Contact[]  @relation("ClaimedContacts")
+  reviews         Review[]
+
+  @@map("profiles")
+}
+
+model GuestSession {
+  id           String   @id @default(uuid())
+  sessionToken String   @unique
+  ipAddress    String?
+  viewCount    Int      @default(0)
+  lastSeen     DateTime @updatedAt
+  createdAt    DateTime @default(now())
+
+  @@map("guest_sessions")
+}
+
+model City {
+  id        String    @id @default(uuid())
+  name      String
+  province  String
+  slug      String    @unique
+  createdAt DateTime  @default(now())
+
+  contacts  Contact[]
+
+  @@map("cities")
+}
+
+model Category {
+  id        String    @id @default(uuid())
+  name      String
+  slug      String    @unique
+  icon      String?
+  createdAt DateTime  @default(now())
+
+  contacts  Contact[]
+
+  @@map("categories")
+}
+
+model Contact {
+  id              String        @id @default(uuid())
+  name            String
+  phone           String
+  address         String?
+  description     String?       @db.VarChar(500)
+  website         String?
+  status          ContactStatus @default(PENDING)
+  rejectionReason String?
+  avgRating       Float         @default(0)
+  reviewCount     Int           @default(0)
+  cityId          String
+  categoryId      String
+  submittedById   String
+  claimedById     String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  city        City     @relation(fields: [cityId], references: [id])
+  category    Category @relation(fields: [categoryId], references: [id])
+  submittedBy Profile  @relation("SubmittedContacts", fields: [submittedById], references: [id])
+  claimedBy   Profile? @relation("ClaimedContacts", fields: [claimedById], references: [id])
+  reviews     Review[]
+
+  @@index([cityId])
+  @@index([categoryId])
+  @@index([status])
+  @@map("contacts")
+}
+
+model Review {
+  id              String       @id @default(uuid())
+  rating          Int
+  comment         String?      @db.VarChar(500)
+  status          ReviewStatus @default(PENDING)
+  rejectionReason String?
+  contactId       String
+  authorId        String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  contact Contact @relation(fields: [contactId], references: [id])
+  author  Profile @relation(fields: [authorId], references: [id])
+
+  @@unique([contactId, authorId])
+  @@index([contactId])
+  @@map("reviews")
+}
