@@ -72,7 +72,7 @@ async function main() {
     { name: "Pemerintah",  slug: "pemerintah",  icon: "🏛️" },
     { name: "Darurat",     slug: "darurat",     icon: "🚨" },
     { name: "Transportasi",slug: "transportasi",icon: "🚗" },
-    { name: "Hiburan",     slug: "hiburan",     icon: "🎭" },
+    { name: "Wisata",      slug: "wisata",      icon: "🗺️" },
   ];
 
   const cats: Record<string, string> = {};

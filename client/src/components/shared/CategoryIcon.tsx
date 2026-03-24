@@ -21,9 +21,9 @@ export function CategoryIcon({ slug, className = "w-7 h-7" }: CategoryIconProps)
       </svg>
     ),
     kuliner: (
-      // Fork and knife
+      // Coffee cup
       <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M7 3v4a2 2 0 002 2h0a2 2 0 002-2V3M9 9v12M17 3v4c0 1.5-1 3-3 3M17 3c0 2 1 4 1 6 0 1.5-1 3-3 3m2-9v12" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M18 8h1a4 4 0 010 8h-1M2 8h16v9a4 4 0 01-4 4H6a4 4 0 01-4-4V8zm4-3c0-1 .5-2 1-2s1 1 1 2M10 5c0-1 .5-2 1-2s1 1 1 2" />
       </svg>
     ),
     jasa: (
@@ -51,10 +51,10 @@ export function CategoryIcon({ slug, className = "w-7 h-7" }: CategoryIconProps)
         <path strokeLinecap="round" strokeLinejoin="round" d="M8 17h.01M16 17h.01M6 3h12a2 2 0 012 2v10a2 2 0 01-2 2h-1l1 2H6l1-2H6a2 2 0 01-2-2V5a2 2 0 012-2zm0 5h12M9 3v5m6-5v5" />
       </svg>
     ),
-    hiburan: (
-      // Music / entertainment
+    wisata: (
+      // Map / Wisata
       <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l5.447 2.724A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
       </svg>
     ),
   };
