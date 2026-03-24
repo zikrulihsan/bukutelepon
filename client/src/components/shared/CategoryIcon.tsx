@@ -1,10 +1,12 @@
+import type React from "react";
+
 interface CategoryIconProps {
   slug: string;
   className?: string;
 }
 
 export function CategoryIcon({ slug, className = "w-7 h-7" }: CategoryIconProps) {
-  const icons: Record<string, JSX.Element> = {
+  const icons: Record<string, React.ReactNode> = {
     kesehatan: (
       // Heart with pulse
       <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>

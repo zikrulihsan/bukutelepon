@@ -24,7 +24,9 @@ app.use(helmet());
 // CORS
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || "http://localhost:5173",
+    origin: (process.env.CLIENT_URL || "http://localhost:5173")
+      .split(",")
+      .map((u) => u.trim()),
     credentials: true,
   })
 );

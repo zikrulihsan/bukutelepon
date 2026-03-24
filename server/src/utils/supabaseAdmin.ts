@@ -28,7 +28,7 @@ export const supabaseAdmin = new Proxy({} as SupabaseClient, {
   get(_target, prop) {
     try {
       const client = getSupabaseAdmin();
-      const value = (client as Record<string | symbol, unknown>)[prop];
+      const value = (client as unknown as Record<string | symbol, unknown>)[prop];
       if (typeof value === "function") {
         return value.bind(client);
       }

@@ -6,40 +6,35 @@ const router = Router();
 
 const GUEST_VIEW_THRESHOLD = parseInt(process.env.GUEST_VIEW_THRESHOLD || "3", 10);
 
-// POST /api/guest/track — track guest contact views via fingerprint
+// POST /api/guest/track — track guest contact views via sessionToken
 router.post("/track", apiLimiter, async (req: Request, res, next) => {
   try {
-    const { fingerprint, contactId } = req.body;
+    const { sessionToken, contactId } = req.body;
 
-    if (!fingerprint || !contactId) {
-      res.status(400).json({ success: false, message: "fingerprint and contactId required" });
+    if (!sessionToken || !contactId) {
+      res.status(400).json({ success: false, message: "sessionToken and contactId required" });
       return;
     }
 
     let session = await prisma.guestSession.findUnique({
-      where: { fingerprint },
+      where: { sessionToken },
     });
 
     if (!session) {
       session = await prisma.guestSession.create({
         data: {
-          fingerprint,
-          viewedContactIds: [contactId],
+          sessionToken,
+          ipAddress: req.ip ?? null,
           viewCount: 1,
         },
       });
     } else {
-      const viewedIds = session.viewedContactIds as string[];
-
-      if (!viewedIds.includes(contactId)) {
-        session = await prisma.guestSession.update({
-          where: { fingerprint },
-          data: {
-            viewedContactIds: [...viewedIds, contactId],
-            viewCount: { increment: 1 },
-          },
-        });
-      }
+      session = await prisma.guestSession.update({
+        where: { sessionToken },
+        data: {
+          viewCount: { increment: 1 },
+        },
+      });
     }
 
     const remaining = Math.max(0, GUEST_VIEW_THRESHOLD - session.viewCount);
@@ -58,11 +53,11 @@ router.post("/track", apiLimiter, async (req: Request, res, next) => {
   }
 });
 
-// GET /api/guest/status/:fingerprint
-router.get("/status/:fingerprint", apiLimiter, async (req, res, next) => {
+// GET /api/guest/status/:sessionToken
+router.get("/status/:sessionToken", apiLimiter, async (req, res, next) => {
   try {
     const session = await prisma.guestSession.findUnique({
-      where: { fingerprint: req.params.fingerprint as string },
+      where: { sessionToken: req.params.sessionToken as string },
     });
 
     const viewCount = session?.viewCount ?? 0;
