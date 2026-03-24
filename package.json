@@ -1,9 +1,12 @@
 {
   "name": "bukutelepon",
   "private": true,
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "build": "npx prisma generate && cd server && npm install && npm run build",
-    "start": "cd server && npx prisma migrate deploy --schema=../prisma/schema.prisma && node dist/index.js"
+    "start": "npx prisma generate && cd server && npx prisma migrate deploy --schema=../prisma/schema.prisma && node dist/index.js"
   },
   "devDependencies": {
     "prisma": "^6.19.2"
