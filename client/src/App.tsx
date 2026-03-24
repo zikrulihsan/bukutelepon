@@ -1,7 +1,11 @@
 import { Routes, Route } from "react-router-dom";
 import { Navbar } from "./components/shared/Navbar";
+import { BottomNav } from "./components/shared/BottomNav";
 import { CityProvider } from "./context/CityContext";
 import MainScreen from "./pages/public/MainScreen";
+import SearchPage from "./pages/public/SearchPage";
+import SavedPage from "./pages/public/SavedPage";
+import AccountPage from "./pages/public/AccountPage";
 import ContactDetailPage from "./pages/public/ContactDetailPage";
 import SubmitPage from "./pages/public/SubmitPage";
 import LoginPage from "./pages/public/LoginPage";
@@ -19,6 +23,9 @@ export default function App() {
         <main>
           <Routes>
             <Route path="/" element={<MainScreen />} />
+            <Route path="/search" element={<SearchPage />} />
+            <Route path="/saved" element={<SavedPage />} />
+            <Route path="/account" element={<AccountPage />} />
             <Route path="/kontak/:id" element={<ContactDetailPage />} />
             <Route path="/submit" element={<SubmitPage />} />
             <Route path="/login" element={<LoginPage />} />
@@ -29,6 +36,7 @@ export default function App() {
             <Route path="/admin/users" element={<AdminUsers />} />
           </Routes>
         </main>
+        <BottomNav />
       </div>
     </CityProvider>
   );

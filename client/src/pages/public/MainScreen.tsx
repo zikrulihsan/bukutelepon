@@ -1,9 +1,8 @@
 import { useState, useEffect, useRef } from "react";
-import { useSearchParams, Link } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { useQuery, useInfiniteQuery } from "@tanstack/react-query";
 import { apiClient } from "../../lib/axios";
 import { useCity } from "../../context/CityContext";
-import { useAuth } from "../../hooks/useAuth";
 import { useContacts } from "../../hooks/useContacts";
 import { ContactCard } from "../../components/shared/ContactCard";
 import { ContributionWall } from "../../components/shared/ContributionWall";
@@ -19,22 +18,19 @@ import type { Category, City, Contact, PaginatedResponse } from "../../types";
 
 export default function MainScreen() {
   const { citySlug, city, setCity, cities, setCities } = useCity();
-  const { user, profile, signOut, loading: authLoading } = useAuth();
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const searchRef = useRef<HTMLInputElement>(null);
-  const stickySearchRef = useRef<HTMLInputElement>(null);
   const headerRef = useRef<HTMLDivElement>(null);
   const loadMoreRef = useRef<HTMLDivElement>(null);
   const chipScrollRef = useRef<HTMLDivElement>(null);
 
   const urlCategory = searchParams.get("category") || "";
-  const urlSearch = searchParams.get("q") || "";
 
   const [activeCategory, setActiveCategory] = useState(urlCategory);
-  const [search, setSearch] = useState(urlSearch);
-  const [searchQuery, setSearchQuery] = useState(urlSearch);
   const [showCityPicker, setShowCityPicker] = useState(false);
   const [showAll, setShowAll] = useState(false);
+
+  const searchPlaceholder = `Cari kontak di ${city?.name ?? "sekitarmu"}...`;
 
   // ── Sticky search on scroll up ──
   const [showStickySearch, setShowStickySearch] = useState(false);
@@ -83,7 +79,7 @@ export default function MainScreen() {
   });
 
   // ── Infinite scroll for filtered results ──
-  const isFiltered = !!activeCategory || !!searchQuery || showAll;
+  const isFiltered = !!activeCategory || showAll;
 
   const {
     data: infiniteData,
@@ -92,14 +88,13 @@ export default function MainScreen() {
     isFetchingNextPage,
     isLoading,
   } = useInfiniteQuery<PaginatedResponse<Contact>>({
-    queryKey: ["contacts-infinite", { city: citySlug, category: activeCategory, search: searchQuery }],
+    queryKey: ["contacts-infinite", { city: citySlug, category: activeCategory }],
     queryFn: async ({ pageParam }) => {
       const params = new URLSearchParams();
       params.set("page", String(pageParam));
       params.set("limit", "20");
       if (citySlug) params.set("city", citySlug);
       if (activeCategory) params.set("category", activeCategory);
-      if (searchQuery) params.set("search", searchQuery);
       const { data } = await apiClient.get(`/contacts?${params}`);
       return data;
     },
@@ -133,15 +128,11 @@ export default function MainScreen() {
   useEffect(() => {
     const params = new URLSearchParams();
     if (activeCategory) params.set("category", activeCategory);
-    if (searchQuery) params.set("q", searchQuery);
     setSearchParams(params, { replace: true });
-  }, [activeCategory, searchQuery, setSearchParams]);
+  }, [activeCategory, setSearchParams]);
 
   useEffect(() => {
     setActiveCategory(searchParams.get("category") || "");
-    const q = searchParams.get("q") || "";
-    setSearch(q);
-    setSearchQuery(q);
   }, []);
 
   // ── Keyboard shortcut ──
@@ -149,24 +140,16 @@ export default function MainScreen() {
     function handleKeyDown(e: KeyboardEvent) {
       if (e.key === "/" && document.activeElement?.tagName !== "INPUT" && document.activeElement?.tagName !== "TEXTAREA") {
         e.preventDefault();
-        (showStickySearch ? stickySearchRef : searchRef).current?.focus();
+        navigate("/search");
       }
     }
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [showStickySearch]);
-
-  // ── Handlers ──
-  function handleSearch(e: React.FormEvent) {
-    e.preventDefault();
-    setSearchQuery(search.trim());
-  }
+  }, [navigate]);
 
   function handleCategoryClick(slug: string) {
     const next = activeCategory === slug ? "" : slug;
     setActiveCategory(next);
-    setSearchQuery("");
-    setSearch("");
 
     // Scroll selected chip to the left edge
     if (next && chipScrollRef.current) {
@@ -183,8 +166,6 @@ export default function MainScreen() {
 
   function handleClearFilters() {
     setActiveCategory("");
-    setSearchQuery("");
-    setSearch("");
     setShowAll(false);
   }
 
@@ -198,7 +179,7 @@ export default function MainScreen() {
   const cityPickerVisible = needsCityPicker || showCityPicker;
 
   return (
-    <div className="min-h-screen bg-gray-50 max-w-md mx-auto relative">
+    <div className="min-h-screen bg-gray-50 max-w-md mx-auto relative pb-24">
       {cityPickerVisible && (
         <CityPickerOverlay
           cities={citiesData?.data ?? cities}
@@ -214,21 +195,17 @@ export default function MainScreen() {
         }`}
       >
         <div className="bg-primary-700 px-4 py-2.5 shadow-lg">
-          <form onSubmit={handleSearch} className="flex items-center bg-white rounded-xl overflow-hidden">
+          <div
+            onClick={() => navigate("/search")}
+            className="flex items-center bg-white rounded-xl overflow-hidden cursor-pointer"
+          >
             <div className="pl-3 text-gray-400">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
             </div>
-            <input
-              ref={stickySearchRef}
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Cari kontak..."
-              className="flex-1 h-9 pl-2.5 pr-3 text-sm text-gray-900 placeholder-gray-400 bg-transparent outline-none"
-            />
-          </form>
+            <span className="flex-1 h-9 pl-2.5 pr-3 text-sm text-gray-400 flex items-center">{searchPlaceholder}</span>
+          </div>
         </div>
       </div>
 
@@ -254,55 +231,22 @@ export default function MainScreen() {
           </button>
 
           <div className="flex items-center gap-2">
-            {authLoading ? null : user ? (
-              <>
-                <Link to="/submit" className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center" title="Tambah Kontak">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-                  </svg>
-                </Link>
-                {profile?.role === "ADMIN" && (
-                  <Link to="/admin" className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center" title="Admin">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
-                  </Link>
-                )}
-                <button onClick={signOut} className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center" title="Keluar">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                  </svg>
-                </button>
-              </>
-            ) : (
-              <Link to="/login" className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center" title="Masuk">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                </svg>
-              </Link>
-            )}
+            <span className="text-white/80 text-xs font-medium">bukutelepon.id</span>
           </div>
         </div>
 
-        {/* Search bar */}
-        <form onSubmit={handleSearch} className="relative">
-          <div className="flex items-center bg-white rounded-xl shadow-sm overflow-hidden">
-            <div className="pl-3.5 text-gray-400">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-            </div>
-            <input
-              ref={searchRef}
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Cari kontak, rumah sakit, kantor..."
-              className="flex-1 h-11 pl-3 pr-4 text-sm text-gray-900 placeholder-gray-400 bg-transparent outline-none"
-            />
+        {/* Search bar — taps navigate to /search */}
+        <div
+          onClick={() => navigate("/search")}
+          className="flex items-center bg-white rounded-xl shadow-sm overflow-hidden cursor-pointer"
+        >
+          <div className="pl-3.5 text-gray-400">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
           </div>
-        </form>
+          <span className="flex-1 h-11 pl-3 pr-4 text-sm text-gray-400 flex items-center">{searchPlaceholder}</span>
+        </div>
       </div>
 
       {/* ── Content ── */}
@@ -413,7 +357,7 @@ export default function MainScreen() {
                   className={`flex-shrink-0 inline-flex items-center gap-1 px-3.5 py-2 rounded-full text-xs font-semibold transition-colors ${
                     activeCategory === cat.slug
                       ? "bg-primary-700 text-white shadow-sm"
-                      : "bg-white text-gray-600 shadow-sm border border-gray-100 text-primary-700"
+                      : "bg-white shadow-sm border border-gray-100 text-primary-700"
                   }`}
                 >
                   <CategoryIcon slug={cat.slug} className="w-3.5 h-3.5" />
@@ -424,9 +368,7 @@ export default function MainScreen() {
 
             {/* Results header */}
             <p className="text-xs text-gray-500 mb-3">
-              {searchQuery
-                ? `Hasil pencarian "${searchQuery}"`
-                : `${total} kontak ${categories.find((c) => c.slug === activeCategory)?.name ?? ""}`}
+              {`${total} kontak ${categories.find((c) => c.slug === activeCategory)?.name ?? ""}`}
               {city ? ` di ${city.name}` : ""}
             </p>
 
