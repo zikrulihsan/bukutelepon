@@ -9,6 +9,12 @@ import { ContactCard } from "../../components/shared/ContactCard";
 import { ContributionWall } from "../../components/shared/ContributionWall";
 import { CityPickerOverlay } from "../../components/shared/CityPickerOverlay";
 import { CategoryIcon } from "../../components/shared/CategoryIcon";
+import {
+  CategoryGridShimmer,
+  EmergencyStripShimmer,
+  RecentContactsShimmer,
+  ContactListShimmer,
+} from "../../components/shared/Shimmer";
 import type { Category, City, Contact, PaginatedResponse } from "../../types";
 
 export default function MainScreen() {
@@ -19,6 +25,7 @@ export default function MainScreen() {
   const stickySearchRef = useRef<HTMLInputElement>(null);
   const headerRef = useRef<HTMLDivElement>(null);
   const loadMoreRef = useRef<HTMLDivElement>(null);
+  const chipScrollRef = useRef<HTMLDivElement>(null);
 
   const urlCategory = searchParams.get("category") || "";
   const urlSearch = searchParams.get("q") || "";
@@ -59,18 +66,18 @@ export default function MainScreen() {
 
   const needsCityPicker = !citySlug && citiesData?.data && citiesData.data.length > 0;
 
-  const { data: categoriesData } = useQuery<{ success: boolean; data: Category[] }>({
+  const { data: categoriesData, isLoading: categoriesLoading } = useQuery<{ success: boolean; data: Category[] }>({
     queryKey: ["categories"],
     queryFn: async () => (await apiClient.get("/categories")).data,
   });
 
-  const { data: emergencyData } = useContacts({
+  const { data: emergencyData, isLoading: emergencyLoading } = useContacts({
     city: citySlug || undefined,
     category: "darurat",
     limit: 5,
   });
 
-  const { data: recentData } = useContacts({
+  const { data: recentData, isLoading: recentLoading } = useContacts({
     city: citySlug || undefined,
     limit: 5,
   });
@@ -156,9 +163,22 @@ export default function MainScreen() {
   }
 
   function handleCategoryClick(slug: string) {
-    setActiveCategory(activeCategory === slug ? "" : slug);
+    const next = activeCategory === slug ? "" : slug;
+    setActiveCategory(next);
     setSearchQuery("");
     setSearch("");
+
+    // Scroll selected chip to the left edge
+    if (next && chipScrollRef.current) {
+      requestAnimationFrame(() => {
+        const container = chipScrollRef.current;
+        if (!container) return;
+        const chip = container.querySelector(`[data-slug="${next}"]`) as HTMLElement | null;
+        if (chip) {
+          container.scrollTo({ left: chip.offsetLeft - 20, behavior: "smooth" });
+        }
+      });
+    }
   }
 
   function handleClearFilters() {
@@ -289,7 +309,8 @@ export default function MainScreen() {
       <div className="px-4 -mt-1">
 
         {/* Emergency strip */}
-        {!isFiltered && emergencyContacts.length > 0 && (
+        {!isFiltered && emergencyLoading && <EmergencyStripShimmer />}
+        {!isFiltered && !emergencyLoading && emergencyContacts.length > 0 && (
           <div className="mt-4 mb-2">
             <div className="flex gap-2.5 overflow-x-auto pb-1 -mx-4 px-4 scrollbar-hide">
               {emergencyContacts.map((contact) => (
@@ -317,30 +338,36 @@ export default function MainScreen() {
         {!isFiltered && (
           <>
             {/* Category grid */}
-            <div className="mt-4 mb-6">
-              <div className="grid grid-cols-4 gap-y-4 gap-x-2">
-                {categories.map((cat) => (
-                  <button
-                    key={cat.slug}
-                    onClick={() => handleCategoryClick(cat.slug)}
-                    className="flex flex-col items-center gap-1.5 active:scale-95 transition-transform"
-                  >
-                    <div className="w-14 h-14 rounded-2xl bg-white shadow-sm border border-gray-100 flex items-center justify-center">
-                      <CategoryIcon slug={cat.slug} />
-                    </div>
-                    <span className="text-[11px] font-medium text-gray-700 text-center leading-tight line-clamp-2">
-                      {cat.name}
-                    </span>
-                  </button>
-                ))}
+            {categoriesLoading ? (
+              <CategoryGridShimmer />
+            ) : (
+              <div className="mt-4 mb-6">
+                <div className="grid grid-cols-4 gap-y-4 gap-x-2">
+                  {categories.map((cat) => (
+                    <button
+                      key={cat.slug}
+                      onClick={() => handleCategoryClick(cat.slug)}
+                      className="flex flex-col items-center gap-1.5 active:scale-95 transition-transform"
+                    >
+                      <div className="w-14 h-14 rounded-2xl bg-white shadow-sm border border-gray-100 flex items-center justify-center text-primary-700">
+                        <CategoryIcon slug={cat.slug} />
+                      </div>
+                      <span className="text-[11px] font-medium text-gray-700 text-center leading-tight line-clamp-2">
+                        {cat.name}
+                      </span>
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Divider */}
             <div className="h-2 bg-gray-100 -mx-4 mb-4 rounded-sm" />
 
             {/* Recent contacts */}
-            {recentData?.data && recentData.data.length > 0 && (
+            {recentLoading ? (
+              <RecentContactsShimmer />
+            ) : recentData?.data && recentData.data.length > 0 ? (
               <div className="pb-6">
                 <div className="flex items-center justify-between mb-3">
                   <h3 className="text-sm font-semibold text-gray-900">
@@ -359,7 +386,7 @@ export default function MainScreen() {
                   ))}
                 </div>
               </div>
-            )}
+            ) : null}
           </>
         )}
 
@@ -367,7 +394,7 @@ export default function MainScreen() {
         {isFiltered && (
           <div className="pt-3 pb-6">
             {/* Category chips */}
-            <div className="flex items-center gap-2 overflow-x-auto pb-3 -mx-4 px-4 scrollbar-hide">
+            <div ref={chipScrollRef} className="flex items-center gap-2 overflow-x-auto pb-3 -mx-4 px-4 scrollbar-hide">
               <button
                 onClick={handleClearFilters}
                 className={`flex-shrink-0 px-3.5 py-2 rounded-full text-xs font-semibold transition-colors ${
@@ -381,11 +408,12 @@ export default function MainScreen() {
               {categories.map((cat) => (
                 <button
                   key={cat.slug}
+                  data-slug={cat.slug}
                   onClick={() => handleCategoryClick(cat.slug)}
                   className={`flex-shrink-0 inline-flex items-center gap-1 px-3.5 py-2 rounded-full text-xs font-semibold transition-colors ${
                     activeCategory === cat.slug
                       ? "bg-primary-700 text-white shadow-sm"
-                      : "bg-white text-gray-600 shadow-sm border border-gray-100"
+                      : "bg-white text-gray-600 shadow-sm border border-gray-100 text-primary-700"
                   }`}
                 >
                   <CategoryIcon slug={cat.slug} className="w-3.5 h-3.5" />
@@ -404,15 +432,7 @@ export default function MainScreen() {
 
             {/* Contact list — lazy loaded */}
             {isLoading ? (
-              <div className="space-y-2.5">
-                {Array.from({ length: 4 }).map((_, i) => (
-                  <div key={i} className="bg-white rounded-2xl p-4 animate-pulse shadow-sm">
-                    <div className="h-4 bg-gray-200 rounded w-40 mb-2" />
-                    <div className="h-3 bg-gray-100 rounded w-28 mb-2" />
-                    <div className="h-3 bg-gray-100 rounded w-56" />
-                  </div>
-                ))}
-              </div>
+              <ContactListShimmer count={4} />
             ) : (
               <>
                 <div className="space-y-2.5">
@@ -432,12 +452,9 @@ export default function MainScreen() {
 
                 {/* Infinite scroll trigger */}
                 {hasNextPage && (
-                  <div ref={loadMoreRef} className="flex justify-center py-6">
+                  <div ref={loadMoreRef} className="py-4">
                     {isFetchingNextPage ? (
-                      <div className="flex items-center gap-2 text-xs text-gray-400">
-                        <div className="w-4 h-4 border-2 border-gray-300 border-t-primary-600 rounded-full animate-spin" />
-                        Memuat...
-                      </div>
+                      <ContactListShimmer count={2} />
                     ) : (
                       <div className="h-4" />
                     )}
