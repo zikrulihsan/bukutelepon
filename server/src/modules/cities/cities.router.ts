@@ -10,7 +10,11 @@ router.get("/", apiLimiter, async (_req, res, next) => {
     const cities = await prisma.city.findMany({
       orderBy: { name: "asc" },
       include: {
-        _count: { select: { contacts: true } },
+        _count: {
+          select: {
+            contacts: { where: { status: "APPROVED" } },
+          },
+        },
       },
     });
 
@@ -26,7 +30,11 @@ router.get("/:slug", apiLimiter, async (req, res, next) => {
     const city = await prisma.city.findUnique({
       where: { slug: req.params.slug as string },
       include: {
-        _count: { select: { contacts: true } },
+        _count: {
+          select: {
+            contacts: { where: { status: "APPROVED" } },
+          },
+        },
       },
     });
 

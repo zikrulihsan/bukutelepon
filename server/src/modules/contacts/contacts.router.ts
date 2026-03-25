@@ -141,4 +141,53 @@ router.post(
   }
 );
 
+// POST /api/contacts/bulk — authenticated users bulk submit (PENDING)
+const bulkSubmitSchema = z.object({
+  contacts: z.array(
+    z.object({
+      name: z.string().min(1).max(200),
+      phone: z.string().min(3).max(30),
+      address: z.string().max(500).optional(),
+    })
+  ).min(1).max(50),
+  cityId: z.string().uuid(),
+  categoryId: z.string().uuid(),
+});
+
+router.post(
+  "/bulk",
+  authenticate,
+  submitLimiter,
+  async (req: AuthenticatedRequest, res, next) => {
+    try {
+      const { contacts, cityId, categoryId } = bulkSubmitSchema.parse(req.body);
+
+      const created = await prisma.contact.createMany({
+        data: contacts.map((c) => ({
+          name: c.name,
+          phone: c.phone,
+          address: c.address || null,
+          cityId,
+          categoryId,
+          submittedById: req.userId!,
+          status: "PENDING" as const,
+        })),
+        skipDuplicates: true,
+      });
+
+      // Mark user as contributor
+      if (created.count > 0) {
+        await prisma.profile.update({
+          where: { id: req.userId },
+          data: { hasContributed: true },
+        });
+      }
+
+      res.status(201).json({ success: true, data: { count: created.count } });
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
 export default router;

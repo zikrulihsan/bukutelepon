@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { z } from "zod";
 import { prisma } from "../../utils/prisma";
 import { authenticate, AuthenticatedRequest } from "../../middleware/authenticate";
 import { requireRole } from "../../middleware/requireRole";
@@ -24,6 +25,72 @@ router.get("/stats", async (_req, res, next) => {
       success: true,
       data: { totalContacts, pendingContacts, totalUsers, totalReviews },
     });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// POST /api/admin/contacts — admin direct create (auto-approved)
+const adminCreateContactSchema = z.object({
+  name: z.string().min(2).max(200),
+  phone: z.string().min(5).max(30),
+  address: z.string().max(500).optional(),
+  website: z.string().url().optional().or(z.literal("")),
+  description: z.string().max(500).optional(),
+  cityId: z.string().uuid(),
+  categoryId: z.string().uuid(),
+});
+
+router.post("/contacts", async (req: AuthenticatedRequest, res, next) => {
+  try {
+    const data = adminCreateContactSchema.parse(req.body);
+
+    const contact = await prisma.contact.create({
+      data: {
+        ...data,
+        submittedById: req.userId!,
+        status: "APPROVED",
+      },
+      include: { city: true, category: true },
+    });
+
+    res.status(201).json({ success: true, data: contact });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// POST /api/admin/contacts/bulk — bulk import contacts (auto-approved)
+const bulkContactSchema = z.object({
+  contacts: z.array(
+    z.object({
+      name: z.string().min(1).max(200),
+      phone: z.string().min(3).max(30),
+      address: z.string().max(500).optional(),
+    })
+  ).min(1).max(100),
+  cityId: z.string().uuid(),
+  categoryId: z.string().uuid(),
+});
+
+router.post("/contacts/bulk", async (req: AuthenticatedRequest, res, next) => {
+  try {
+    const { contacts, cityId, categoryId } = bulkContactSchema.parse(req.body);
+
+    const created = await prisma.contact.createMany({
+      data: contacts.map((c) => ({
+        name: c.name,
+        phone: c.phone,
+        address: c.address || null,
+        cityId,
+        categoryId,
+        submittedById: req.userId!,
+        status: "APPROVED" as const,
+      })),
+      skipDuplicates: true,
+    });
+
+    res.status(201).json({ success: true, data: { count: created.count } });
   } catch (err) {
     next(err);
   }
