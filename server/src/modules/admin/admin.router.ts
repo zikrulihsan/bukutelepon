@@ -33,7 +33,7 @@ router.get("/stats", async (_req, res, next) => {
 // POST /api/admin/contacts — admin direct create (auto-approved)
 const adminCreateContactSchema = z.object({
   name: z.string().min(2).max(200),
-  phone: z.string().min(5).max(30),
+  phone: z.string().min(1).max(30),
   address: z.string().max(500).optional(),
   website: z.string().url().optional().or(z.literal("")),
   description: z.string().max(500).optional(),

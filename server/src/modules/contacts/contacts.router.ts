@@ -14,7 +14,7 @@ const GUEST_VIEW_THRESHOLD = parseInt(process.env.GUEST_VIEW_THRESHOLD || "3", 1
 
 const createContactSchema = z.object({
   name: z.string().min(2).max(200),
-  phone: z.string().min(5).max(30),
+  phone: z.string().min(1).max(30),
   address: z.string().max(500).optional(),
   website: z.string().url().optional().or(z.literal("")),
   description: z.string().max(500).optional(),
