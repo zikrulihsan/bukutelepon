@@ -127,6 +127,34 @@ router.get("/contacts", async (req, res, next) => {
   }
 });
 
+// PUT /api/admin/contacts/:id — edit contact
+const adminEditContactSchema = z.object({
+  name: z.string().min(1).max(200).optional(),
+  phone: z.string().min(1).max(30).optional(),
+  address: z.string().max(500).optional().nullable(),
+  website: z.string().url().optional().nullable().or(z.literal("")),
+  description: z.string().max(500).optional().nullable(),
+  cityId: z.string().uuid().optional(),
+  categoryId: z.string().uuid().optional(),
+  status: z.enum(["PENDING", "APPROVED", "REJECTED"]).optional(),
+});
+
+router.put("/contacts/:id", async (req: AuthenticatedRequest, res, next) => {
+  try {
+    const data = adminEditContactSchema.parse(req.body);
+
+    const contact = await prisma.contact.update({
+      where: { id: req.params.id as string },
+      data,
+      include: { city: true, category: true },
+    });
+
+    res.json({ success: true, data: contact });
+  } catch (err) {
+    next(err);
+  }
+});
+
 // PATCH /api/admin/contacts/:id/approve
 router.patch("/contacts/:id/approve", async (req: AuthenticatedRequest, res, next) => {
   try {

@@ -67,4 +67,19 @@ router.get("/me", authenticate, async (req: AuthenticatedRequest, res, next) => 
   }
 });
 
+// GET /api/auth/my-contributions — user's submitted contacts
+router.get("/my-contributions", authenticate, async (req: AuthenticatedRequest, res, next) => {
+  try {
+    const contacts = await prisma.contact.findMany({
+      where: { submittedById: req.userId },
+      include: { city: true, category: true },
+      orderBy: { createdAt: "desc" },
+    });
+
+    res.json({ success: true, data: contacts });
+  } catch (err) {
+    next(err);
+  }
+});
+
 export default router;

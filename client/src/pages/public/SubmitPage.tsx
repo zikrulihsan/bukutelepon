@@ -4,7 +4,8 @@ import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "../../lib/axios";
 import { useAuth } from "../../hooks/useAuth";
 import { useCity } from "../../context/CityContext";
-import type { City, Category } from "../../types";
+import { Badge } from "../../components/ui/Badge";
+import type { City, Category, Contact } from "../../types";
 
 interface ImportedContact {
   name: string;
@@ -75,6 +76,8 @@ function hasContactPicker(): boolean {
   return "contacts" in navigator && "ContactsManager" in window;
 }
 
+type Tab = "riwayat" | "manual" | "import";
+
 export default function SubmitPage() {
   const { user, loading: authLoading } = useAuth();
   const { citySlug } = useCity();
@@ -91,10 +94,15 @@ export default function SubmitPage() {
     queryFn: async () => (await apiClient.get("/categories")).data,
   });
 
+  const { data: contributionsData, isLoading: contributionsLoading } = useQuery<{ success: boolean; data: Contact[] }>({
+    queryKey: ["my-contributions"],
+    queryFn: async () => (await apiClient.get("/auth/my-contributions")).data,
+    enabled: !!user,
+  });
+
   const defaultCityId = citiesData?.data.find((c) => c.slug === citySlug)?.id ?? "";
 
-  // Tab: "manual" | "import"
-  const [tab, setTab] = useState<"manual" | "import">("manual");
+  const [tab, setTab] = useState<Tab>("riwayat");
 
   // Manual form
   const [form, setForm] = useState({
@@ -183,10 +191,10 @@ export default function SubmitPage() {
               Tambah Lagi
             </button>
             <button
-              onClick={() => navigate("/")}
+              onClick={() => { setSuccess(false); setTab("riwayat"); }}
               className="bg-gray-100 text-gray-700 px-5 py-2.5 rounded-xl text-sm font-semibold active:scale-[0.98] transition-all"
             >
-              Kembali
+              Lihat Riwayat
             </button>
           </div>
         </div>
@@ -282,6 +290,10 @@ export default function SubmitPage() {
   }
 
   const selectedCount = imported.filter((c) => c.selected).length;
+  const contributions = contributionsData?.data ?? [];
+  const approvedCount = contributions.filter((c) => c.status === "APPROVED").length;
+  const pendingCount = contributions.filter((c) => c.status === "PENDING").length;
+
   const inputClass = "w-full h-11 bg-gray-50 border border-gray-200 rounded-xl px-3.5 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors";
   const labelClass = "block text-xs font-semibold text-gray-700 mb-1.5";
 
@@ -289,31 +301,102 @@ export default function SubmitPage() {
     <div className="min-h-screen bg-gray-50 max-w-md mx-auto pb-24">
       {/* Header */}
       <div className="bg-white px-4 pt-4 pb-3 border-b border-gray-100">
-        <h1 className="text-lg font-bold text-gray-900">Tambah Kontak</h1>
+        <h1 className="text-lg font-bold text-gray-900">Kontribusi</h1>
         <p className="text-xs text-gray-500 mt-0.5">Bantu lengkapi direktori kotamu</p>
       </div>
 
       {/* Tabs */}
       <div className="bg-white border-b border-gray-100 px-4 flex gap-1">
-        <button
-          onClick={() => setTab("manual")}
-          className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
-            tab === "manual" ? "border-primary-600 text-primary-700" : "border-transparent text-gray-500"
-          }`}
-        >
-          Manual
-        </button>
-        <button
-          onClick={() => setTab("import")}
-          className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
-            tab === "import" ? "border-primary-600 text-primary-700" : "border-transparent text-gray-500"
-          }`}
-        >
-          Impor Kontak
-        </button>
+        {([
+          { key: "riwayat" as Tab, label: "Riwayat" },
+          { key: "manual" as Tab, label: "Tambah" },
+          { key: "import" as Tab, label: "Impor" },
+        ]).map((t) => (
+          <button
+            key={t.key}
+            onClick={() => setTab(t.key)}
+            className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
+              tab === t.key ? "border-primary-600 text-primary-700" : "border-transparent text-gray-500"
+            }`}
+          >
+            {t.label}
+          </button>
+        ))}
       </div>
 
       <div className="px-4 pt-4">
+        {/* ── Riwayat Tab ── */}
+        {tab === "riwayat" && (
+          <>
+            {/* Stats summary */}
+            <div className="grid grid-cols-3 gap-2 mb-4">
+              <div className="bg-white rounded-xl border border-gray-200 p-3 text-center">
+                <p className="text-xl font-bold text-gray-900">{contributions.length}</p>
+                <p className="text-[10px] text-gray-500 font-medium">Total</p>
+              </div>
+              <div className="bg-green-50 rounded-xl border border-green-200 p-3 text-center">
+                <p className="text-xl font-bold text-green-700">{approvedCount}</p>
+                <p className="text-[10px] text-green-600 font-medium">Approved</p>
+              </div>
+              <div className="bg-yellow-50 rounded-xl border border-yellow-200 p-3 text-center">
+                <p className="text-xl font-bold text-yellow-700">{pendingCount}</p>
+                <p className="text-[10px] text-yellow-600 font-medium">Pending</p>
+              </div>
+            </div>
+
+            {contributionsLoading ? (
+              <div className="space-y-3">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <div key={i} className="bg-white rounded-xl p-4 animate-pulse">
+                    <div className="h-4 bg-gray-200 rounded w-2/3 mb-2" />
+                    <div className="h-3 bg-gray-100 rounded w-1/3" />
+                  </div>
+                ))}
+              </div>
+            ) : contributions.length === 0 ? (
+              <div className="text-center py-12">
+                <div className="w-14 h-14 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-3">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <p className="text-sm font-medium text-gray-600">Belum ada kontribusi</p>
+                <p className="text-xs text-gray-400 mt-1">Mulai tambahkan kontak untuk kotamu</p>
+                <button
+                  onClick={() => setTab("manual")}
+                  className="mt-4 bg-primary-700 text-white px-5 py-2.5 rounded-xl text-sm font-semibold active:scale-[0.98] transition-all"
+                >
+                  Tambah Kontak
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-2.5">
+                {contributions.map((contact) => (
+                  <div key={contact.id} className="bg-white rounded-xl border border-gray-200 p-3.5">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <h3 className="text-sm font-semibold text-gray-900 truncate">{contact.name}</h3>
+                        <p className="text-xs text-gray-500 mt-0.5">{contact.phone}</p>
+                        <p className="text-[11px] text-gray-400 mt-0.5">
+                          {contact.city?.name} &middot; {contact.category?.name}
+                        </p>
+                      </div>
+                      <div className="flex-shrink-0">
+                        <Badge variant={contact.status === "APPROVED" ? "success" : contact.status === "REJECTED" ? "danger" : "warning"}>
+                          {contact.status === "APPROVED" ? "Disetujui" : contact.status === "REJECTED" ? "Ditolak" : "Menunggu"}
+                        </Badge>
+                      </div>
+                    </div>
+                    <p className="text-[10px] text-gray-400 mt-2">
+                      {new Date(contact.createdAt).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" })}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </>
+        )}
+
         {/* ── Manual Tab ── */}
         {tab === "manual" && (
           <>
@@ -421,7 +504,6 @@ export default function SubmitPage() {
             {/* Imported list */}
             {imported.length > 0 ? (
               <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-                {/* Header */}
                 <div className="px-4 py-3 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
                   <label className="flex items-center gap-2 text-sm">
                     <input
@@ -437,7 +519,6 @@ export default function SubmitPage() {
                   </button>
                 </div>
 
-                {/* List */}
                 <div className="max-h-64 overflow-y-auto divide-y divide-gray-100">
                   {imported.map((contact, i) => (
                     <div key={i} className="flex items-center gap-3 px-4 py-2.5">
@@ -460,7 +541,6 @@ export default function SubmitPage() {
                   ))}
                 </div>
 
-                {/* Submit */}
                 <div className="px-4 py-4 bg-gray-50 border-t border-gray-200 space-y-3">
                   <div className="grid grid-cols-2 gap-2">
                     <select
@@ -502,7 +582,6 @@ export default function SubmitPage() {
                 </div>
               </div>
             ) : (
-              /* Empty state */
               <div className="bg-white rounded-xl border border-dashed border-gray-300 p-10 text-center">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-gray-300 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
