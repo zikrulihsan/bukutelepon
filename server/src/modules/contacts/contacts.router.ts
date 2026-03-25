@@ -2,7 +2,6 @@ import { Router } from "express";
 import { prisma } from "../../utils/prisma";
 import { z } from "zod";
 import { authenticate, AuthenticatedRequest } from "../../middleware/authenticate";
-import { requireContribution } from "../../middleware/requireContribution";
 import { checkAccess, AccessRequest } from "../../middleware/checkAccess";
 import { submitLimiter, apiLimiter } from "../../middleware/rateLimiter";
 import { sanitize } from "../../middleware/sanitize";

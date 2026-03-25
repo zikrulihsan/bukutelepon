@@ -2,7 +2,6 @@ import { Router } from "express";
 import { prisma } from "../../utils/prisma";
 import { z } from "zod";
 import { authenticate, AuthenticatedRequest } from "../../middleware/authenticate";
-import { requireContribution } from "../../middleware/requireContribution";
 import { submitLimiter, apiLimiter } from "../../middleware/rateLimiter";
 import { sanitize } from "../../middleware/sanitize";
 import { AppError } from "../../middleware/errorHandler";
@@ -42,7 +41,6 @@ router.get("/", apiLimiter, async (req, res, next) => {
 router.post(
   "/",
   authenticate,
-  requireContribution,
   submitLimiter,
   sanitize,
   async (req: AuthenticatedRequest, res, next) => {

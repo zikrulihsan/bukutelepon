@@ -5,7 +5,6 @@ import { apiClient } from "../../lib/axios";
 import { useContacts } from "../../hooks/useContacts";
 import { ContactCard } from "../../components/shared/ContactCard";
 import { ContributionWall } from "../../components/shared/ContributionWall";
-import { ContributePrompt } from "../../components/shared/ContributePrompt";
 import type { City } from "../../types";
 
 export default function CityPage() {
@@ -48,8 +47,6 @@ export default function CityPage() {
             <p className="text-sm text-gray-500">{city.province}</p>
           </div>
         )}
-
-        <ContributePrompt />
 
         {isLoading ? (
           <div className="space-y-3 mt-4">
