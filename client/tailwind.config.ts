@@ -4,6 +4,9 @@ const config: Config = {
   content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
   theme: {
     extend: {
+      fontFamily: {
+        display: ['"Nunito Sans"', "sans-serif"],
+      },
       colors: {
         primary: {
           50: "#f0fdf4",

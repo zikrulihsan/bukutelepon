@@ -19,14 +19,42 @@ export default function SearchPage() {
   const urlQ = searchParams.get("q") || "";
   const urlCat = searchParams.get("category") || "";
 
+  const urlVerified = searchParams.get("verified") || "";
+
   const [search, setSearch] = useState(urlQ);
   const [searchQuery, setSearchQuery] = useState(urlQ);
   const [activeCategory, setActiveCategory] = useState(urlCat);
+  const [verifiedFilter, setVerifiedFilter] = useState(urlVerified);
+  const [showFilterMenu, setShowFilterMenu] = useState(false);
+  const filterRef = useRef<HTMLDivElement>(null);
+
+  // Close filter menu on outside click
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (filterRef.current && !filterRef.current.contains(e.target as Node)) {
+        setShowFilterMenu(false);
+      }
+    }
+    if (showFilterMenu) {
+      document.addEventListener("mousedown", handleClick);
+      return () => document.removeEventListener("mousedown", handleClick);
+    }
+  }, [showFilterMenu]);
 
   // Auto-focus on mount
   useEffect(() => {
     inputRef.current?.focus();
   }, []);
+
+  // Debounce search input
+  useEffect(() => {
+    const trimmed = search.trim();
+    if (trimmed === searchQuery) return;
+    const timer = setTimeout(() => {
+      setSearchQuery(trimmed);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [search]);
 
   const { data: categoriesData } = useQuery<{ success: boolean; data: Category[] }>({
     queryKey: ["categories"],
@@ -34,7 +62,7 @@ export default function SearchPage() {
   });
   const categories = categoriesData?.data ?? [];
 
-  const hasFilter = !!searchQuery || !!activeCategory;
+  const hasFilter = !!searchQuery || !!activeCategory || !!verifiedFilter;
 
   const {
     data: infiniteData,
@@ -43,7 +71,7 @@ export default function SearchPage() {
     isFetchingNextPage,
     isLoading,
   } = useInfiniteQuery<PaginatedResponse<Contact>>({
-    queryKey: ["search-contacts", { city: citySlug, category: activeCategory, search: searchQuery }],
+    queryKey: ["search-contacts", { city: citySlug, category: activeCategory, search: searchQuery, verified: verifiedFilter }],
     queryFn: async ({ pageParam }) => {
       const params = new URLSearchParams();
       params.set("page", String(pageParam));
@@ -51,6 +79,7 @@ export default function SearchPage() {
       if (citySlug) params.set("city", citySlug);
       if (activeCategory) params.set("category", activeCategory);
       if (searchQuery) params.set("search", searchQuery);
+      if (verifiedFilter) params.set("verified", verifiedFilter);
       const { data } = await apiClient.get(`/contacts?${params}`);
       return data;
     },
@@ -85,8 +114,9 @@ export default function SearchPage() {
     const params = new URLSearchParams();
     if (searchQuery) params.set("q", searchQuery);
     if (activeCategory) params.set("category", activeCategory);
+    if (verifiedFilter) params.set("verified", verifiedFilter);
     setSearchParams(params, { replace: true });
-  }, [searchQuery, activeCategory, setSearchParams]);
+  }, [searchQuery, activeCategory, verifiedFilter, setSearchParams]);
 
   function handleSearch(e: React.FormEvent) {
     e.preventDefault();
@@ -140,23 +170,70 @@ export default function SearchPage() {
           )}
         </form>
 
-        {/* Category chips */}
-        <div ref={chipScrollRef} className="flex items-center gap-2 overflow-x-auto pt-3 scrollbar-hide">
-          {categories.map((cat) => (
+        {/* Category chips + filter icon */}
+        <div className="flex items-center gap-2 pt-3">
+          {/* Filter icon */}
+          <div ref={filterRef} className="relative flex-shrink-0">
             <button
-              key={cat.slug}
-              data-slug={cat.slug}
-              onClick={() => handleCategoryClick(cat.slug)}
-              className={`flex-shrink-0 inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors ${
-                activeCategory === cat.slug
-                  ? "bg-primary-700 text-white shadow-sm"
-                  : "bg-white text-primary-700 shadow-sm border border-gray-100"
+              onClick={() => setShowFilterMenu(!showFilterMenu)}
+              className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
+                verifiedFilter
+                  ? "bg-blue-600 text-white"
+                  : "bg-gray-100 text-gray-500"
               }`}
             >
-              <CategoryIcon slug={cat.slug} className="w-3.5 h-3.5" />
-              {cat.name}
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z" clipRule="evenodd" />
+              </svg>
             </button>
-          ))}
+            {showFilterMenu && (
+              <div className="absolute top-full left-0 mt-1.5 bg-white rounded-xl shadow-lg border border-gray-100 py-1 z-30 min-w-[160px]">
+                {([
+                  { value: "", label: "Semua" },
+                  { value: "true", label: "Terverifikasi" },
+                  { value: "false", label: "Belum Verifikasi" },
+                ] as const).map(({ value, label }) => (
+                  <button
+                    key={value}
+                    onClick={() => { setVerifiedFilter(value); setShowFilterMenu(false); }}
+                    className={`w-full text-left px-3.5 py-2 text-xs font-medium flex items-center gap-2 transition-colors ${
+                      verifiedFilter === value ? "text-blue-600 bg-blue-50" : "text-gray-700 hover:bg-gray-50"
+                    }`}
+                  >
+                    {value === "true" && (
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 text-blue-500" viewBox="0 0 24 24" fill="currentColor">
+                        <path fillRule="evenodd" d="M8.603 3.799A4.49 4.49 0 0112 2.25c1.357 0 2.573.6 3.397 1.549a4.49 4.49 0 013.498 1.307 4.491 4.491 0 011.307 3.497A4.49 4.49 0 0121.75 12a4.49 4.49 0 01-1.549 3.397 4.491 4.491 0 01-1.307 3.497 4.491 4.491 0 01-3.497 1.307A4.49 4.49 0 0112 21.75a4.49 4.49 0 01-3.397-1.549 4.49 4.49 0 01-3.498-1.306 4.491 4.491 0 01-1.307-3.498A4.49 4.49 0 012.25 12c0-1.357.6-2.573 1.549-3.397a4.49 4.49 0 011.307-3.497 4.49 4.49 0 013.497-1.307zm7.007 6.387a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z" clipRule="evenodd" />
+                      </svg>
+                    )}
+                    {label}
+                    {verifiedFilter === value && (
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 ml-auto text-blue-600" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    )}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div ref={chipScrollRef} className="flex items-center gap-2 overflow-x-auto scrollbar-hide">
+            {categories.map((cat) => (
+              <button
+                key={cat.slug}
+                data-slug={cat.slug}
+                onClick={() => handleCategoryClick(cat.slug)}
+                className={`flex-shrink-0 inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors ${
+                  activeCategory === cat.slug
+                    ? "bg-primary-700 text-white shadow-sm"
+                    : "bg-white text-primary-700 shadow-sm border border-gray-100"
+                }`}
+              >
+                <CategoryIcon slug={cat.slug} className="w-3.5 h-3.5" />
+                {cat.name}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 

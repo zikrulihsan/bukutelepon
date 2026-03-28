@@ -40,6 +40,7 @@ export interface Contact {
   website: string | null;
   description: string | null;
   status: ContactStatus;
+  isVerified: boolean;
   createdAt: string;
   updatedAt: string;
   cityId: string;

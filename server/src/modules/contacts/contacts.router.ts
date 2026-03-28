@@ -29,6 +29,7 @@ router.get("/", apiLimiter, checkAccess, async (req: AccessRequest, res, next) =
     const citySlug = req.query.city as string | undefined;
     const categorySlug = req.query.category as string | undefined;
     const search = req.query.search as string | undefined;
+    const verified = req.query.verified as string | undefined;
 
     const where: Record<string, unknown> = { status: "APPROVED" };
 
@@ -37,6 +38,8 @@ router.get("/", apiLimiter, checkAccess, async (req: AccessRequest, res, next) =
     if (search) {
       where.name = { contains: search, mode: "insensitive" };
     }
+    if (verified === "true") where.isVerified = true;
+    if (verified === "false") where.isVerified = false;
 
     const [contacts, total] = await Promise.all([
       prisma.contact.findMany({
