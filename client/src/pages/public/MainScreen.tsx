@@ -9,12 +9,18 @@ import { ContributionWall } from "../../components/shared/ContributionWall";
 import { CityPickerOverlay } from "../../components/shared/CityPickerOverlay";
 import { CategoryIcon } from "../../components/shared/CategoryIcon";
 import {
-  CategoryGridShimmer,
-  EmergencyStripShimmer,
   RecentContactsShimmer,
   ContactListShimmer,
 } from "../../components/shared/Shimmer";
 import type { Category, City, Contact, PaginatedResponse } from "../../types";
+
+function getGreeting(): string {
+  const h = new Date().getHours();
+  if (h < 11) return "Selamat pagi";
+  if (h < 15) return "Selamat siang";
+  if (h < 18) return "Selamat sore";
+  return "Selamat malam";
+}
 
 export default function MainScreen() {
   const { citySlug, city, setCity, cities, setCities } = useCity();
@@ -29,8 +35,6 @@ export default function MainScreen() {
   const [activeCategory, setActiveCategory] = useState(urlCategory);
   const [showCityPicker, setShowCityPicker] = useState(false);
   const [showAll, setShowAll] = useState(false);
-
-  const searchPlaceholder = `Cari kontak di ${city?.name ?? "sekitarmu"}...`;
 
   // ── Sticky search on scroll up ──
   const [showStickySearch, setShowStickySearch] = useState(false);
@@ -65,12 +69,6 @@ export default function MainScreen() {
   const { data: categoriesData, isLoading: categoriesLoading } = useQuery<{ success: boolean; data: Category[] }>({
     queryKey: ["categories"],
     queryFn: async () => (await apiClient.get("/categories")).data,
-  });
-
-  const { data: emergencyData, isLoading: emergencyLoading } = useContacts({
-    city: citySlug || undefined,
-    category: "darurat",
-    limit: 5,
   });
 
   const { data: recentData, isLoading: recentLoading } = useContacts({
@@ -151,7 +149,6 @@ export default function MainScreen() {
     const next = activeCategory === slug ? "" : slug;
     setActiveCategory(next);
 
-    // Scroll selected chip to the left edge
     if (next && chipScrollRef.current) {
       requestAnimationFrame(() => {
         const container = chipScrollRef.current;
@@ -175,7 +172,6 @@ export default function MainScreen() {
   }
 
   const categories = categoriesData?.data ?? [];
-  const emergencyContacts = emergencyData?.data ?? [];
   const cityPickerVisible = needsCityPicker || showCityPicker;
 
   return (
@@ -188,7 +184,7 @@ export default function MainScreen() {
         />
       )}
 
-      {/* ── Sticky search bar (appears on scroll up) ── */}
+      {/* ── Sticky search bar ── */}
       <div
         className={`fixed top-0 left-0 right-0 z-30 max-w-md mx-auto transition-transform duration-200 ${
           showStickySearch ? "translate-y-0" : "-translate-y-full"
@@ -204,109 +200,100 @@ export default function MainScreen() {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
             </div>
-            <span className="flex-1 h-9 pl-2.5 pr-3 text-sm text-gray-400 flex items-center">{searchPlaceholder}</span>
+            <span className="flex-1 h-9 pl-2.5 pr-3 text-sm text-gray-400 flex items-center">Cari tukang, rumah sakit, kuliner...</span>
           </div>
         </div>
       </div>
 
       {/* ── Green header ── */}
-      <div ref={headerRef} className="bg-gradient-to-b from-primary-700 to-primary-600 px-4 pt-3 pb-5 rounded-b-3xl">
-        {/* Top bar */}
-        <div className="flex items-center justify-between mb-4">
-          <button onClick={() => setShowCityPicker(true)} className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
-              </svg>
-            </div>
-            <div className="text-left">
-              <div className="text-white/70 text-[10px] leading-tight">Lokasi kamu</div>
-              <div className="text-white font-semibold text-sm leading-tight flex items-center gap-1">
-                {city?.name ?? "Pilih Kota"}
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 text-white/70" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-                </svg>
-              </div>
-            </div>
-          </button>
-
-          <div className="flex items-center gap-2">
-            <span className="text-white/80 text-xs font-medium">bukutelepon.id</span>
+      <div ref={headerRef} className="bg-gradient-to-b from-primary-800 via-primary-700 to-primary-600 px-5 pt-5 pb-7 rounded-b-[2rem]">
+        {/* Top row: greeting + logo */}
+        <div className="flex items-start justify-between mb-1">
+          <h1 className="text-[22px] font-bold text-white">{getGreeting()}</h1>
+          <div className="w-9 h-9 rounded-full bg-white/15 flex items-center justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
           </div>
         </div>
 
-        {/* Search bar — taps navigate to /search */}
+        {/* Location */}
+        <button onClick={() => setShowCityPicker(true)} className="flex items-center gap-1.5 mb-4">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white/80" viewBox="0 0 20 20" fill="currentColor">
+            <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+          </svg>
+          <span className="text-white font-medium text-sm">{city?.name ?? "Pilih Kota"}</span>
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 text-white/60" viewBox="0 0 20 20" fill="currentColor">
+            <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+          </svg>
+        </button>
+
+        {/* Question */}
+        <p className="text-white font-bold text-lg mb-3.5">Mau cari apa hari ini?</p>
+
+        {/* Search bar */}
         <div
           onClick={() => navigate("/search")}
-          className="flex items-center bg-white rounded-xl shadow-sm overflow-hidden cursor-pointer"
+          className="flex items-center bg-white/95 rounded-2xl shadow-sm overflow-hidden cursor-pointer backdrop-blur-sm"
         >
-          <div className="pl-3.5 text-gray-400">
+          <div className="pl-4 text-gray-400">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
           </div>
-          <span className="flex-1 h-11 pl-3 pr-4 text-sm text-gray-400 flex items-center">{searchPlaceholder}</span>
+          <span className="flex-1 h-12 pl-3 pr-4 text-sm text-gray-400 flex items-center">Cari tukang, rumah sakit, kuliner...</span>
         </div>
       </div>
 
       {/* ── Content ── */}
-      <div className="px-4 -mt-1">
-
-        {/* Emergency strip */}
-        {!isFiltered && emergencyLoading && <EmergencyStripShimmer />}
-        {!isFiltered && !emergencyLoading && emergencyContacts.length > 0 && (
-          <div className="mt-4 mb-2">
-            <div className="flex gap-2.5 overflow-x-auto pb-1 -mx-4 px-4 scrollbar-hide">
-              {emergencyContacts.map((contact) => (
-                <a
-                  key={contact.id}
-                  href={`tel:${contact.phone.replace(/\D/g, "")}`}
-                  className="flex-shrink-0 flex items-center gap-2.5 bg-red-50 border border-red-100 rounded-2xl px-3.5 py-2.5 active:scale-[0.98] transition-transform"
-                >
-                  <div className="w-9 h-9 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-red-600" viewBox="0 0 20 20" fill="currentColor">
-                      <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
-                    </svg>
-                  </div>
-                  <div>
-                    <div className="text-xs font-semibold text-gray-900 whitespace-nowrap">{contact.name}</div>
-                    <div className="text-[11px] text-red-600 font-medium">{contact.phone}</div>
-                  </div>
-                </a>
-              ))}
-            </div>
-          </div>
-        )}
+      <div className="px-4">
 
         {/* ── Browse mode ── */}
         {!isFiltered && (
           <>
-            {/* Category grid */}
+            {/* Category horizontal scroll */}
             {categoriesLoading ? (
-              <CategoryGridShimmer />
+              <div className="flex gap-3 overflow-x-auto pt-5 pb-2 -mx-4 px-4 scrollbar-hide">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <div key={i} className="flex-shrink-0 w-20">
+                    <div className="w-16 h-16 rounded-2xl shimmer mx-auto mb-2" />
+                    <div className="h-3 w-14 shimmer mx-auto rounded" />
+                  </div>
+                ))}
+              </div>
             ) : (
-              <div className="mt-4 mb-6">
-                <div className="grid grid-cols-4 gap-y-4 gap-x-2">
+              <div className="pt-5 pb-1">
+                <div className="flex gap-2 overflow-x-auto -mx-4 px-4 scrollbar-hide pb-2">
                   {categories.map((cat) => (
                     <button
                       key={cat.slug}
                       onClick={() => handleCategoryClick(cat.slug)}
-                      className="flex flex-col items-center gap-1.5 active:scale-95 transition-transform"
+                      className="flex-shrink-0 flex flex-col items-center gap-1.5 w-[72px] active:scale-95 transition-transform"
                     >
-                      <div className="w-14 h-14 rounded-2xl bg-white shadow-sm border border-gray-100 flex items-center justify-center text-primary-700">
-                        <CategoryIcon slug={cat.slug} />
+                      <div className="w-16 h-16 rounded-2xl bg-white shadow-sm border border-gray-100 flex items-center justify-center text-primary-700">
+                        <CategoryIcon slug={cat.slug} className="w-8 h-8" />
                       </div>
-                      <span className="text-[11px] font-medium text-gray-700 text-center leading-tight line-clamp-2">
+                      <span className="text-[11px] font-medium text-gray-700 text-center leading-tight line-clamp-1">
                         {cat.name}
                       </span>
                     </button>
                   ))}
                 </div>
+
+                {/* Lihat semua */}
+                <div className="flex justify-end mt-1 mb-1">
+                  <button
+                    onClick={() => setShowAll(true)}
+                    className="text-xs font-semibold text-primary-600 active:scale-95 transition-transform"
+                  >
+                    Lihat semua &rarr;
+                  </button>
+                </div>
               </div>
             )}
 
             {/* Divider */}
-            <div className="h-2 bg-gray-100 -mx-4 mb-4 rounded-sm" />
+            <div className="h-2 bg-gray-100 -mx-4 mb-4" />
 
             {/* Recent contacts */}
             {recentLoading ? (
@@ -314,23 +301,27 @@ export default function MainScreen() {
             ) : recentData?.data && recentData.data.length > 0 ? (
               <div className="pb-6">
                 <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-sm font-semibold text-gray-900">
+                  <h3 className="text-base font-bold text-gray-900">
                     Terbaru di {city?.name}
                   </h3>
                   <button
                     onClick={() => setShowAll(true)}
-                    className="text-xs font-semibold text-primary-600 hover:text-primary-800 active:scale-95 transition-transform"
+                    className="text-xs font-semibold text-primary-600 active:scale-95 transition-transform"
                   >
-                    Lihat semua →
+                    Lihat semua &rarr;
                   </button>
                 </div>
-                <div className="space-y-2.5">
+                <div className="space-y-3">
                   {recentData.data.slice(0, 5).map((contact) => (
                     <ContactCard key={contact.id} contact={contact} />
                   ))}
                 </div>
               </div>
-            ) : null}
+            ) : (
+              <div className="text-center py-12">
+                <p className="text-sm text-gray-400">Belum ada kontak di {city?.name ?? "kota ini"}</p>
+              </div>
+            )}
           </>
         )}
 
@@ -372,18 +363,17 @@ export default function MainScreen() {
               {city ? ` di ${city.name}` : ""}
             </p>
 
-            {/* Contact list — lazy loaded */}
+            {/* Contact list */}
             {isLoading ? (
               <ContactListShimmer count={4} />
             ) : (
               <>
-                <div className="space-y-2.5">
+                <div className="space-y-3">
                   {allContacts.map((contact) => (
                     <ContactCard key={contact.id} contact={contact} />
                   ))}
                   {allContacts.length === 0 && (
                     <div className="text-center py-16">
-                      <div className="text-3xl mb-3">🔍</div>
                       <p className="text-gray-500 text-sm">Tidak ada kontak ditemukan</p>
                       <button onClick={handleClearFilters} className="text-primary-600 text-sm font-medium mt-2">
                         Hapus filter
@@ -392,7 +382,6 @@ export default function MainScreen() {
                   )}
                 </div>
 
-                {/* Infinite scroll trigger */}
                 {hasNextPage && (
                   <div ref={loadMoreRef} className="py-4">
                     {isFetchingNextPage ? (
