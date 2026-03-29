@@ -155,7 +155,7 @@ export default function SearchPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder={`Cari kontak di ${city?.name ?? "sekitarmu"}...`}
-            className="flex-1 h-12 pl-3 pr-2 text-[15px] font-medium text-gray-900 placeholder-gray-400 bg-transparent outline-none"
+            className="flex-1 h-12 pl-3 pr-2 text-[16px] font-medium text-gray-900 placeholder-gray-400 bg-transparent outline-none"
           />
           {search && (
             <button
