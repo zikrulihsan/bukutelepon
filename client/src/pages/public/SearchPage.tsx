@@ -143,8 +143,8 @@ export default function SearchPage() {
     <div className="min-h-screen bg-gray-50 max-w-md mx-auto pb-24">
       {/* Search header */}
       <div className="bg-white px-4 pt-4 pb-3 border-b border-gray-100 sticky top-0 z-20">
-        <form onSubmit={handleSearch} className="flex items-center bg-gray-100 rounded-xl overflow-hidden">
-          <div className="pl-3.5 text-gray-400">
+        <form onSubmit={handleSearch} className="flex items-center bg-white border border-gray-200 rounded-full p-1 shadow-sm focus-within:ring-4 focus-within:ring-green-500/10 focus-within:border-green-500 transition-all">
+          <div className="pl-4 text-gray-400">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
@@ -155,19 +155,20 @@ export default function SearchPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder={`Cari kontak di ${city?.name ?? "sekitarmu"}...`}
-            className="flex-1 h-11 pl-3 pr-4 text-sm text-gray-900 placeholder-gray-400 bg-transparent outline-none"
+            className="flex-1 h-12 pl-3 pr-2 text-[15px] font-medium text-gray-900 placeholder-gray-400 bg-transparent outline-none"
           />
           {search && (
             <button
               type="button"
               onClick={() => { setSearch(""); setSearchQuery(""); inputRef.current?.focus(); }}
-              className="pr-3 text-gray-400"
+              className="mr-2 w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-gray-200 active:scale-95 transition-colors"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
           )}
+
         </form>
 
         {/* Category chips + filter icon */}

@@ -14,6 +14,51 @@ import {
 } from "../../components/shared/Shimmer";
 import type { Category, City, Contact, PaginatedResponse } from "../../types";
 
+const EMERGENCY_CONTACTS = [
+  {
+    name: "Darurat", phone: "112", icon: (
+      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+        <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
+      </svg>
+    )
+  },
+  {
+    name: "Polisi", phone: "110", icon: (
+      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 2L3 7v5c0 5.25 3.83 10.15 9 11 5.17-.85 9-5.75 9-11V7l-9-5z" />
+      </svg>
+    )
+  },
+  {
+    name: "Ambulans", phone: "119", icon: (
+      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+        <path d="M10 10H6m2-2v4m-2 6h12a2 2 0 002-2v-5.5a.5.5 0 00-.11-.33l-3-3.78A2 2 0 0015.33 6H4a2 2 0 00-2 2v8a2 2 0 002 2m2 0a2 2 0 104 0m-4 0h4m8 0a2 2 0 104 0" />
+      </svg>
+    )
+  },
+  {
+    name: "Pemadam", phone: "113", icon: (
+      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 12c2-2.96 0-7-1-8 0 3.038-1.773 4.741-3 6-1.226 1.26-2 3.24-2 5a6 6 0 1012 0c0-1.532-1.056-3.94-2-5-1.786 3-2.791 3-4 2z" />
+      </svg>
+    )
+  },
+  {
+    name: "SAR", phone: "115", icon: (
+      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="10" /><path d="M12 8v4l3 3" />
+      </svg>
+    )
+  },
+  {
+    name: "PLN", phone: "123", icon: (
+      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+        <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+      </svg>
+    )
+  }
+];
+
 export default function MainScreen() {
   const { citySlug, city, setCity, cities, setCities } = useCity();
   const navigate = useNavigate();
@@ -32,6 +77,7 @@ export default function MainScreen() {
   const filterRef = useRef<HTMLDivElement>(null);
   const [showCityPicker, setShowCityPicker] = useState(false);
   const [showAll, setShowAll] = useState(false);
+  const [showEmergency, setShowEmergency] = useState(false);
   const catScrollRef = useRef<HTMLDivElement>(null);
   const [catScrollProgress, setCatScrollProgress] = useState(0);
 
@@ -86,12 +132,6 @@ export default function MainScreen() {
   const { data: recentData, isLoading: recentLoading } = useContacts({
     city: citySlug || undefined,
     limit: 5,
-  });
-
-  const { data: emergencyData } = useContacts({
-    city: citySlug || undefined,
-    category: "darurat",
-    limit: 10,
   });
 
   // ── Infinite scroll for filtered results ──
@@ -220,149 +260,177 @@ export default function MainScreen() {
 
       {/* ── Sticky search bar ── */}
       <div
-        className={`fixed top-0 left-0 right-0 z-30 max-w-md mx-auto transition-transform duration-200 ${
-          showStickySearch ? "translate-y-0" : "-translate-y-full"
-        }`}
+        className={`fixed top-0 left-0 right-0 z-30 max-w-md mx-auto transition-all duration-300 ${showStickySearch ? "translate-y-0 opacity-100" : "-translate-y-full opacity-0 pointer-events-none"
+          }`}
       >
-        <div className="bg-primary-700 px-4 py-2.5 shadow-lg">
+        <div className="bg-white/95 backdrop-blur-md px-4 py-3 shadow-[0_4px_20px_rgba(0,0,0,0.06)] border-b border-gray-100">
           <div
             onClick={() => navigate("/search")}
-            className="flex items-center bg-white rounded-xl overflow-hidden cursor-pointer"
+            className="flex items-center bg-white border border-gray-200 rounded-full p-1 shadow-sm cursor-pointer hover:shadow-md transition-all group"
           >
-            <div className="pl-3 text-gray-400">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <div className="pl-3.5 text-gray-400 group-hover:text-[#1A5B45] transition-colors">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
             </div>
-            <span className="flex-1 h-9 pl-2.5 pr-3 text-sm text-gray-400 flex items-center">Cari tukang, rumah sakit, kuliner...</span>
+            <span className="flex-1 h-9 pl-2.5 pr-2 text-[14px] text-gray-500 font-medium flex items-center truncate">Cari kontak di {city?.name ?? "sekitarmu"}...</span>
+
           </div>
         </div>
       </div>
 
       {/* ── Green header ── */}
-      <div ref={headerRef} className="bg-gradient-to-b from-primary-800 via-primary-700 to-primary-600 px-5 pt-5 pb-7 rounded-b-[2rem]">
+      <div ref={headerRef} className="bg-primary-900 px-5 pt-5 pb-8 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-green-400 opacity-10 rounded-full blur-[80px] pointer-events-none transform translate-x-1/2 -translate-y-1/3"></div>
         {/* Top row: brand + WA button */}
-        <div className="flex items-center justify-between mb-3">
-          <span className="text-lg font-extrabold text-white font-display tracking-tight">BukuTelepon</span>
+        <div className="flex items-center justify-between mb-6 relative z-10">
+          <div className="flex items-center gap-2">
+            <span className="text-xl font-extrabold text-white font-display tracking-tight">carikontak<span className="text-[#6EE7B7]">.id</span></span>
+          </div>
           <a
             href="https://wa.me/6282338588078?text=Permisi%20admin%20cari%20kontak%2C%20saya%20ingin%20bertanya"
             target="_blank"
             rel="noopener noreferrer"
-            className="w-9 h-9 rounded-full bg-white/15 flex items-center justify-center active:scale-90 transition-transform"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-white/20 bg-white/5 active:scale-95 transition-transform"
           >
-            <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-white/90" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
             </svg>
+            <span className="text-sm font-medium text-white/90">Bantuan</span>
           </a>
         </div>
 
-        {/* Location */}
-        <button onClick={() => setShowCityPicker(true)} className="flex items-center gap-1.5 mb-4">
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white/80" viewBox="0 0 20 20" fill="currentColor">
-            <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
-          </svg>
-          <span className="text-white font-medium text-sm">{city?.name ?? "Pilih Kota"}</span>
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 text-white/60" viewBox="0 0 20 20" fill="currentColor">
+        {/* Location Pill */}
+        <button onClick={() => setShowCityPicker(true)} className="flex items-center gap-2 mb-6 px-3.5 py-1.5 rounded-full bg-white/10 border border-white/5 w-max active:scale-95 transition-transform relative z-10">
+          <div className="w-5 h-5 rounded-full bg-[#6EE7B7] flex items-center justify-center flex-shrink-0">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 text-[#0C3B2E]" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+            </svg>
+          </div>
+          <span className="text-white font-medium text-sm pr-1">{city?.name ?? "Pilih Kota"}</span>
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white/60" viewBox="0 0 20 20" fill="currentColor">
             <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
           </svg>
         </button>
 
         {/* Headline */}
-        <p className="text-white font-bold text-lg mb-3.5 font-display">Mau cari apa hari ini?</p>
+        <div className="mb-6 relative z-10">
+          <h1 className="text-white font-extrabold text-3xl mb-3 font-display leading-[1.1] tracking-tight">
+            Temukan kontak penting <br />di <span className="text-[#6EE7B7]">kotamu.</span>
+          </h1>
+        </div>
 
         {/* Search bar */}
         <div
           onClick={() => navigate("/search")}
-          className="flex items-center bg-white/95 rounded-2xl shadow-sm overflow-hidden cursor-pointer backdrop-blur-sm"
+          className="flex items-center bg-white rounded-full p-1 shadow-lg cursor-pointer transform hover:scale-[1.02] transition-transform relative z-10 mb-6"
         >
           <div className="pl-4 text-gray-400">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
           </div>
-          <span className="flex-1 h-12 pl-3 pr-4 text-sm text-gray-400 flex items-center">Cari tukang, rumah sakit, kuliner...</span>
+          <span className="flex-1 h-12 pl-3 pr-2 text-[15px] text-gray-400 flex items-center truncate">Cari kontak di {city?.name ?? "sekitarmu"}...</span>
+          <button className="w-12 h-12 rounded-full bg-primary-700 hover:bg-primary-600 flex items-center justify-center shadow-md text-white mr-0.5 active:scale-95 transition-all">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+            </svg>
+          </button>
         </div>
       </div>
 
       {/* ── Content ── */}
-      <div className="px-4">
+      <div className="bg-gray-50 rounded-t-[2rem] -mt-6 pt-6 px-4 relative z-20 shadow-[0_-4px_20px_rgba(0,0,0,0.1)] min-h-screen">
 
         {/* ── Browse mode ── */}
         {!isFiltered && (
           <>
-            {/* Category horizontal scroll */}
-            {categoriesLoading ? (
-              <div className="flex gap-3 overflow-x-auto pt-5 pb-2 -mx-4 px-4 scrollbar-hide">
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <div key={i} className="flex-shrink-0 w-20">
-                    <div className="w-16 h-16 rounded-2xl shimmer mx-auto mb-2" />
-                    <div className="h-3 w-14 shimmer mx-auto rounded" />
+            {/* Emergency Contacts Button */}
+            <div className="mb-6 animate-fade-in-up">
+              <button
+                onClick={() => setShowEmergency(!showEmergency)}
+                className="w-full flex items-center justify-between bg-[#FFF5F5] border border-red-100 rounded-[14px] px-3 py-2.5 shadow-sm active:scale-[0.98] transition-all"
+              >
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-[18px] w-[18px] text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
                   </div>
-                ))}
-              </div>
-            ) : (
-              <div className="pt-5 pb-1">
-                <div ref={catScrollRef} className="flex gap-2 overflow-x-auto -mx-4 px-4 scrollbar-hide pb-2">
-                  {categories.map((cat) => (
-                    <button
-                      key={cat.slug}
-                      onClick={() => handleCategoryClick(cat.slug)}
-                      className="flex-shrink-0 flex flex-col items-center gap-1.5 w-[72px] active:scale-95 transition-transform"
-                    >
-                      <div className="w-16 h-16 rounded-2xl bg-white shadow-sm border border-gray-100 flex items-center justify-center text-primary-700">
-                        <CategoryIcon slug={cat.slug} className="w-8 h-8" />
-                      </div>
-                      <span className="text-[11px] font-medium text-gray-700 text-center leading-tight line-clamp-1">
-                        {cat.name}
-                      </span>
-                    </button>
-                  ))}
+                  <span className="text-[13.5px] font-bold text-red-700 tracking-tight">Panggilan Darurat Cepat</span>
                 </div>
-                {/* Scroll indicator bar */}
-                <div className="flex justify-center mt-2">
-                  <div className="w-7 h-[6px] rounded-full bg-gray-200 relative overflow-hidden">
-                    <div
-                      className="absolute top-0 left-0 h-full w-1/2 rounded-full bg-primary-800 transition-transform duration-150"
-                      style={{ transform: `translateX(${catScrollProgress * 100}%)` }}
-                    />
-                  </div>
+                <div className={`flex items-center justify-center transition-transform duration-300 ${showEmergency ? 'rotate-180' : ''}`}>
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-red-300" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                  </svg>
                 </div>
-              </div>
-            )}
+              </button>
 
-            {/* Emergency contacts */}
-            {emergencyData?.data && emergencyData.data.length > 0 && (
-              <div className="pt-3 pb-2">
-                <div className="flex items-center justify-between mb-2.5">
-                  <h3 className="text-sm font-bold text-gray-900">Nomor Darurat</h3>
-                  <button
-                    onClick={() => handleCategoryClick("darurat")}
-                    className="text-xs font-semibold text-primary-600 active:scale-95 transition-transform"
-                  >
-                    Lihat semua &rarr;
-                  </button>
-                </div>
-                <div className="flex gap-2.5 overflow-x-auto -mx-4 px-4 scrollbar-hide pb-1">
-                  {emergencyData.data.map((contact) => (
+              {/* Collapsible Content */}
+              <div
+                className={`overflow-hidden transition-all duration-300 ease-in-out ${showEmergency ? 'max-h-[200px] mt-3 opacity-100' : 'max-h-0 opacity-0'}`}
+              >
+                <div className="flex gap-2.5 overflow-x-auto scrollbar-hide px-1 pb-1">
+                  {EMERGENCY_CONTACTS.map((ec) => (
                     <a
-                      key={contact.id}
-                      href={`tel:${contact.phone.replace(/\D/g, "").startsWith("0") ? "+62" + contact.phone.replace(/\D/g, "").slice(1) : "+" + contact.phone.replace(/\D/g, "")}`}
-                      className="flex-shrink-0 flex items-center gap-2.5 bg-red-50 rounded-2xl px-3.5 py-2.5 active:scale-[0.97] transition-transform border border-red-100"
+                      key={ec.phone}
+                      href={`tel:${ec.phone}`}
+                      className="flex-shrink-0 w-[90px] flex flex-col items-center gap-2 bg-white rounded-2xl py-3.5 border border-red-50 shadow-sm shadow-red-100/50 active:scale-95 transition-transform"
                     >
-                      <div className="w-9 h-9 rounded-full bg-red-100 flex items-center justify-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4.5 w-4.5 text-red-600" viewBox="0 0 20 20" fill="currentColor">
-                          <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
-                        </svg>
+                      <div className="w-[38px] h-[38px] rounded-full bg-[#FFF5F5] flex items-center justify-center flex-shrink-0 text-red-500">
+                        {ec.icon}
                       </div>
-                      <div>
-                        <p className="text-xs font-bold text-gray-900 leading-tight">{contact.name}</p>
-                        <p className="text-[11px] text-red-600 font-semibold">{contact.phone}</p>
+                      <div className="text-center">
+                        <p className="text-[10px] font-bold text-gray-900 leading-tight mb-1">{ec.name}</p>
+                        <p className="text-[10px] text-red-500 font-semibold leading-none">{ec.phone}</p>
                       </div>
                     </a>
                   ))}
                 </div>
               </div>
-            )}
+            </div>
+
+            {/* Categories Grid */}
+            <div className="mb-8 mt-2">
+              <h3 className="text-[15px] font-bold text-gray-900 mb-4 px-1 animate-fade-in-up" style={{ animationDelay: '50ms' }}>Kategori Utama</h3>
+              {categoriesLoading ? (
+                <div className="grid grid-cols-4 gap-y-5 gap-x-2">
+                  {Array.from({ length: 8 }).map((_, i) => (
+                    <div key={i} className="flex flex-col items-center gap-2">
+                      <div className="w-14 h-14 rounded-[18px] shimmer" />
+                      <div className="h-2.5 w-12 shimmer rounded" />
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="grid grid-cols-4 gap-y-5 gap-x-2">
+                  {categories.slice(0, 8).map((cat, i) => {
+                    const bgColors = [
+                      "bg-blue-50 text-blue-500", "bg-orange-50 text-orange-500",
+                      "bg-purple-50 text-purple-500", "bg-green-50 text-green-500",
+                      "bg-pink-50 text-pink-500", "bg-yellow-50 text-amber-500",
+                      "bg-indigo-50 text-indigo-500", "bg-teal-50 text-teal-500"
+                    ];
+                    const colorClass = bgColors[i % bgColors.length];
+                    return (
+                      <button
+                        key={cat.slug}
+                        onClick={() => handleCategoryClick(cat.slug)}
+                        className="flex flex-col items-center gap-2 group active:scale-95 transition-transform animate-fade-in-up"
+                        style={{ animationDelay: `${(i * 50) + 100}ms`, animationFillMode: 'both' }}
+                      >
+                        <div className={`w-[58px] h-[58px] rounded-[18px] ${colorClass} flex items-center justify-center transition-transform group-hover:-translate-y-1 group-hover:shadow-[0_8px_16px_rgba(0,0,0,0.06)]`}>
+                          <CategoryIcon slug={cat.slug} className="w-7 h-7" />
+                        </div>
+                        <span className="text-[11.5px] font-medium text-gray-700 text-center leading-tight">
+                          {cat.name}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
 
             {/* Divider */}
             <div className="h-2 bg-gray-100 -mx-4 mb-4" />
@@ -406,11 +474,10 @@ export default function MainScreen() {
               <div ref={filterRef} className="relative flex-shrink-0">
                 <button
                   onClick={() => setShowFilterMenu(!showFilterMenu)}
-                  className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
-                    verifiedFilter
-                      ? "bg-blue-600 text-white"
-                      : "bg-gray-100 text-gray-500"
-                  }`}
+                  className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${verifiedFilter
+                    ? "bg-blue-600 text-white"
+                    : "bg-gray-100 text-gray-500"
+                    }`}
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z" clipRule="evenodd" />
@@ -426,9 +493,8 @@ export default function MainScreen() {
                       <button
                         key={value}
                         onClick={() => { setVerifiedFilter(value); setShowFilterMenu(false); }}
-                        className={`w-full text-left px-3.5 py-2 text-xs font-medium flex items-center gap-2 transition-colors ${
-                          verifiedFilter === value ? "text-blue-600 bg-blue-50" : "text-gray-700 hover:bg-gray-50"
-                        }`}
+                        className={`w-full text-left px-3.5 py-2 text-xs font-medium flex items-center gap-2 transition-colors ${verifiedFilter === value ? "text-blue-600 bg-blue-50" : "text-gray-700 hover:bg-gray-50"
+                          }`}
                       >
                         {value === "true" && (
                           <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 text-blue-500" viewBox="0 0 24 24" fill="currentColor">
@@ -449,11 +515,10 @@ export default function MainScreen() {
 
               <button
                 onClick={handleClearFilters}
-                className={`flex-shrink-0 px-3.5 py-2 rounded-full text-xs font-semibold transition-colors ${
-                  !activeCategory
-                    ? "bg-primary-700 text-white shadow-sm"
-                    : "bg-white text-gray-600 shadow-sm border border-gray-100"
-                }`}
+                className={`flex-shrink-0 px-3.5 py-2 rounded-full text-xs font-semibold transition-colors ${!activeCategory
+                  ? "bg-primary-700 text-white shadow-sm"
+                  : "bg-white text-gray-600 shadow-sm border border-gray-100"
+                  }`}
               >
                 Semua
               </button>
@@ -464,11 +529,10 @@ export default function MainScreen() {
                     key={cat.slug}
                     data-slug={cat.slug}
                     onClick={() => handleCategoryClick(cat.slug)}
-                    className={`flex-shrink-0 inline-flex items-center gap-1 px-3.5 py-2 rounded-full text-xs font-semibold transition-colors ${
-                      activeCategory === cat.slug
-                        ? "bg-primary-700 text-white shadow-sm"
-                        : "bg-white shadow-sm border border-gray-100 text-primary-700"
-                    }`}
+                    className={`flex-shrink-0 inline-flex items-center gap-1 px-3.5 py-2 rounded-full text-xs font-semibold transition-colors ${activeCategory === cat.slug
+                      ? "bg-primary-700 text-white shadow-sm"
+                      : "bg-white shadow-sm border border-gray-100 text-primary-700"
+                      }`}
                   >
                     <CategoryIcon slug={cat.slug} className="w-3.5 h-3.5" />
                     {cat.name}
