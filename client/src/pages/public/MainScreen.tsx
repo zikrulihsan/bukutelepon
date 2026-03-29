@@ -260,7 +260,7 @@ export default function MainScreen() {
 
       {/* ── Sticky search bar ── */}
       <div
-        className={`fixed top-0 left-0 right-0 z-30 max-w-md mx-auto transition-all duration-300 ${showStickySearch ? "translate-y-0 opacity-100" : "-translate-y-full opacity-0 pointer-events-none"
+        className={`fixed top-0 left-0 right-0 z-30 max-w-md mx-auto transition-all duration-200 ${showStickySearch ? "translate-y-0 opacity-100" : "-translate-y-full opacity-0 pointer-events-none"
           }`}
       >
         <div className="bg-white/95 backdrop-blur-md px-4 py-3 shadow-[0_4px_20px_rgba(0,0,0,0.06)] border-b border-gray-100">
@@ -359,7 +359,7 @@ export default function MainScreen() {
                   </div>
                   <span className="text-[13.5px] font-bold text-red-700 tracking-tight">Panggilan Darurat Cepat</span>
                 </div>
-                <div className={`flex items-center justify-center transition-transform duration-300 ${showEmergency ? 'rotate-180' : ''}`}>
+                <div className={`flex items-center justify-center transition-transform duration-200 ${showEmergency ? 'rotate-180' : ''}`}>
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-red-300" viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
                   </svg>
@@ -368,7 +368,7 @@ export default function MainScreen() {
 
               {/* Collapsible Content */}
               <div
-                className={`overflow-hidden transition-all duration-300 ease-in-out ${showEmergency ? 'max-h-[200px] mt-3 opacity-100' : 'max-h-0 opacity-0'}`}
+                className={`overflow-hidden transition-all duration-200 ease-in-out ${showEmergency ? 'max-h-[200px] mt-3 opacity-100' : 'max-h-0 opacity-0'}`}
               >
                 <div className="flex gap-2.5 overflow-x-auto scrollbar-hide px-1 pb-1">
                   {EMERGENCY_CONTACTS.map((ec) => (
