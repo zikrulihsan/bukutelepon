@@ -16,7 +16,13 @@ export function BottomNav() {
         <div className="bg-white border-t border-gray-100 shadow-[0_-2px_10px_rgba(0,0,0,0.04)]">
           <div className="grid grid-cols-5 pb-[env(safe-area-inset-bottom)] pt-1">
             {/* Home */}
-            <button onClick={() => navigate("/")} className="flex flex-col items-center pt-2.5 pb-2 gap-1 active:scale-95 transition-transform">
+            <button onClick={() => {
+              if (location.pathname === "/") {
+                window.dispatchEvent(new Event("reset-home"));
+              } else {
+                navigate("/");
+              }
+            }} className="flex flex-col items-center pt-2.5 pb-2 gap-1 active:scale-95 transition-transform">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 className={`h-6 w-6 ${active("/") ? "text-primary-700" : "text-gray-400"}`}

@@ -236,6 +236,12 @@ export default function MainScreen() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
+  useEffect(() => {
+    const handleReset = () => handleClearFilters();
+    window.addEventListener("reset-home", handleReset);
+    return () => window.removeEventListener("reset-home", handleReset);
+  }, []);
+
   function handleCitySelect(c: City) {
     setCity(c);
     setShowCityPicker(false);
