@@ -34,7 +34,7 @@ export function ContactCard({ contact }: ContactCardProps) {
   }
 
   return (
-    <div className="bg-white rounded-[20px] shadow-[0_4px_20px_rgba(0,0,0,0.03)] border border-gray-100/80 p-5 relative overflow-hidden group hover:shadow-[0_8px_30px_rgba(0,0,0,0.06)] hover:-translate-y-0.5 transition-[transform,box-shadow] duration-200 flex flex-col gap-3">
+    <div className="bg-white rounded-[20px] shadow-[0_4px_20px_rgba(0,0,0,0.03)] border border-gray-100/80 p-5 relative overflow-hidden group hover:shadow-[0_8px_30px_rgba(0,0,0,0.06)] hover:-translate-y-0.5 transition-all duration-300 flex flex-col gap-3">
       {/* Subtle top-right aesthetic glow */}
       <div className="absolute top-0 right-0 w-40 h-40 bg-green-400/5 rounded-full blur-[40px] -mr-10 -mt-10 pointer-events-none"></div>
 
@@ -97,7 +97,7 @@ export function ContactCard({ contact }: ContactCardProps) {
           href={formatWhatsAppUrl(contact.phone)}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex-1 h-10 rounded-[12px] bg-primary-700 hover:bg-primary-600 shadow-sm flex items-center justify-center gap-2.5 active:scale-[0.97] transition-colors duration-200"
+          className="flex-1 h-10 rounded-[12px] bg-primary-700 hover:bg-primary-600 shadow-sm flex items-center justify-center gap-2.5 active:scale-[0.97] transition-all"
         >
           <svg className="w-[16px] h-[16px] text-white" viewBox="0 0 24 24" fill="currentColor">
             <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347zM12.05 21.785h-.01a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.981.998-3.648-.235-.374A9.86 9.86 0 0 1 2.17 12.01C2.17 6.56 6.6 2.13 12.06 2.13a9.84 9.84 0 0 1 6.982 2.894 9.84 9.84 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884v-.117zM12.05.015C5.495.015.005 5.505.005 12.06a12.01 12.01 0 0 0 1.607 6.004L0 24l6.104-1.602A12 12 0 0 0 12.05 24.03c6.556 0 11.95-5.49 11.95-12.045C24 5.43 18.607-.06 12.05.015z"/>

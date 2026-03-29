@@ -44,9 +44,9 @@ const config: Config = {
         whatsapp: "#25D366",
       },
       animation: {
-        fadeDown: "fadeDown 0.25s ease-out",
-        fadeUp: "fadeUp 0.3s ease-out",
-        pop: "pop 0.2s ease-out",
+        fadeDown: "fadeDown 0.45s ease-out",
+        fadeUp: "fadeUp 0.55s ease-out",
+        pop: "pop 0.35s ease-out",
       },
       keyframes: {
         fadeDown: {
