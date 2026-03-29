@@ -209,15 +209,23 @@ export default function MainScreen() {
     const next = activeCategory === slug ? "" : slug;
     setActiveCategory(next);
 
-    if (next && chipScrollRef.current) {
-      requestAnimationFrame(() => {
-        const container = chipScrollRef.current;
-        if (!container) return;
-        const chip = container.querySelector(`[data-slug="${next}"]`) as HTMLElement | null;
-        if (chip) {
-          container.scrollTo({ left: chip.offsetLeft - 20, behavior: "smooth" });
+    if (next) {
+      setTimeout(() => {
+        if (chipScrollRef.current) {
+          const container = chipScrollRef.current;
+          const chip = container.querySelector(`[data-slug="${next}"]`) as HTMLElement | null;
+          if (chip) {
+            container.scrollTo({ left: chip.offsetLeft - 64, behavior: "smooth" });
+          }
         }
-      });
+        const searchNode = document.getElementById("hero-search");
+        if (searchNode) {
+          const y = searchNode.getBoundingClientRect().top + window.scrollY - 16;
+          window.scrollTo({ top: y, behavior: "smooth" });
+        }
+      }, 50);
+    } else {
+      window.scrollTo({ top: 0, behavior: "smooth" });
     }
   }
 
@@ -225,6 +233,7 @@ export default function MainScreen() {
     setActiveCategory("");
     setVerifiedFilter("");
     setShowAll(false);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
   function handleCitySelect(c: City) {
@@ -322,6 +331,7 @@ export default function MainScreen() {
 
         {/* Search bar */}
         <div
+          id="hero-search"
           onClick={() => navigate("/search")}
           className="flex items-center bg-white rounded-full p-1 shadow-lg cursor-pointer transform hover:scale-[1.02] transition-transform relative z-10 mb-6"
         >
@@ -340,13 +350,13 @@ export default function MainScreen() {
       </div>
 
       {/* ── Content ── */}
-      <div className="bg-gray-50 rounded-t-[2rem] -mt-6 pt-6 px-4 relative z-20 shadow-[0_-4px_20px_rgba(0,0,0,0.1)] min-h-screen">
+      <div className="bg-gray-50 rounded-t-[2rem] -mt-6 pt-3 px-4 relative z-20 min-h-screen">
 
         {/* ── Browse mode ── */}
         {!isFiltered && (
           <>
             {/* Emergency Contacts Button */}
-            <div className="mb-6 animate-fade-in-up">
+            <div className="mb-4 animate-fade-in-up">
               <button
                 onClick={() => setShowEmergency(!showEmergency)}
                 className="w-full flex items-center justify-between bg-[#FFF5F5] border border-red-100 rounded-[14px] px-3 py-2.5 shadow-sm active:scale-[0.98] transition-all"
@@ -391,7 +401,7 @@ export default function MainScreen() {
             </div>
 
             {/* Categories Grid */}
-            <div className="mb-8 mt-2">
+            <div className="mb-8 mt-1">
               <h3 className="text-[15px] font-bold text-gray-900 mb-4 px-1 animate-fade-in-up" style={{ animationDelay: '50ms' }}>Kategori Utama</h3>
               {categoriesLoading ? (
                 <div className="grid grid-cols-4 gap-y-5 gap-x-2">
@@ -445,7 +455,16 @@ export default function MainScreen() {
                     Terbaru di {city?.name}
                   </h3>
                   <button
-                    onClick={() => setShowAll(true)}
+                    onClick={() => {
+                      setShowAll(true);
+                      setTimeout(() => {
+                        const searchNode = document.getElementById("hero-search");
+                        if (searchNode) {
+                          const y = searchNode.getBoundingClientRect().top + window.scrollY - 16;
+                          window.scrollTo({ top: y, behavior: "smooth" });
+                        }
+                      }, 50);
+                    }}
                     className="text-xs font-semibold text-primary-600 active:scale-95 transition-transform"
                   >
                     Lihat semua &rarr;
@@ -513,17 +532,17 @@ export default function MainScreen() {
                 )}
               </div>
 
-              <button
-                onClick={handleClearFilters}
-                className={`flex-shrink-0 px-3.5 py-2 rounded-full text-xs font-semibold transition-colors ${!activeCategory
-                  ? "bg-primary-700 text-white shadow-sm"
-                  : "bg-white text-gray-600 shadow-sm border border-gray-100"
-                  }`}
-              >
-                Semua
-              </button>
-
               <div ref={chipScrollRef} className="flex items-center gap-2 overflow-x-auto scrollbar-hide">
+                <button
+                  onClick={handleClearFilters}
+                  className={`flex-shrink-0 px-3.5 py-2 rounded-full text-xs font-semibold transition-colors ${!activeCategory
+                    ? "bg-primary-700 text-white shadow-sm"
+                    : "bg-white text-gray-600 shadow-sm border border-gray-100"
+                    }`}
+                >
+                  Semua
+                </button>
+
                 {categories.map((cat) => (
                   <button
                     key={cat.slug}

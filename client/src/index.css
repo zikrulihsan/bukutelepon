@@ -6,7 +6,7 @@
 
 @layer base {
   body {
-    @apply bg-[#E8ECEF] text-gray-900 antialiased;
+    @apply bg-[#E8ECEF] text-gray-900 antialiased overflow-y-scroll;
     font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
   }
 }
