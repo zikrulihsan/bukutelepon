@@ -300,7 +300,7 @@ export default function MainScreen() {
         {/* Top row: brand + WA button */}
         <div className="flex items-center justify-between mb-6 relative z-10">
           <div className="flex items-center gap-2">
-            <span className="text-xl font-extrabold text-white font-display tracking-tight">carikontak<span className="text-[#6EE7B7]">.id</span></span>
+            <span className="text-xl font-extrabold text-white font-display tracking-tight">carikontak<span className="text-[#6EE7B7]">.com</span></span>
           </div>
           <a
             href="https://wa.me/6282338588078?text=Permisi%20admin%20cari%20kontak%2C%20saya%20ingin%20bertanya"
