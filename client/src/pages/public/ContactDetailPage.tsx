@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useContact } from "../../hooks/useContacts";
 import { StarRating } from "../../components/shared/StarRating";
@@ -45,6 +45,10 @@ export default function ContactDetailPage() {
   const { data, isLoading } = useContact(id!);
   const [copied, setCopied] = useState(false);
   const [saved, setSaved] = useState(() => (id ? isSaved(id) : false));
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [id]);
 
   function handleCopy() {
     if (!contact) return;
