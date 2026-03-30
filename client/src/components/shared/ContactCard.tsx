@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import type { Contact } from "../../types";
 import { CategoryIcon } from "./CategoryIcon";
 import { isSaved, toggleSaved } from "../../pages/public/SavedPage";
@@ -22,6 +23,7 @@ function formatTelUrl(phone: string): string {
 export function ContactCard({ contact }: ContactCardProps) {
   const [copied, setCopied] = useState(false);
   const [saved, setSaved] = useState(() => isSaved(contact.id));
+  const navigate = useNavigate();
 
   function handleCopy() {
     navigator.clipboard.writeText(contact.phone);
@@ -33,6 +35,10 @@ export function ContactCard({ contact }: ContactCardProps) {
     setSaved(toggleSaved(contact.id));
   }
 
+  function handleNavigate() {
+    navigate(`/kontak/${contact.id}`);
+  }
+
   return (
     <div className="bg-white rounded-[20px] shadow-[0_4px_20px_rgba(0,0,0,0.03)] border border-gray-100/80 p-5 relative overflow-hidden group hover:shadow-[0_8px_30px_rgba(0,0,0,0.06)] hover:-translate-y-0.5 transition-all duration-300 flex flex-col gap-3">
       {/* Subtle top-right aesthetic glow */}
@@ -40,14 +46,18 @@ export function ContactCard({ contact }: ContactCardProps) {
 
       {/* Header: name + save */}
       <div className="flex items-start justify-between gap-3 relative z-10">
-        <div>
-          <h3 className="font-bold text-gray-900 text-base leading-snug flex items-center gap-1.5 mb-1.5">
+        <div className="cursor-pointer flex-1 min-w-0" onClick={handleNavigate}>
+          <h3 className="font-bold text-gray-900 text-base leading-snug flex items-center gap-1.5 mb-1.5 group-hover:text-primary-700 transition-colors">
             {contact.name}
             {contact.isVerified && (
               <svg xmlns="http://www.w3.org/2000/svg" className="h-[18px] w-[18px] text-blue-500 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor" aria-label="Terverifikasi">
                 <path fillRule="evenodd" d="M8.603 3.799A4.49 4.49 0 0112 2.25c1.357 0 2.573.6 3.397 1.549a4.49 4.49 0 013.498 1.307 4.491 4.491 0 011.307 3.497A4.49 4.49 0 0121.75 12a4.49 4.49 0 01-1.549 3.397 4.491 4.491 0 01-1.307 3.497 4.491 4.491 0 01-3.497 1.307A4.49 4.49 0 0112 21.75a4.49 4.49 0 01-3.397-1.549 4.49 4.49 0 01-3.498-1.306 4.491 4.491 0 01-1.307-3.498A4.49 4.49 0 012.25 12c0-1.357.6-2.573 1.549-3.397a4.49 4.49 0 011.307-3.497 4.49 4.49 0 013.497-1.307zm7.007 6.387a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z" clipRule="evenodd" />
               </svg>
             )}
+            {/* Small arrow indicator */}
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 text-gray-300 group-hover:text-primary-400 transition-all group-hover:translate-x-0.5 flex-shrink-0 ml-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+            </svg>
           </h3>
           {contact.category && (
             <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-[6px] bg-emerald-50 text-[11px] font-bold text-emerald-700 border border-emerald-100">
@@ -75,14 +85,14 @@ export function ContactCard({ contact }: ContactCardProps) {
         </button>
       </div>
 
-      {/* Description */}
+      {/* Description — clickable */}
       {contact.description && (
-        <p className="text-[13px] text-gray-500 leading-relaxed line-clamp-2 relative z-10">{contact.description}</p>
+        <p className="text-[13px] text-gray-500 leading-relaxed line-clamp-2 relative z-10 cursor-pointer" onClick={handleNavigate}>{contact.description}</p>
       )}
 
-      {/* Address */}
+      {/* Address — clickable */}
       {contact.address && (
-        <div className="flex items-start gap-2 relative z-10 pt-0.5">
+        <div className="flex items-start gap-2 relative z-10 pt-0.5 cursor-pointer" onClick={handleNavigate}>
           <svg xmlns="http://www.w3.org/2000/svg" className="h-[14px] w-[14px] text-gray-400 mt-0.5 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
             <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
           </svg>

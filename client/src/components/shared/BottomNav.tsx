@@ -1,6 +1,6 @@
 import { useLocation, useNavigate } from "react-router-dom";
 
-const HIDDEN_ROUTES = ["/login", "/register", "/admin"];
+const HIDDEN_ROUTES = ["/login", "/register", "/admin", "/kontak"];
 
 export function BottomNav() {
   const location = useLocation();

@@ -1,12 +1,12 @@
 import { Link, useLocation } from "react-router-dom";
 
 // Pages that have their own header or don't need the navbar
-const HIDDEN_ROUTES = ["/", "/search", "/saved", "/account", "/submit"];
+const HIDDEN_ROUTES = ["/", "/search", "/saved", "/account", "/submit", "/kontak"];
 
 export function Navbar() {
   const location = useLocation();
 
-  if (HIDDEN_ROUTES.some((r) => location.pathname === r) || location.pathname.startsWith("/admin")) {
+  if (HIDDEN_ROUTES.some((r) => location.pathname === r) || location.pathname.startsWith("/admin") || location.pathname.startsWith("/kontak")) {
     return null;
   }
 
