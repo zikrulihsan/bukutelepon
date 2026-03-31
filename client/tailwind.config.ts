@@ -62,6 +62,9 @@ const config: Config = {
           to: { opacity: "1", transform: "scale(1)" },
         },
       },
+      transitionDuration: {
+        "350": "350ms",
+      },
     },
   },
   plugins: [],

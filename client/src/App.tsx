@@ -2,6 +2,7 @@ import { Routes, Route } from "react-router-dom";
 import { Navbar } from "./components/shared/Navbar";
 import { BottomNav } from "./components/shared/BottomNav";
 import { AdminLayout } from "./components/admin/AdminLayout";
+import { PWAInstallBanner } from "./components/shared/PWAInstallBanner";
 import { CityProvider } from "./context/CityContext";
 import MainScreen from "./pages/public/MainScreen";
 import SearchPage from "./pages/public/SearchPage";
@@ -40,6 +41,7 @@ export default function App() {
                     <Route path="/register" element={<RegisterPage />} />
                   </Routes>
                 </main>
+                <PWAInstallBanner />
                 <BottomNav />
               </>
             }
