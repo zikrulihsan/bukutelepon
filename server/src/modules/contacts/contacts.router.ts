@@ -36,7 +36,10 @@ router.get("/", apiLimiter, checkAccess, async (req: AccessRequest, res, next) =
     if (citySlug) where.city = { slug: citySlug };
     if (categorySlug) where.category = { slug: categorySlug };
     if (search) {
-      where.name = { contains: search, mode: "insensitive" };
+      where.OR = [
+        { name: { contains: search, mode: "insensitive" } },
+        { description: { contains: search, mode: "insensitive" } },
+      ];
     }
     if (verified === "true") where.isVerified = true;
     if (verified === "false") where.isVerified = false;

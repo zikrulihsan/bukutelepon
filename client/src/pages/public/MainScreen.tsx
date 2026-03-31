@@ -8,6 +8,7 @@ import { ContactCard } from "../../components/shared/ContactCard";
 import { ContributionWall } from "../../components/shared/ContributionWall";
 import { CityPickerOverlay } from "../../components/shared/CityPickerOverlay";
 import { CategoryIcon } from "../../components/shared/CategoryIcon";
+import { OnboardingTutorial, hasCompletedOnboarding } from "../../components/shared/OnboardingTutorial";
 import {
   RecentContactsShimmer,
   ContactListShimmer,
@@ -78,6 +79,7 @@ export default function MainScreen() {
   const [showCityPicker, setShowCityPicker] = useState(false);
   const [showAll, setShowAll] = useState(false);
   const [showEmergency, setShowEmergency] = useState(false);
+  const [showTutorial, setShowTutorial] = useState(false);
   const catScrollRef = useRef<HTMLDivElement>(null);
   const [catScrollProgress, setCatScrollProgress] = useState(0);
 
@@ -245,6 +247,10 @@ export default function MainScreen() {
   function handleCitySelect(c: City) {
     setCity(c);
     setShowCityPicker(false);
+    // Trigger onboarding tutorial for first-time users
+    if (!hasCompletedOnboarding()) {
+      setTimeout(() => setShowTutorial(true), 400);
+    }
   }
 
   const categories = categoriesData?.data ?? [];
@@ -272,6 +278,12 @@ export default function MainScreen() {
           onClose={citySlug ? () => setShowCityPicker(false) : undefined}
         />
       )}
+
+      {/* Onboarding Tutorial */}
+      <OnboardingTutorial
+        show={showTutorial}
+        onComplete={() => setShowTutorial(false)}
+      />
 
       {/* ── Sticky search bar ── */}
       <div
