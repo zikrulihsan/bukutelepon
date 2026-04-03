@@ -38,17 +38,18 @@ async function main() {
   console.log("✓ Profiles seeded");
 
   // ── Cities ───────────────────────────────────────────────────────────────────
+  // code = wilayah.id regency code used by seed-kecamatans.ts to fetch districts
   const cityData = [
-    { name: "Jakarta Selatan", province: "DKI Jakarta",           slug: "jakarta-selatan" },
-    { name: "Surabaya",        province: "Jawa Timur",            slug: "surabaya" },
-    { name: "Bandung",         province: "Jawa Barat",            slug: "bandung" },
-    { name: "Medan",           province: "Sumatera Utara",        slug: "medan" },
-    { name: "Semarang",        province: "Jawa Tengah",           slug: "semarang" },
-    { name: "Makassar",        province: "Sulawesi Selatan",      slug: "makassar" },
-    { name: "Palembang",       province: "Sumatera Selatan",      slug: "palembang" },
-    { name: "Mataram",         province: "Nusa Tenggara Barat",   slug: "mataram" },
-    { name: "Lombok Barat",    province: "Nusa Tenggara Barat",   slug: "lombok-barat" },
-    { name: "Sumbawa Besar",   province: "Nusa Tenggara Barat",   slug: "sumbawa-besar" },
+    { name: "Jakarta Selatan", province: "DKI Jakarta",           slug: "jakarta-selatan", code: "31.74" },
+    { name: "Surabaya",        province: "Jawa Timur",            slug: "surabaya",        code: "35.78" },
+    { name: "Bandung",         province: "Jawa Barat",            slug: "bandung",         code: "32.73" },
+    { name: "Medan",           province: "Sumatera Utara",        slug: "medan",           code: "12.71" },
+    { name: "Semarang",        province: "Jawa Tengah",           slug: "semarang",        code: "33.74" },
+    { name: "Makassar",        province: "Sulawesi Selatan",      slug: "makassar",        code: "73.71" },
+    { name: "Palembang",       province: "Sumatera Selatan",      slug: "palembang",       code: "16.71" },
+    { name: "Mataram",         province: "Nusa Tenggara Barat",   slug: "mataram",         code: "52.71" },
+    { name: "Lombok Barat",    province: "Nusa Tenggara Barat",   slug: "lombok-barat",    code: "52.01" },
+    { name: "Sumbawa Besar",   province: "Nusa Tenggara Barat",   slug: "sumbawa-besar",   code: "52.04" },
   ];
 
   const cities: Record<string, string> = {};

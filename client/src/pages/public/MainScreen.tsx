@@ -61,7 +61,7 @@ const EMERGENCY_CONTACTS = [
 ];
 
 export default function MainScreen() {
-  const { citySlug, city, setCity, cities, setCities } = useCity();
+  const { citySlug, city, setCity, setKecamatan, cities, setCities } = useCity();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const headerRef = useRef<HTMLDivElement>(null);
@@ -244,8 +244,9 @@ export default function MainScreen() {
     return () => window.removeEventListener("reset-home", handleReset);
   }, []);
 
-  function handleCitySelect(c: City) {
+  function handleCitySelect(c: City, kec: import("../../types").Kecamatan | null) {
     setCity(c);
+    setKecamatan(kec);
     setShowCityPicker(false);
     // Trigger onboarding tutorial for first-time users
     if (!hasCompletedOnboarding()) {

@@ -13,9 +13,19 @@ export interface City {
   name: string;
   slug: string;
   province: string;
+  code: string | null;
   imageUrl: string | null;
   createdAt: string;
   updatedAt: string;
+  _count?: { contacts: number };
+}
+
+export interface Kecamatan {
+  id: string;
+  name: string;
+  slug: string;
+  code: string;
+  cityId: string;
   _count?: { contacts: number };
 }
 
@@ -45,6 +55,8 @@ export interface Contact {
   updatedAt: string;
   cityId: string;
   city?: City;
+  kecamatanId?: string | null;
+  kecamatan?: Kecamatan | null;
   categoryId: string;
   category?: Category;
   submittedById: string;

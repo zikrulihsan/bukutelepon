@@ -68,11 +68,27 @@ model City {
   name      String
   province  String
   slug      String    @unique
+  code      String?   @unique  // wilayah.id regency code e.g. "31.74"
   createdAt DateTime  @default(now())
 
-  contacts  Contact[]
+  contacts    Contact[]
+  kecamatans  Kecamatan[]
 
   @@map("cities")
+}
+
+model Kecamatan {
+  id     String @id @default(uuid())
+  name   String
+  slug   String @unique
+  code   String @unique  // wilayah.id district code e.g. "31.74.01"
+  cityId String
+
+  city     City      @relation(fields: [cityId], references: [id])
+  contacts Contact[]
+
+  @@index([cityId])
+  @@map("kecamatans")
 }
 
 model Category {
@@ -99,6 +115,7 @@ model Contact {
   avgRating       Float         @default(0)
   reviewCount     Int           @default(0)
   cityId          String
+  kecamatanId     String?
   categoryId      String
   submittedById   String
   isVerified      Boolean       @default(false)
@@ -106,13 +123,15 @@ model Contact {
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
 
-  city        City     @relation(fields: [cityId], references: [id])
-  category    Category @relation(fields: [categoryId], references: [id])
+  city        City       @relation(fields: [cityId], references: [id])
+  kecamatan   Kecamatan? @relation(fields: [kecamatanId], references: [id])
+  category    Category   @relation(fields: [categoryId], references: [id])
   submittedBy Profile  @relation("SubmittedContacts", fields: [submittedById], references: [id])
   claimedBy   Profile? @relation("ClaimedContacts", fields: [claimedById], references: [id])
   reviews     Review[]
 
   @@index([cityId])
+  @@index([kecamatanId])
   @@index([categoryId])
   @@index([status])
   @@map("contacts")

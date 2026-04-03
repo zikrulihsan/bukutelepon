@@ -18,6 +18,7 @@ const createContactSchema = z.object({
   website: z.string().url().optional().or(z.literal("")),
   description: z.string().max(500).optional(),
   cityId: z.string().uuid(),
+  kecamatanId: z.string().uuid().optional(),
   categoryId: z.string().uuid(),
 });
 
@@ -27,6 +28,7 @@ router.get("/", apiLimiter, checkAccess, async (req: AccessRequest, res, next) =
     const page = parseInt(req.query.page as string) || 1;
     const limit = parseInt(req.query.limit as string) || 20;
     const citySlug = req.query.city as string | undefined;
+    const kecamatanSlug = req.query.kecamatan as string | undefined;
     const categorySlug = req.query.category as string | undefined;
     const search = req.query.search as string | undefined;
     const verified = req.query.verified as string | undefined;
@@ -34,6 +36,7 @@ router.get("/", apiLimiter, checkAccess, async (req: AccessRequest, res, next) =
     const where: Record<string, unknown> = { status: "APPROVED" };
 
     if (citySlug) where.city = { slug: citySlug };
+    if (kecamatanSlug) where.kecamatan = { slug: kecamatanSlug };
     if (categorySlug) where.category = { slug: categorySlug };
     if (search) {
       where.OR = [
@@ -47,7 +50,7 @@ router.get("/", apiLimiter, checkAccess, async (req: AccessRequest, res, next) =
     const [contacts, total] = await Promise.all([
       prisma.contact.findMany({
         where,
-        include: { city: true, category: true },
+        include: { city: true, kecamatan: true, category: true },
         skip: (page - 1) * limit,
         take: limit,
         orderBy: { createdAt: "desc" },
@@ -96,6 +99,7 @@ router.get("/:id", apiLimiter, checkAccess, async (req: AccessRequest, res, next
       where: { id: req.params.id as string },
       include: {
         city: true,
+        kecamatan: true,
         category: true,
         reviews: {
           where: { status: "APPROVED" },

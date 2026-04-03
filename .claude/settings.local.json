@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:wilayah.id)",
+      "WebFetch(domain:github.com)"
+    ]
+  }
+}
