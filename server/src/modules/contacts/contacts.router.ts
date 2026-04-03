@@ -16,6 +16,7 @@ const createContactSchema = z.object({
   phone: z.string().min(1).max(30),
   address: z.string().max(500).optional(),
   website: z.string().url().optional().or(z.literal("")),
+  mapsUrl: z.string().url().optional().or(z.literal("")),
   description: z.string().max(500).optional(),
   cityId: z.string().uuid(),
   categoryId: z.string().uuid(),

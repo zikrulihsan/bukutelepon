@@ -94,6 +94,7 @@ model Contact {
   address         String?
   description     String?       @db.VarChar(500)
   website         String?
+  mapsUrl         String?
   status          ContactStatus @default(PENDING)
   rejectionReason String?
   avgRating       Float         @default(0)

@@ -108,7 +108,7 @@ export default function SubmitPage() {
 
   // Manual form
   const [form, setForm] = useState({
-    name: "", phone: "", address: "", website: "", description: "", cityId: "", categoryId: "",
+    name: "", phone: "", address: "", website: "", mapsUrl: "", description: "", cityId: "", categoryId: "",
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -184,7 +184,7 @@ export default function SubmitPage() {
           </p>
           <div className="flex gap-2.5 justify-center">
             <button
-              onClick={() => { setSuccess(false); setForm({ name: "", phone: "", address: "", website: "", description: "", cityId: defaultCityId, categoryId: "" }); }}
+              onClick={() => { setSuccess(false); setForm({ name: "", phone: "", address: "", website: "", mapsUrl: "", description: "", cityId: defaultCityId, categoryId: "" }); }}
               className="bg-primary-700 text-white px-5 py-2.5 rounded-xl text-sm font-semibold active:scale-[0.98] transition-all"
             >
               Tambah Lagi
@@ -439,6 +439,10 @@ export default function SubmitPage() {
               <div>
                 <label className={labelClass}>Website</label>
                 <input type="url" value={form.website} onChange={(e) => update("website", e.target.value)} placeholder="https://contoh.com" className={inputClass} />
+              </div>
+              <div>
+                <label className={labelClass}>Link Google Maps</label>
+                <input type="url" value={form.mapsUrl} onChange={(e) => update("mapsUrl", e.target.value)} placeholder="https://maps.google.com/..." className={inputClass} />
               </div>
               <div>
                 <label className={labelClass}>Deskripsi</label>

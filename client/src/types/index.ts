@@ -38,6 +38,7 @@ export interface Contact {
   phone: string;
   address: string | null;
   website: string | null;
+  mapsUrl: string | null;
   description: string | null;
   status: ContactStatus;
   isVerified: boolean;

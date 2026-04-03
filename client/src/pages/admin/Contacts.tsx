@@ -11,6 +11,7 @@ interface EditForm {
   phone: string;
   address: string;
   website: string;
+  mapsUrl: string;
   description: string;
   cityId: string;
   categoryId: string;
@@ -61,6 +62,7 @@ export default function AdminContacts() {
         ...data,
         address: data.address || null,
         website: data.website || null,
+        mapsUrl: data.mapsUrl || null,
         description: data.description || null,
       }),
     onSuccess: () => {
@@ -77,6 +79,7 @@ export default function AdminContacts() {
       phone: contact.phone,
       address: contact.address || "",
       website: contact.website || "",
+      mapsUrl: contact.mapsUrl || "",
       description: contact.description || "",
       cityId: contact.cityId,
       categoryId: contact.categoryId,
@@ -163,13 +166,17 @@ export default function AdminContacts() {
                       <input value={editForm.website} onChange={(e) => setEditForm({ ...editForm, website: e.target.value })} className={inputClass} placeholder="Opsional" />
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-gray-500 mb-1">Status</label>
-                      <select value={editForm.status} onChange={(e) => setEditForm({ ...editForm, status: e.target.value })} className={`${inputClass} bg-white`}>
-                        <option value="PENDING">PENDING</option>
-                        <option value="APPROVED">APPROVED</option>
-                        <option value="REJECTED">REJECTED</option>
-                      </select>
+                      <label className="block text-xs font-medium text-gray-500 mb-1">Link Google Maps</label>
+                      <input value={editForm.mapsUrl} onChange={(e) => setEditForm({ ...editForm, mapsUrl: e.target.value })} className={inputClass} placeholder="Opsional" />
                     </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-500 mb-1">Status</label>
+                    <select value={editForm.status} onChange={(e) => setEditForm({ ...editForm, status: e.target.value })} className={`${inputClass} bg-white`}>
+                      <option value="PENDING">PENDING</option>
+                      <option value="APPROVED">APPROVED</option>
+                      <option value="REJECTED">REJECTED</option>
+                    </select>
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-gray-500 mb-1">Deskripsi</label>

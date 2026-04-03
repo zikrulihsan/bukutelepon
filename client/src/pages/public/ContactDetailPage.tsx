@@ -5,7 +5,7 @@ import { StarRating } from "../../components/shared/StarRating";
 import { CategoryIcon } from "../../components/shared/CategoryIcon";
 import { isSaved, toggleSaved } from "../../lib/saved";
 import { formatWhatsAppUrl, formatTelUrl } from "../../lib/phone";
-import { HiChevronLeft, HiCheckBadge, HiMapPin, HiStar, HiBookmark, HiChevronRight, HiCheck, HiOutlineUser, HiOutlineGlobeAlt, HiArrowTopRightOnSquare, HiOutlineChatBubbleOvalLeft } from "react-icons/hi2";
+import { HiChevronLeft, HiCheckBadge, HiMapPin, HiStar, HiBookmark, HiChevronRight, HiCheck, HiOutlineUser, HiOutlineGlobeAlt, HiArrowTopRightOnSquare, HiOutlineChatBubbleOvalLeft, HiOutlineMapPin } from "react-icons/hi2";
 import { HiOutlineBookmark, HiOutlinePhone, HiOutlineClipboardCopy, HiOutlineShare } from "react-icons/hi";
 import { FaWhatsapp } from "react-icons/fa";
 
@@ -287,6 +287,27 @@ export default function ContactDetailPage() {
               <div className="flex-1 min-w-0">
                 <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">Website</p>
                 <p className="text-[14px] font-medium text-primary-600 truncate">{contact.website}</p>
+              </div>
+              <HiArrowTopRightOnSquare className="h-4 w-4 text-gray-300 flex-shrink-0" />
+            </a>
+          </div>
+        )}
+
+        {/* Google Maps */}
+        {contact.mapsUrl && (
+          <div className="bg-white rounded-2xl border border-gray-100/80 shadow-[0_2px_12px_rgba(0,0,0,0.03)] overflow-hidden">
+            <a
+              href={contact.mapsUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-5 py-4 flex items-center gap-4 hover:bg-gray-50 transition-colors"
+            >
+              <div className="w-10 h-10 rounded-xl bg-green-50 flex items-center justify-center flex-shrink-0">
+                <HiOutlineMapPin className="h-5 w-5 text-green-600" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">Google Maps</p>
+                <p className="text-[14px] font-medium text-primary-600">Lihat di Google Maps</p>
               </div>
               <HiArrowTopRightOnSquare className="h-4 w-4 text-gray-300 flex-shrink-0" />
             </a>
