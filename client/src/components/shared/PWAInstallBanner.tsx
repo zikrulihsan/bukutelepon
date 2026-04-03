@@ -1,4 +1,6 @@
 import { useState, useEffect } from "react";
+import { HiXMark, HiOutlinePlusCircle } from "react-icons/hi2";
+import { HiOutlineShare } from "react-icons/hi";
 
 const DISMISSED_KEY = "pwa_install_dismissed";
 const DISMISSED_EXPIRY_DAYS = 7;
@@ -148,7 +150,7 @@ export function PWAInstallBanner() {
                     Pasang di iPhone kamu
                   </p>
                   <p className="text-[#6ee7b7]/80 text-[11px] mt-0.5 leading-tight">
-                    Ketuk <ShareIcon className="inline" /> lalu «Tambah ke Layar Utama»
+                    Ketuk <HiOutlineShare className="inline h-3.5 w-3.5" /> lalu «Tambah ke Layar Utama»
                   </p>
                 </>
               ) : (
@@ -183,9 +185,7 @@ export function PWAInstallBanner() {
                 className="w-7 h-7 flex items-center justify-center rounded-full bg-white/10 text-white/60 hover:bg-white/20 active:scale-90 transition-all"
                 aria-label="Tutup"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                </svg>
+                <HiXMark className="h-3.5 w-3.5" />
               </button>
             </div>
           </div>
@@ -196,11 +196,11 @@ export function PWAInstallBanner() {
               <div className="flex items-center gap-2.5 bg-white/10 rounded-xl px-3 py-2.5">
                 <Step number="1" />
                 <span className="text-[11px] text-white/70">Ketuk</span>
-                <ShareIcon className="text-white flex-shrink-0" />
+                <HiOutlineShare className="h-3.5 w-3.5 text-white flex-shrink-0" />
                 <div className="w-px h-3 bg-white/20 flex-shrink-0" />
                 <Step number="2" />
                 <span className="text-[11px] text-white/70 truncate">Tambah ke Layar Utama</span>
-                <PlusSquareIcon className="text-[#6ee7b7] flex-shrink-0 ml-auto" />
+                <HiOutlinePlusCircle className="h-3.5 w-3.5 text-[#6ee7b7] flex-shrink-0 ml-auto" />
               </div>
             </div>
           )}
@@ -215,21 +215,5 @@ function Step({ number }: { number: string }) {
     <span className="w-4 h-4 rounded-full bg-[#6ee7b7]/20 text-[#6ee7b7] text-[9px] font-bold flex items-center justify-center flex-shrink-0">
       {number}
     </span>
-  );
-}
-
-function ShareIcon({ className = "" }: { className?: string }) {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" className={`h-3.5 w-3.5 ${className}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
-    </svg>
-  );
-}
-
-function PlusSquareIcon({ className = "" }: { className?: string }) {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" className={`h-3.5 w-3.5 ${className}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-    </svg>
   );
 }

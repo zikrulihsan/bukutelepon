@@ -6,6 +6,7 @@ import { useContacts } from "../../hooks/useContacts";
 import { ContactCard } from "../../components/shared/ContactCard";
 import { ContributionWall } from "../../components/shared/ContributionWall";
 import type { City } from "../../types";
+import { HiChevronLeft } from "react-icons/hi2";
 
 export default function CityPage() {
   const { slug } = useParams<{ slug: string }>();
@@ -35,9 +36,7 @@ export default function CityPage() {
           to="/"
           className="text-sm text-primary-700 hover:text-primary-800 font-medium mb-4 inline-flex items-center gap-1"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-          </svg>
+          <HiChevronLeft className="h-4 w-4" />
           Kembali
         </Link>
 

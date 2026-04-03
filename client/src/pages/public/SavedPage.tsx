@@ -2,34 +2,9 @@ import { useState, useEffect } from "react";
 import { apiClient } from "../../lib/axios";
 import { ContactCard } from "../../components/shared/ContactCard";
 import { ContactListShimmer } from "../../components/shared/Shimmer";
+import { getSavedIds, toggleSaved } from "../../lib/saved";
 import type { Contact } from "../../types";
-
-const STORAGE_KEY = "bukutelepon_saved";
-
-export function getSavedIds(): string[] {
-  try {
-    return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
-  } catch {
-    return [];
-  }
-}
-
-export function toggleSaved(id: string): boolean {
-  const ids = getSavedIds();
-  const idx = ids.indexOf(id);
-  if (idx >= 0) {
-    ids.splice(idx, 1);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(ids));
-    return false;
-  }
-  ids.unshift(id);
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(ids));
-  return true;
-}
-
-export function isSaved(id: string): boolean {
-  return getSavedIds().includes(id);
-}
+import { HiOutlineBookmark, HiXMark } from "react-icons/hi2";
 
 export default function SavedPage() {
   const [contacts, setContacts] = useState<Contact[]>([]);
@@ -78,9 +53,7 @@ export default function SavedPage() {
         ) : contacts.length === 0 ? (
           <div className="text-center py-20">
             <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
-              </svg>
+              <HiOutlineBookmark className="h-7 w-7 text-gray-400" />
             </div>
             <p className="text-sm font-medium text-gray-900 mb-1">Belum ada kontak tersimpan</p>
             <p className="text-xs text-gray-500">Simpan kontak dari halaman beranda untuk akses cepat</p>
@@ -89,15 +62,13 @@ export default function SavedPage() {
           <div className="space-y-2.5">
             {contacts.map((contact) => (
               <div key={contact.id} className="relative">
-                <ContactCard contact={contact} />
+                <ContactCard contact={contact} hideSave />
                 <button
                   onClick={() => handleRemove(contact.id)}
-                  className="absolute top-3 right-3 w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+                  className="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-white border border-gray-200 shadow-sm flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 hover:border-red-200 transition-colors z-20"
                   title="Hapus dari tersimpan"
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                  </svg>
+                  <HiXMark className="h-3.5 w-3.5" />
                 </button>
               </div>
             ))}

@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "../../lib/axios";
 import type { City, Category } from "../../types";
+import { HiMagnifyingGlass } from "react-icons/hi2";
 
 const CATEGORY_ICONS: Record<string, string> = {
   darurat: "🚨",
@@ -114,20 +115,7 @@ export default function HomePage() {
             type="submit"
             className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 bg-primary-700 hover:bg-primary-800 rounded-full flex items-center justify-center transition-colors"
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-5 w-5 text-white"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth={2.5}
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-              />
-            </svg>
+            <HiMagnifyingGlass className="h-5 w-5 text-white" />
           </button>
         </form>
       </div>

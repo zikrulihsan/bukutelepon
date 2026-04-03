@@ -1,4 +1,4 @@
-import { useState, useRef, FormEvent } from "react";
+import { useState, useEffect, useRef, FormEvent } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "../../lib/axios";
@@ -6,6 +6,8 @@ import { useAuth } from "../../hooks/useAuth";
 import { useCity } from "../../context/CityContext";
 import { Badge } from "../../components/ui/Badge";
 import type { City, Category, Contact } from "../../types";
+import { HiOutlinePlusCircle, HiXMark, HiCheck, HiOutlineUsers, HiOutlineCloudArrowUp } from "react-icons/hi2";
+import { ImSpinner2 } from "react-icons/im";
 
 interface ImportedContact {
   name: string;
@@ -120,12 +122,13 @@ export default function SubmitPage() {
   const [bulkError, setBulkError] = useState("");
   const [bulkSuccess, setBulkSuccess] = useState("");
 
-  if (defaultCityId && !form.cityId) {
-    setForm((f) => ({ ...f, cityId: defaultCityId }));
-  }
-  if (defaultCityId && !importCityId) {
-    setImportCityId(defaultCityId);
-  }
+  // Sync defaultCityId into form once cities data loads
+  useEffect(() => {
+    if (defaultCityId) {
+      setForm((f) => (f.cityId ? f : { ...f, cityId: defaultCityId }));
+      setImportCityId((prev) => prev || defaultCityId);
+    }
+  }, [defaultCityId]);
 
   // ── Auth states ──
   if (authLoading) {
@@ -148,9 +151,7 @@ export default function SubmitPage() {
       <div className="min-h-screen bg-gray-50 max-w-md mx-auto pb-24">
         <div className="px-4 pt-16 text-center">
           <div className="w-16 h-16 rounded-full bg-primary-50 flex items-center justify-center mx-auto mb-4">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 text-primary-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
+            <HiOutlinePlusCircle className="h-7 w-7 text-primary-700" />
           </div>
           <h2 className="text-lg font-bold text-gray-900 mb-1">Kontribusi Kontak</h2>
           <p className="text-xs text-gray-500 mb-6 max-w-xs mx-auto leading-relaxed">
@@ -175,9 +176,7 @@ export default function SubmitPage() {
       <div className="min-h-screen bg-gray-50 max-w-md mx-auto pb-24">
         <div className="px-4 pt-16 text-center">
           <div className="w-16 h-16 rounded-full bg-green-50 flex items-center justify-center mx-auto mb-4">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-            </svg>
+            <HiCheck className="h-8 w-8 text-green-600" />
           </div>
           <h2 className="text-lg font-bold text-gray-900 mb-1">Kontak Terkirim!</h2>
           <p className="text-xs text-gray-500 mb-6 max-w-xs mx-auto leading-relaxed">
@@ -356,9 +355,7 @@ export default function SubmitPage() {
             ) : contributions.length === 0 ? (
               <div className="text-center py-12">
                 <div className="w-14 h-14 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-3">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
+                  <HiOutlinePlusCircle className="h-6 w-6 text-gray-400" />
                 </div>
                 <p className="text-sm font-medium text-gray-600">Belum ada kontribusi</p>
                 <p className="text-xs text-gray-400 mt-1">Mulai tambahkan kontak untuk kotamu</p>
@@ -448,12 +445,7 @@ export default function SubmitPage() {
                 <textarea rows={3} value={form.description} onChange={(e) => update("description", e.target.value)} placeholder="Deskripsi singkat tentang tempat ini..." className={`${inputClass} h-auto py-2.5 resize-none`} />
               </div>
               <button type="submit" disabled={loading} className="w-full h-12 bg-primary-700 text-white rounded-xl text-sm font-semibold active:scale-[0.98] transition-all disabled:opacity-50 flex items-center justify-center gap-2">
-                {loading && (
-                  <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                  </svg>
-                )}
+                {loading && <ImSpinner2 className="animate-spin h-4 w-4" />}
                 Kirim Kontak
               </button>
             </form>
@@ -482,9 +474,7 @@ export default function SubmitPage() {
                   onClick={handlePickContacts}
                   className="inline-flex items-center gap-2 px-4 py-2.5 bg-primary-700 text-white text-sm font-medium rounded-xl active:scale-[0.98] transition-all"
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
+                  <HiOutlineUsers className="h-4 w-4" />
                   Pilih dari Kontak HP
                 </button>
               )}
@@ -493,9 +483,7 @@ export default function SubmitPage() {
                 onClick={() => fileInputRef.current?.click()}
                 className="inline-flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 text-gray-700 text-sm font-medium rounded-xl active:scale-[0.98] transition-all"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                </svg>
+                <HiOutlineCloudArrowUp className="h-4 w-4" />
                 Upload .vcf / .csv
               </button>
               <input ref={fileInputRef} type="file" accept=".vcf,.vcard,.csv" className="hidden" onChange={handleFileImport} />
@@ -533,9 +521,7 @@ export default function SubmitPage() {
                         <p className="text-xs text-gray-500">{contact.phone}</p>
                       </div>
                       <button type="button" onClick={() => removeContact(i)} className="text-gray-400 active:text-red-500 flex-shrink-0">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                        </svg>
+                        <HiXMark className="h-4 w-4" />
                       </button>
                     </div>
                   ))}
@@ -570,12 +556,7 @@ export default function SubmitPage() {
                     disabled={selectedCount === 0 || !importCityId || !importCategoryId || bulkLoading}
                     className="w-full h-11 bg-primary-700 text-white rounded-xl text-sm font-semibold active:scale-[0.98] transition-all disabled:opacity-50 flex items-center justify-center gap-2"
                   >
-                    {bulkLoading && (
-                      <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                      </svg>
-                    )}
+                    {bulkLoading && <ImSpinner2 className="animate-spin h-4 w-4" />}
                     Kirim {selectedCount} Kontak
                   </button>
                   <p className="text-[11px] text-gray-400 text-center">Kontak akan ditinjau admin sebelum ditampilkan</p>
@@ -583,9 +564,7 @@ export default function SubmitPage() {
               </div>
             ) : (
               <div className="bg-white rounded-xl border border-dashed border-gray-300 p-10 text-center">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-gray-300 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
+                <HiOutlineUsers className="h-10 w-10 text-gray-300 mx-auto mb-3" />
                 <p className="text-sm text-gray-500 font-medium">Belum ada kontak diimpor</p>
                 <p className="text-xs text-gray-400 mt-1">
                   {hasContactPicker()

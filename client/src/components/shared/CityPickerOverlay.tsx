@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import type { City } from "../../types";
+import { HiXMark } from "react-icons/hi2";
 
 interface CityPickerOverlayProps {
   cities: City[];
@@ -14,7 +15,7 @@ export function CityPickerOverlay({ cities, onSelect, onClose }: CityPickerOverl
   }, []);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center">
+    <div className="fixed inset-0 z-[60] flex items-end justify-center">
       {/* Backdrop */}
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
 
@@ -36,9 +37,7 @@ export function CityPickerOverlay({ cities, onSelect, onClose }: CityPickerOverl
               onClick={onClose}
               className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 transition-colors text-gray-500"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-              </svg>
+              <HiXMark className="h-4 w-4" />
             </button>
           )}
         </div>
