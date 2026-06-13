@@ -52,17 +52,20 @@ export function RecentContactsShimmer() {
 
 export function ContactCardShimmer() {
   return (
-    <div className="bg-white rounded-2xl shadow-sm p-4 space-y-2.5">
-      <div className="flex items-start justify-between gap-2">
-        <div className="h-4 w-40 rounded shimmer" />
-        <div className="h-5 w-5 rounded shimmer" />
+    <div className="bg-white rounded-2xl border border-gray-100 p-4">
+      <div className="flex gap-3.5">
+        <div className="w-[84px] h-[84px] rounded-2xl shimmer flex-shrink-0" />
+        <div className="flex-1 min-w-0 pt-1">
+          <div className="h-4 w-36 rounded shimmer" />
+          <div className="h-2.5 w-24 rounded shimmer mt-2.5" />
+          <div className="h-3 w-full rounded shimmer mt-3" />
+          <div className="h-3 w-2/3 rounded shimmer mt-1.5" />
+        </div>
       </div>
-      <div className="h-3 w-56 rounded shimmer" />
-      <div className="h-5 w-16 rounded-full shimmer" />
-      <div className="flex items-center gap-2 pt-1">
-        <div className="flex-1 h-9 rounded-xl shimmer" />
-        <div className="h-9 w-9 rounded-xl shimmer" />
-        <div className="h-9 w-9 rounded-xl shimmer" />
+      <div className="flex items-center gap-2.5 mt-4">
+        <div className="flex-1 h-11 rounded-xl shimmer" />
+        <div className="h-11 w-24 rounded-xl shimmer" />
+        <div className="h-11 w-11 rounded-xl shimmer" />
       </div>
     </div>
   );

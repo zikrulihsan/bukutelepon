@@ -1,5 +1,5 @@
 import type React from "react";
-import { HiOutlineHeart, HiOutlineAcademicCap, HiOutlineCog6Tooth, HiOutlineBuildingLibrary, HiOutlineBell, HiOutlineMap, HiOutlineArchiveBox } from "react-icons/hi2";
+import { HiOutlineHeart, HiOutlineAcademicCap, HiOutlineCog6Tooth, HiOutlineBuildingLibrary, HiOutlineBell, HiOutlineMap, HiOutlineArchiveBox, HiOutlineBriefcase } from "react-icons/hi2";
 import { HiOutlineTruck } from "react-icons/hi";
 import { LuCoffee } from "react-icons/lu";
 
@@ -18,6 +18,7 @@ export function CategoryIcon({ slug, className = "w-7 h-7" }: CategoryIconProps)
     darurat: <HiOutlineBell className={className} />,
     transportasi: <HiOutlineTruck className={className} />,
     wisata: <HiOutlineMap className={className} />,
+    penginapan: <HiOutlineBriefcase className={className} />,
   };
 
   return (
