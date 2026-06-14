@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { apiClient } from "../../lib/axios";
+import { useContactsData } from "../../context/ContactsContext";
 import { ContactCard } from "../../components/shared/ContactCard";
 import { ContactListShimmer } from "../../components/shared/Shimmer";
 import { getSavedIds, toggleSaved } from "../../lib/saved";
@@ -7,33 +8,50 @@ import type { Contact } from "../../types";
 import { HiOutlineBookmark, HiXMark } from "react-icons/hi2";
 
 export default function SavedPage() {
+  const { getById, isLoading: cacheLoading } = useContactsData();
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (cacheLoading) return;
+
     async function fetchSaved() {
       const ids = getSavedIds();
       if (ids.length === 0) {
         setLoading(false);
         return;
       }
-      try {
-        const results = await Promise.all(
-          ids.map((id) =>
-            apiClient
-              .get(`/contacts/${id}`)
-              .then((r) => r.data.data as Contact)
-              .catch(() => null)
-          )
-        );
-        setContacts(results.filter(Boolean) as Contact[]);
-      } catch {
-        // ignore
+
+      // Serve from the local cache; only hit the network for cache misses.
+      const fromCache: Contact[] = [];
+      const missingIds: string[] = [];
+      for (const id of ids) {
+        const hit = getById(id);
+        if (hit) fromCache.push(hit);
+        else missingIds.push(id);
       }
+
+      const fetched = await Promise.all(
+        missingIds.map((id) =>
+          apiClient
+            .get(`/contacts/${id}`)
+            .then((r) => r.data.data as Contact)
+            .catch(() => null)
+        )
+      );
+
+      const byId = new Map<string, Contact>();
+      [...fromCache, ...(fetched.filter(Boolean) as Contact[])].forEach((c) =>
+        byId.set(c.id, c)
+      );
+      // Preserve saved-order.
+      setContacts(ids.map((id) => byId.get(id)).filter(Boolean) as Contact[]);
       setLoading(false);
     }
+
     fetchSaved();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cacheLoading]);
 
   function handleRemove(id: string) {
     toggleSaved(id);

@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { useQuery, useInfiniteQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "../../lib/axios";
 import { useCity } from "../../context/CityContext";
-import { useContacts } from "../../hooks/useContacts";
+import { useContacts, useInfiniteContacts } from "../../hooks/useContacts";
 import { ContactCard } from "../../components/shared/ContactCard";
 import { ContributionWall } from "../../components/shared/ContributionWall";
 import { CityPickerOverlay } from "../../components/shared/CityPickerOverlay";
@@ -13,7 +13,7 @@ import {
   RecentContactsShimmer,
   ContactListShimmer,
 } from "../../components/shared/Shimmer";
-import type { Category, City, Contact, PaginatedResponse } from "../../types";
+import type { Category, City } from "../../types";
 
 const EMERGENCY_CONTACTS = [
   {
@@ -145,24 +145,10 @@ export default function MainScreen() {
     hasNextPage,
     isFetchingNextPage,
     isLoading,
-  } = useInfiniteQuery<PaginatedResponse<Contact>>({
-    queryKey: ["contacts-infinite", { city: citySlug, category: activeCategory, verified: verifiedFilter }],
-    queryFn: async ({ pageParam }) => {
-      const params = new URLSearchParams();
-      params.set("page", String(pageParam));
-      params.set("limit", "20");
-      if (citySlug) params.set("city", citySlug);
-      if (activeCategory) params.set("category", activeCategory);
-      if (verifiedFilter) params.set("verified", verifiedFilter);
-      const { data } = await apiClient.get(`/contacts?${params}`);
-      return data;
-    },
-    initialPageParam: 1,
-    getNextPageParam: (lastPage) => {
-      if (lastPage.meta.guestLimited) return undefined;
-      if (lastPage.meta.page < lastPage.meta.totalPages) return lastPage.meta.page + 1;
-      return undefined;
-    },
+  } = useInfiniteContacts({
+    city: citySlug || undefined,
+    category: activeCategory || undefined,
+    verified: verifiedFilter || undefined,
     enabled: isFiltered,
   });
 

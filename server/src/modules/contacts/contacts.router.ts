@@ -90,6 +90,41 @@ router.get("/", apiLimiter, checkAccess, async (req: AccessRequest, res, next) =
   }
 });
 
+// GET /api/contacts/version — lightweight version check for local-first caching
+router.get("/version", apiLimiter, async (_req, res, next) => {
+  try {
+    const row = await prisma.collectionVersion.findUnique({
+      where: { key: "contacts" },
+    });
+
+    res.json({ success: true, version: row?.version ?? 0 });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// GET /api/contacts/all — full approved collection for local-first cache
+router.get("/all", apiLimiter, async (_req, res, next) => {
+  try {
+    const [contacts, versionRow] = await Promise.all([
+      prisma.contact.findMany({
+        where: { status: "APPROVED" },
+        include: { city: true, category: true },
+        orderBy: { createdAt: "desc" },
+      }),
+      prisma.collectionVersion.findUnique({ where: { key: "contacts" } }),
+    ]);
+
+    res.json({
+      success: true,
+      data: contacts,
+      version: versionRow?.version ?? 0,
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
 // GET /api/contacts/:id
 router.get("/:id", apiLimiter, checkAccess, async (req: AccessRequest, res, next) => {
   try {

@@ -119,6 +119,14 @@ model Contact {
   @@map("contacts")
 }
 
+model CollectionVersion {
+  key       String   @id
+  version   Int      @default(1)
+  updatedAt DateTime @updatedAt
+
+  @@map("collection_versions")
+}
+
 model Review {
   id              String       @id @default(uuid())
   rating          Int
