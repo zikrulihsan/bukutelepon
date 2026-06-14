@@ -1,9 +1,10 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "../../lib/axios";
 import { useCity } from "../../context/CityContext";
 import { useContacts, useInfiniteContacts } from "../../hooks/useContacts";
+import { useContactsData } from "../../context/ContactsContext";
 import { ContactCard } from "../../components/shared/ContactCard";
 import { ContributionWall } from "../../components/shared/ContributionWall";
 import { CityPickerOverlay } from "../../components/shared/CityPickerOverlay";
@@ -79,6 +80,7 @@ export default function MainScreen() {
   const [showCityPicker, setShowCityPicker] = useState(false);
   const [showAll, setShowAll] = useState(false);
   const [showEmergency, setShowEmergency] = useState(false);
+  const [showCategories, setShowCategories] = useState(true);
   const [showTutorial, setShowTutorial] = useState(false);
   const catScrollRef = useRef<HTMLDivElement>(null);
   const [catScrollProgress, setCatScrollProgress] = useState(0);
@@ -242,6 +244,23 @@ export default function MainScreen() {
   const categories = categoriesData?.data ?? [];
   const cityPickerVisible = needsCityPicker || showCityPicker;
 
+  // ── Derived stats (real data from the local cache, scoped to the city) ──
+  const { contacts: allCachedContacts } = useContactsData();
+  const { totalKontak, newThisWeek, categoryCounts } = useMemo(() => {
+    const inCity = citySlug
+      ? allCachedContacts.filter((c) => c.city?.slug === citySlug)
+      : allCachedContacts;
+    const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+    const counts: Record<string, number> = {};
+    let recent = 0;
+    for (const c of inCity) {
+      const slug = c.category?.slug;
+      if (slug) counts[slug] = (counts[slug] ?? 0) + 1;
+      if (new Date(c.createdAt).getTime() >= weekAgo) recent += 1;
+    }
+    return { totalKontak: inCity.length, newThisWeek: recent, categoryCounts: counts };
+  }, [allCachedContacts, citySlug]);
+
   // ── Category scroll progress ──
   useEffect(() => {
     const el = catScrollRef.current;
@@ -256,7 +275,7 @@ export default function MainScreen() {
   }, [categories.length]);
 
   return (
-    <div className="min-h-screen bg-white max-w-md mx-auto relative pb-24">
+    <div className="min-h-screen bg-[#F1F3EE] max-w-md mx-auto relative pb-24">
       {cityPickerVisible && (
         <CityPickerOverlay
           cities={citiesData?.data ?? cities}
@@ -293,7 +312,7 @@ export default function MainScreen() {
       </div>
 
       {/* ── Header ── */}
-      <div ref={headerRef} className="bg-white px-5 pt-6 pb-2">
+      <div ref={headerRef} className="px-5 pt-6 pb-1">
         {/* Top row: brand + help button */}
         <div className="flex items-center justify-between mb-5">
           <span className="text-[26px] font-extrabold text-gray-900 font-display tracking-tight">
@@ -303,7 +322,7 @@ export default function MainScreen() {
             href="https://wa.me/6282338588078?text=Permisi%20admin%20cari%20kontak%2C%20saya%20ingin%20bertanya"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-1.5 px-3.5 py-2 rounded-full border border-gray-200 active:scale-95 transition-transform"
+            className="flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-white border border-gray-200/70 shadow-[0_1px_3px_rgba(0,0,0,0.05)] active:scale-95 transition-transform"
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
@@ -312,39 +331,55 @@ export default function MainScreen() {
           </a>
         </div>
 
-        {/* Location selector */}
-        <button onClick={() => setShowCityPicker(true)} className="flex items-center gap-2 mb-5 w-max active:scale-95 transition-transform">
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-primary-600" viewBox="0 0 20 20" fill="currentColor">
-            <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
-          </svg>
-          <span className="text-gray-900 font-bold text-lg tracking-tight">{city?.name ?? "Pilih Kota"}</span>
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
-            <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-          </svg>
-        </button>
-
-        {/* Search bar */}
-        <div
-          id="hero-search"
-          onClick={() => navigate("/search")}
-          className="flex items-center bg-white rounded-2xl border-2 border-gray-300 p-1.5 cursor-pointer hover:border-gray-400 transition-colors"
-        >
-          <div className="pl-3 text-gray-400">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        {/* Hero panel — soft green, holds location + search + stats */}
+        <div className="bg-[#E4EDE3] rounded-3xl p-4 shadow-[0_1px_3px_rgba(0,0,0,0.03)]">
+          {/* Location selector */}
+          <button onClick={() => setShowCityPicker(true)} className="flex items-center gap-2 mb-3.5 w-max active:scale-95 transition-transform">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-primary-600" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
             </svg>
-          </div>
-          <span className="flex-1 h-10 pl-3 pr-2 text-[15px] text-gray-400 flex items-center truncate">Cari kontak…</span>
-          <button className="w-12 h-11 rounded-xl bg-primary-700 hover:bg-primary-600 flex items-center justify-center text-white active:scale-95 transition-all">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+            <span className="text-gray-900 font-bold text-lg tracking-tight">{city?.name ?? "Pilih Kota"}</span>
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
             </svg>
           </button>
+
+          {/* Search bar */}
+          <div
+            id="hero-search"
+            onClick={() => navigate("/search")}
+            className="flex items-center bg-white rounded-2xl p-1.5 shadow-[0_2px_8px_rgba(0,0,0,0.04)] cursor-pointer hover:shadow-[0_4px_12px_rgba(0,0,0,0.07)] transition-shadow"
+          >
+            <div className="pl-3 text-gray-400">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
+            <span className="flex-1 h-10 pl-3 pr-2 text-[15px] text-gray-400 flex items-center truncate">Cari kontak…</span>
+            <button className="w-12 h-11 rounded-xl bg-primary-700 hover:bg-primary-600 flex items-center justify-center text-white active:scale-95 transition-all">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+              </svg>
+            </button>
+          </div>
+
+          {/* Stats strip */}
+          <div className="flex items-center gap-2.5 mt-3.5 px-1 text-[13px] text-gray-500">
+            <span><span className="font-bold text-gray-900">{totalKontak}</span> kontak</span>
+            <span className="w-1 h-1 rounded-full bg-gray-400/60" />
+            <span><span className="font-bold text-gray-900">{categories.length}</span> kategori</span>
+            {newThisWeek > 0 && (
+              <>
+                <span className="w-1 h-1 rounded-full bg-gray-400/60" />
+                <span><span className="font-bold text-primary-700">+{newThisWeek}</span> minggu ini</span>
+              </>
+            )}
+          </div>
         </div>
       </div>
 
       {/* ── Content ── */}
-      <div className="bg-white pt-3 px-4 relative z-20 min-h-screen">
+      <div className="pt-5 px-4 relative z-20">
 
         {/* ── Browse mode ── */}
         {!isFiltered && (
@@ -353,13 +388,20 @@ export default function MainScreen() {
             <div className="mb-7 animate-fade-in-up">
               <button
                 onClick={() => setShowEmergency(!showEmergency)}
-                className="w-full flex items-center justify-between bg-white border border-gray-200 rounded-2xl px-4 py-3.5 active:scale-[0.98] transition-all"
+                className="w-full flex items-center justify-between bg-white rounded-2xl px-3.5 py-3 shadow-[0_2px_8px_rgba(0,0,0,0.04)] active:scale-[0.98] transition-all"
               >
-                <div className="flex items-center gap-3">
-                  <span className="w-2.5 h-2.5 rounded-full bg-red-500 flex-shrink-0" />
-                  <span className="text-[15px] font-bold text-gray-900 tracking-tight">Panggilan Darurat Cepat</span>
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-11 h-11 rounded-xl bg-[#FDECEC] flex items-center justify-center flex-shrink-0 text-red-500">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-[22px] w-[22px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
+                    </svg>
+                  </div>
+                  <div className="text-left min-w-0">
+                    <p className="text-[15px] font-bold text-gray-900 tracking-tight leading-tight">Panggilan Darurat</p>
+                    <p className="text-[12.5px] text-gray-400 leading-tight mt-0.5 truncate">Polisi &middot; Ambulans &middot; Damkar</p>
+                  </div>
                 </div>
-                <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 text-gray-400 transition-transform ${showEmergency ? 'rotate-90' : ''}`} viewBox="0 0 20 20" fill="currentColor">
+                <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 text-gray-400 flex-shrink-0 transition-transform ${showEmergency ? 'rotate-90' : ''}`} viewBox="0 0 20 20" fill="currentColor">
                   <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
                 </svg>
               </button>
@@ -388,41 +430,49 @@ export default function MainScreen() {
               </div>
             </div>
 
-            {/* Categories list */}
+            {/* Categories */}
             <div className="mb-8">
-              <h3 className="text-[12px] font-bold text-gray-400 uppercase tracking-[0.12em] mb-3 px-1">Kategori</h3>
-              {categoriesLoading ? (
-                <div className="grid grid-cols-2 gap-x-6 gap-y-1">
-                  {Array.from({ length: 8 }).map((_, i) => (
-                    <div key={i} className="flex items-center gap-3 py-3">
-                      <div className="w-11 h-11 rounded-xl shimmer flex-shrink-0" />
-                      <div className="flex-1">
-                        <div className="h-3 w-20 shimmer rounded mb-2" />
-                        <div className="h-2.5 w-10 shimmer rounded" />
+              <button
+                onClick={() => setShowCategories((v) => !v)}
+                className="w-full flex items-center justify-between mb-3 px-1 active:opacity-70 transition-opacity"
+              >
+                <h3 className="text-[12px] font-bold text-gray-400 uppercase tracking-[0.12em]">Kategori</h3>
+                <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 text-gray-400 transition-transform ${showCategories ? "" : "-rotate-90"}`} viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                </svg>
+              </button>
+              {showCategories && (
+                categoriesLoading ? (
+                  <div className="grid grid-cols-2 gap-3">
+                    {Array.from({ length: 8 }).map((_, i) => (
+                      <div key={i} className="flex items-center gap-3 bg-white rounded-2xl p-3.5 shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
+                        <div className="w-11 h-11 rounded-xl shimmer flex-shrink-0" />
+                        <div className="flex-1">
+                          <div className="h-3 w-16 shimmer rounded mb-2" />
+                          <div className="h-2.5 w-10 shimmer rounded" />
+                        </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="grid grid-cols-2 gap-x-6">
-                  {categories.map((cat) => (
-                    <button
-                      key={cat.slug}
-                      onClick={() => handleCategoryClick(cat.slug)}
-                      className="flex items-center gap-3 py-3.5 border-b border-gray-100 group active:scale-[0.98] transition-transform text-left"
-                    >
-                      <div className="w-11 h-11 rounded-xl bg-gray-100 text-gray-700 flex items-center justify-center flex-shrink-0 group-hover:bg-gray-200 transition-colors">
-                        <CategoryIcon slug={cat.slug} className="w-[22px] h-[22px]" />
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-[15px] font-bold text-gray-900 leading-tight truncate">{cat.name}</p>
-                        {cat._count && (
-                          <p className="text-[13px] text-gray-400 leading-tight mt-0.5">{cat._count.contacts}</p>
-                        )}
-                      </div>
-                    </button>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 gap-3">
+                    {categories.map((cat) => (
+                      <button
+                        key={cat.slug}
+                        onClick={() => handleCategoryClick(cat.slug)}
+                        className="flex items-center gap-3 bg-white rounded-2xl p-3.5 shadow-[0_2px_8px_rgba(0,0,0,0.04)] group active:scale-[0.97] hover:shadow-[0_4px_12px_rgba(0,0,0,0.07)] transition-all text-left"
+                      >
+                        <div className="w-11 h-11 rounded-xl bg-gray-100 text-gray-600 flex items-center justify-center flex-shrink-0 group-hover:bg-gray-200 transition-colors">
+                          <CategoryIcon slug={cat.slug} className="w-[22px] h-[22px]" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-[15px] font-bold text-gray-900 leading-tight truncate">{cat.name}</p>
+                          <p className="text-[12.5px] text-gray-400 leading-tight mt-0.5">{categoryCounts[cat.slug] ?? 0} kontak</p>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )
               )}
             </div>
 

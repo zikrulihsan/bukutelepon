@@ -52,7 +52,7 @@ export function RecentContactsShimmer() {
 
 export function ContactCardShimmer() {
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 p-4">
+    <div className="bg-white rounded-2xl border border-gray-100/80 shadow-[0_2px_8px_rgba(0,0,0,0.04)] p-4">
       <div className="flex gap-3.5">
         <div className="w-[84px] h-[84px] rounded-2xl shimmer flex-shrink-0" />
         <div className="flex-1 min-w-0 pt-1">

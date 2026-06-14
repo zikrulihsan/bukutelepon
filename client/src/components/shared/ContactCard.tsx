@@ -30,7 +30,7 @@ export function ContactCard({ contact, hideSave }: ContactCardProps) {
   const location = contact.address || contact.city?.name || "";
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 p-4">
+    <div className="bg-white rounded-2xl border border-gray-100/80 shadow-[0_2px_8px_rgba(0,0,0,0.04)] p-4">
       {/* Top: photo + info */}
       <div className="flex gap-3.5">
         {/* Photo placeholder */}
