@@ -2,7 +2,7 @@ import { apiClient } from "./axios";
 import type { Contact } from "../types";
 
 // localStorage keys. Bump the suffix if the cached shape changes.
-const LS_DATA_KEY = "bt_contacts_v1";
+const LS_DATA_KEY = "bt_contacts_v2";
 const LS_VERSION_KEY = "bt_contacts_version";
 
 // Cosmetic guest gate — keep in sync with the server's GUEST_VIEW_THRESHOLD env.
