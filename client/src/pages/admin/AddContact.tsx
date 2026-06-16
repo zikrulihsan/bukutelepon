@@ -1,6 +1,7 @@
 import { useState, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "../../lib/axios";
+import { supabase } from "../../lib/supabase";
 import { useCategories } from "../../context/CategoriesContext";
 import type { City, Category } from "../../types";
 
@@ -103,6 +104,10 @@ export default function AdminAddContact() {
     cityId: "",
     categoryId: "",
   });
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [imageUploading, setImageUploading] = useState(false);
+  const imageInputRef = useRef<HTMLInputElement>(null);
   const [success, setSuccess] = useState(false);
 
   // Import state
@@ -123,12 +128,13 @@ export default function AdminAddContact() {
 
   // Single create mutation
   const mutation = useMutation({
-    mutationFn: async (data: typeof form) => {
+    mutationFn: async ({ formData, imageUrl }: { formData: typeof form; imageUrl?: string }) => {
       const payload = {
-        ...data,
-        website: data.website || undefined,
-        address: data.address || undefined,
-        description: data.description || undefined,
+        ...formData,
+        website: formData.website || undefined,
+        address: formData.address || undefined,
+        description: formData.description || undefined,
+        imageUrl: imageUrl || undefined,
       };
       return (await apiClient.post("/admin/contacts", payload)).data;
     },
@@ -136,6 +142,8 @@ export default function AdminAddContact() {
       queryClient.invalidateQueries({ queryKey: ["admin"] });
       setSuccess(true);
       setForm({ name: "", phone: "", address: "", website: "", description: "", cityId: form.cityId, categoryId: form.categoryId });
+      setImageFile(null);
+      setImagePreview(null);
       setTimeout(() => setSuccess(false), 3000);
     },
   });
@@ -153,9 +161,40 @@ export default function AdminAddContact() {
     },
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setImageFile(file);
+    setImagePreview(URL.createObjectURL(file));
+    e.target.value = "";
+  }
+
+  function removeImage() {
+    setImageFile(null);
+    if (imagePreview) URL.revokeObjectURL(imagePreview);
+    setImagePreview(null);
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    mutation.mutate(form);
+
+    let imageUrl: string | undefined;
+
+    if (imageFile) {
+      setImageUploading(true);
+      const ext = imageFile.name.split(".").pop();
+      const path = `contacts/${Date.now()}.${ext}`;
+      const { error } = await supabase.storage.from("contact-images").upload(path, imageFile, { upsert: false });
+      setImageUploading(false);
+      if (error) {
+        mutation.reset();
+        return;
+      }
+      const { data: urlData } = supabase.storage.from("contact-images").getPublicUrl(path);
+      imageUrl = urlData.publicUrl;
+    }
+
+    mutation.mutate({ formData: form, imageUrl });
   };
 
   // Contact Picker API (mobile browsers)
@@ -508,12 +547,48 @@ export default function AdminAddContact() {
             />
           </div>
 
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Foto</label>
+            {imagePreview ? (
+              <div className="relative w-24 h-24">
+                <img src={imagePreview} alt="Preview" className="w-24 h-24 rounded-xl object-cover border border-gray-200" />
+                <button
+                  type="button"
+                  onClick={removeImage}
+                  className="absolute -top-2 -right-2 bg-white border border-gray-200 rounded-full p-0.5 shadow text-gray-500 hover:text-red-500"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => imageInputRef.current?.click()}
+                className="flex items-center gap-2 px-4 py-2.5 bg-white border border-dashed border-gray-300 rounded-xl text-sm text-gray-500 hover:border-primary-400 hover:text-primary-600 transition-colors"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                Upload foto
+              </button>
+            )}
+            <input
+              ref={imageInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleImageChange}
+            />
+          </div>
+
           <button
             type="submit"
-            disabled={mutation.isPending}
+            disabled={mutation.isPending || imageUploading}
             className="w-full bg-primary-700 text-white font-semibold py-2.5 rounded-xl hover:bg-primary-800 transition-colors disabled:opacity-50"
           >
-            {mutation.isPending ? "Menyimpan..." : "Tambah Kontak"}
+            {imageUploading ? "Mengupload foto..." : mutation.isPending ? "Menyimpan..." : "Tambah Kontak"}
           </button>
         </form>
       </div>
