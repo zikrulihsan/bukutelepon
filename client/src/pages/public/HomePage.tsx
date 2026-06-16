@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "../../lib/axios";
+import { useCategories } from "../../context/CategoriesContext";
 import type { City, Category } from "../../types";
 import { HiMagnifyingGlass } from "react-icons/hi2";
 
@@ -33,16 +34,7 @@ export default function HomePage() {
     },
   });
 
-  const { data: categoriesData, isLoading: categoriesLoading } = useQuery<{
-    success: boolean;
-    data: Category[];
-  }>({
-    queryKey: ["categories"],
-    queryFn: async () => {
-      const { data } = await apiClient.get("/categories");
-      return data;
-    },
-  });
+  const { categories: categoriesData, isLoading: categoriesLoading } = useCategories();
 
   // Keyboard shortcut: press '/' to focus search
   useEffect(() => {
@@ -140,7 +132,7 @@ export default function HomePage() {
           </div>
         ) : (
           <div className="grid grid-cols-3 gap-3">
-            {categoriesData?.data.map((category) => (
+            {categoriesData.map((category) => (
               <button
                 key={category.id}
                 onClick={() => handleCategoryClick(category)}

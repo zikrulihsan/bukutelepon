@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "../../lib/axios";
+import { useCategories } from "../../context/CategoriesContext";
 import { Button } from "../../components/ui/Button";
 import { Badge } from "../../components/ui/Badge";
 import type { Contact, City, Category, PaginatedResponse } from "../../types";
@@ -36,10 +37,7 @@ export default function AdminContacts() {
     queryFn: async () => (await apiClient.get("/cities")).data,
   });
 
-  const { data: categoriesData } = useQuery<{ success: boolean; data: Category[] }>({
-    queryKey: ["categories"],
-    queryFn: async () => (await apiClient.get("/categories")).data,
-  });
+  const { categories: categoriesData } = useCategories();
 
   const invalidateAll = () => {
     queryClient.invalidateQueries({ queryKey: ["admin", "contacts"] });
@@ -93,7 +91,7 @@ export default function AdminContacts() {
   }
 
   const cities = citiesData?.data ?? [];
-  const categories = categoriesData?.data ?? [];
+  const categories = categoriesData ?? [];
   const inputClass = "w-full rounded-lg border border-gray-300 px-3 py-1.5 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none";
 
   return (

@@ -1,14 +1,12 @@
 import { useState, useEffect, useRef } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
-import { apiClient } from "../../lib/axios";
 import { useCity } from "../../context/CityContext";
+import { useCategories } from "../../context/CategoriesContext";
 import { useInfiniteContacts } from "../../hooks/useContacts";
 import { ContactCard } from "../../components/shared/ContactCard";
 import { ContributionWall } from "../../components/shared/ContributionWall";
 import { CategoryIcon } from "../../components/shared/CategoryIcon";
 import { ContactListShimmer } from "../../components/shared/Shimmer";
-import type { Category } from "../../types";
 import { HiChevronLeft, HiMagnifyingGlass, HiXMark, HiCheckBadge, HiCheck } from "react-icons/hi2";
 import { HiFilter } from "react-icons/hi";
 
@@ -60,11 +58,7 @@ export default function SearchPage() {
     return () => clearTimeout(timer);
   }, [search]);
 
-  const { data: categoriesData } = useQuery<{ success: boolean; data: Category[] }>({
-    queryKey: ["categories"],
-    queryFn: async () => (await apiClient.get("/categories")).data,
-  });
-  const categories = categoriesData?.data ?? [];
+  const { categories } = useCategories();
 
   const hasFilter = !!searchQuery || !!activeCategory || !!verifiedFilter;
 

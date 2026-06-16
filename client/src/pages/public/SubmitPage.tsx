@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "../../lib/axios";
 import { useAuth } from "../../hooks/useAuth";
 import { useCity } from "../../context/CityContext";
+import { useCategories } from "../../context/CategoriesContext";
 import { Badge } from "../../components/ui/Badge";
 import type { City, Category, Contact } from "../../types";
 import { HiOutlinePlusCircle, HiXMark, HiCheck, HiOutlineUsers, HiOutlineCloudArrowUp } from "react-icons/hi2";
@@ -91,10 +92,7 @@ export default function SubmitPage() {
     queryFn: async () => (await apiClient.get("/cities")).data,
   });
 
-  const { data: categoriesData } = useQuery<{ success: boolean; data: Category[] }>({
-    queryKey: ["categories"],
-    queryFn: async () => (await apiClient.get("/categories")).data,
-  });
+  const { categories: categoriesData } = useCategories();
 
   const { data: contributionsData, isLoading: contributionsLoading } = useQuery<{ success: boolean; data: Contact[] }>({
     queryKey: ["my-contributions"],
@@ -426,7 +424,7 @@ export default function SubmitPage() {
                   <label className={labelClass}>Kategori *</label>
                   <select required value={form.categoryId} onChange={(e) => update("categoryId", e.target.value)} className={`${inputClass} appearance-none`}>
                     <option value="">Pilih Kategori</option>
-                    {categoriesData?.data.map((cat) => (
+                    {categoriesData.map((cat) => (
                       <option key={cat.id} value={cat.id}>{cat.name}</option>
                     ))}
                   </select>
@@ -549,7 +547,7 @@ export default function SubmitPage() {
                       className={`${inputClass} h-10 text-xs`}
                     >
                       <option value="">Pilih kategori *</option>
-                      {categoriesData?.data.map((c) => (
+                      {categoriesData.map((c) => (
                         <option key={c.id} value={c.id}>{c.name}</option>
                       ))}
                     </select>

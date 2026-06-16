@@ -4,6 +4,7 @@ import { BottomNav } from "./components/shared/BottomNav";
 import { AdminLayout } from "./components/admin/AdminLayout";
 import { PWAInstallBanner } from "./components/shared/PWAInstallBanner";
 import { CityProvider } from "./context/CityContext";
+import { CategoriesProvider } from "./context/CategoriesContext";
 import MainScreen from "./pages/public/MainScreen";
 import SearchPage from "./pages/public/SearchPage";
 import SavedPage from "./pages/public/SavedPage";
@@ -21,8 +22,9 @@ import AdminUsers from "./pages/admin/Users";
 export default function App() {
   return (
     <CityProvider>
-      <div className="min-h-screen bg-white">
-        <Routes>
+      <CategoriesProvider>
+        <div className="min-h-screen bg-white">
+          <Routes>
           {/* Public routes */}
           <Route
             path="/*"
@@ -56,7 +58,8 @@ export default function App() {
             <Route path="users" element={<AdminUsers />} />
           </Route>
         </Routes>
-      </div>
+        </div>
+      </CategoriesProvider>
     </CityProvider>
   );
 }

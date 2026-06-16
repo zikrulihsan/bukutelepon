@@ -3,6 +3,7 @@ import { useSearchParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "../../lib/axios";
 import { useCity } from "../../context/CityContext";
+import { useCategories } from "../../context/CategoriesContext";
 import { useContacts, useInfiniteContacts } from "../../hooks/useContacts";
 import { useContactsData } from "../../context/ContactsContext";
 import { ContactCard } from "../../components/shared/ContactCard";
@@ -128,10 +129,7 @@ export default function MainScreen() {
 
   const needsCityPicker = !citySlug && citiesData?.data && citiesData.data.length > 0;
 
-  const { data: categoriesData, isLoading: categoriesLoading } = useQuery<{ success: boolean; data: Category[] }>({
-    queryKey: ["categories"],
-    queryFn: async () => (await apiClient.get("/categories")).data,
-  });
+  const { categories: categoriesData, isLoading: categoriesLoading } = useCategories();
 
   const { data: recentData, isLoading: recentLoading } = useContacts({
     city: citySlug || undefined,
@@ -241,7 +239,7 @@ export default function MainScreen() {
     }
   }
 
-  const categories = categoriesData?.data ?? [];
+  const categories = categoriesData ?? [];
   const cityPickerVisible = needsCityPicker || showCityPicker;
 
   // ── Derived stats (real data from the local cache, scoped to the city) ──

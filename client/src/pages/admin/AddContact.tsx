@@ -1,6 +1,7 @@
 import { useState, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "../../lib/axios";
+import { useCategories } from "../../context/CategoriesContext";
 import type { City, Category } from "../../types";
 
 interface ImportedContact {
@@ -115,13 +116,10 @@ export default function AdminAddContact() {
     queryFn: async () => (await apiClient.get("/cities")).data,
   });
 
-  const { data: categoriesData } = useQuery<{ success: boolean; data: Category[] }>({
-    queryKey: ["categories"],
-    queryFn: async () => (await apiClient.get("/categories")).data,
-  });
+  const { categories: categoriesData } = useCategories();
 
   const cities = citiesData?.data ?? [];
-  const categories = categoriesData?.data ?? [];
+  const categories = categoriesData ?? [];
 
   // Single create mutation
   const mutation = useMutation({

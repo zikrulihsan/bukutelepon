@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "../../lib/axios";
+import { useCategories } from "../../context/CategoriesContext";
 import { useContacts } from "../../hooks/useContacts";
 import { ContactCard } from "../../components/shared/ContactCard";
 import { ContributionWall } from "../../components/shared/ContributionWall";
@@ -53,16 +54,7 @@ export default function SearchResultsPage() {
     }
   }, [filterOpen]);
 
-  const { data: categoriesData } = useQuery<{
-    success: boolean;
-    data: Category[];
-  }>({
-    queryKey: ["categories"],
-    queryFn: async () => {
-      const { data } = await apiClient.get("/categories");
-      return data;
-    },
-  });
+  const { categories: categoriesData } = useCategories();
 
   const { data: citiesData } = useQuery<{ success: boolean; data: City[] }>({
     queryKey: ["cities"],
@@ -233,7 +225,7 @@ export default function SearchResultsPage() {
                       Kategori
                     </label>
                     <div className="max-h-48 overflow-y-auto space-y-1 pr-1">
-                      {categoriesData?.data.map((cat) => (
+                      {categoriesData.map((cat) => (
                         <label
                           key={cat.slug}
                           className="flex items-center gap-3 py-2 px-1 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors"
@@ -295,9 +287,9 @@ export default function SearchResultsPage() {
         </form>
 
         {/* Category filter chips */}
-        {categoriesData?.data && categoriesData.data.length > 0 && (
+        {categoriesData && categoriesData.length > 0 && (
           <div className="flex items-center gap-2 flex-wrap mb-5">
-            {categoriesData.data.map((cat) => (
+            {categoriesData.map((cat) => (
               <button
                 key={cat.slug}
                 onClick={() => handleCategoryFilter(cat.slug)}
@@ -333,10 +325,10 @@ export default function SearchResultsPage() {
                 </button>
               </span>
             )}
-            {selectedCategory && categoriesData?.data && (
+            {selectedCategory && categoriesData && (
               <span className="inline-flex items-center gap-1 bg-primary-50 text-primary-700 text-xs font-medium px-2.5 py-1 rounded-full">
-                {categoriesData.data.find((c) => c.slug === selectedCategory)?.icon}{" "}
-                {categoriesData.data.find((c) => c.slug === selectedCategory)?.name}
+                {categoriesData.find((c) => c.slug === selectedCategory)?.icon}{" "}
+                {categoriesData.find((c) => c.slug === selectedCategory)?.name}
                 <button
                   onClick={() => {
                     const params = new URLSearchParams(searchParams);
