@@ -33,14 +33,18 @@ export function ContactCard({ contact, hideSave }: ContactCardProps) {
     <div className="bg-white rounded-2xl border border-gray-100/80 shadow-[0_2px_8px_rgba(0,0,0,0.04)] p-4">
       {/* Top: photo + info */}
       <div className="flex gap-3.5">
-        {/* Photo placeholder */}
+        {/* Photo */}
         <button
           onClick={handleNavigate}
-          className="flex-shrink-0 w-[84px] h-[84px] rounded-2xl flex items-center justify-center active:scale-95 transition-transform"
-          style={{ background: PHOTO_STRIPES }}
+          className="flex-shrink-0 w-[84px] h-[84px] rounded-2xl overflow-hidden flex items-center justify-center active:scale-95 transition-transform"
+          style={contact.imageUrl ? undefined : { background: PHOTO_STRIPES }}
           aria-label={`Lihat ${contact.name}`}
         >
-          <span className="text-[11px] font-medium text-gray-400">foto</span>
+          {contact.imageUrl ? (
+            <img src={contact.imageUrl} alt={contact.name} className="w-full h-full object-cover" />
+          ) : (
+            <span className="text-[11px] font-medium text-gray-400">foto</span>
+          )}
         </button>
 
         {/* Info */}

@@ -136,10 +136,14 @@ export default function ContactDetailPage() {
         {/* Profile info */}
         <div className="relative z-10 flex items-start gap-4">
           {/* Avatar */}
-          <div className="w-[68px] h-[68px] rounded-2xl bg-white/15 backdrop-blur-sm border border-white/20 flex items-center justify-center flex-shrink-0 shadow-lg">
-            <span className="text-2xl font-bold text-white/90 tracking-wide">
-              {getInitials(contact.name)}
-            </span>
+          <div className="w-[68px] h-[68px] rounded-2xl overflow-hidden bg-white/15 backdrop-blur-sm border border-white/20 flex items-center justify-center flex-shrink-0 shadow-lg">
+            {contact.imageUrl ? (
+              <img src={contact.imageUrl} alt={contact.name} className="w-full h-full object-cover" />
+            ) : (
+              <span className="text-2xl font-bold text-white/90 tracking-wide">
+                {getInitials(contact.name)}
+              </span>
+            )}
           </div>
 
           <div className="flex-1 min-w-0 pt-0.5">
