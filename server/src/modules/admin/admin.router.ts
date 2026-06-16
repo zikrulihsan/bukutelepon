@@ -163,6 +163,7 @@ router.patch("/contacts/:id/approve", async (req: AuthenticatedRequest, res, nex
     const contact = await prisma.contact.update({
       where: { id: req.params.id as string },
       data: { status: "APPROVED" },
+      include: { city: true, category: true, submittedBy: true },
     });
 
     res.json({ success: true, data: contact });
@@ -177,6 +178,7 @@ router.patch("/contacts/:id/reject", async (req: AuthenticatedRequest, res, next
     const contact = await prisma.contact.update({
       where: { id: req.params.id as string },
       data: { status: "REJECTED" },
+      include: { city: true, category: true, submittedBy: true },
     });
 
     res.json({ success: true, data: contact });
