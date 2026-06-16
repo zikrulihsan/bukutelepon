@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, FormEvent } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "../../lib/axios";
+import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../hooks/useAuth";
 import { useCity } from "../../context/CityContext";
 import { useCategories } from "../../context/CategoriesContext";
@@ -108,6 +109,10 @@ export default function SubmitPage() {
   const [form, setForm] = useState({
     name: "", phone: "", address: "", website: "", mapsUrl: "", description: "", cityId: "", categoryId: "",
   });
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [imageUploading, setImageUploading] = useState(false);
+  const imageInputRef = useRef<HTMLInputElement>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
@@ -182,7 +187,7 @@ export default function SubmitPage() {
           </p>
           <div className="flex gap-2.5 justify-center">
             <button
-              onClick={() => { setSuccess(false); setForm({ name: "", phone: "", address: "", website: "", mapsUrl: "", description: "", cityId: defaultCityId, categoryId: "" }); }}
+              onClick={() => { setSuccess(false); setForm({ name: "", phone: "", address: "", website: "", mapsUrl: "", description: "", cityId: defaultCityId, categoryId: "" }); setImageFile(null); setImagePreview(null); }}
               className="bg-primary-700 text-white px-5 py-2.5 rounded-xl text-sm font-semibold active:scale-[0.98] transition-all"
             >
               Tambah Lagi
@@ -200,18 +205,48 @@ export default function SubmitPage() {
   }
 
   // ── Handlers ──
+  function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setImageFile(file);
+    setImagePreview(URL.createObjectURL(file));
+    e.target.value = "";
+  }
+
+  function removeImage() {
+    setImageFile(null);
+    if (imagePreview) URL.revokeObjectURL(imagePreview);
+    setImagePreview(null);
+  }
+
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setLoading(true);
     setError("");
     try {
-      await apiClient.post("/contacts", form);
+      let imageUrl: string | undefined;
+
+      if (imageFile) {
+        setImageUploading(true);
+        const ext = imageFile.name.split(".").pop();
+        const path = `contacts/${Date.now()}.${ext}`;
+        const { error: uploadError } = await supabase.storage.from("contact-images").upload(path, imageFile, { upsert: false });
+        setImageUploading(false);
+        if (uploadError) throw new Error("Gagal mengupload foto");
+        const { data: urlData } = supabase.storage.from("contact-images").getPublicUrl(path);
+        imageUrl = urlData.publicUrl;
+      }
+
+      await apiClient.post("/contacts", { ...form, imageUrl });
       setSuccess(true);
+      setImageFile(null);
+      setImagePreview(null);
     } catch (err: unknown) {
-      const message = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
+      const message = (err as { response?: { data?: { message?: string } }; message?: string })?.response?.data?.message ?? (err as { message?: string })?.message;
       setError(message || "Gagal mengirim kontak");
     } finally {
       setLoading(false);
+      setImageUploading(false);
     }
   }
 
@@ -445,9 +480,34 @@ export default function SubmitPage() {
                 <label className={labelClass}>Deskripsi</label>
                 <textarea rows={3} value={form.description} onChange={(e) => update("description", e.target.value)} placeholder="Deskripsi singkat tentang tempat ini..." className="form-input h-auto py-2.5 resize-none" />
               </div>
-              <button type="submit" disabled={loading} className="w-full h-12 bg-primary-700 text-white rounded-xl text-sm font-semibold active:scale-[0.98] transition-all disabled:opacity-50 flex items-center justify-center gap-2">
-                {loading && <ImSpinner2 className="animate-spin h-4 w-4" />}
-                Kirim Kontak
+              <div>
+                <label className={labelClass}>Foto</label>
+                {imagePreview ? (
+                  <div className="relative w-20 h-20">
+                    <img src={imagePreview} alt="Preview" className="w-20 h-20 rounded-xl object-cover border border-gray-200" />
+                    <button
+                      type="button"
+                      onClick={removeImage}
+                      className="absolute -top-2 -right-2 bg-white border border-gray-200 rounded-full p-0.5 shadow text-gray-500 active:text-red-500"
+                    >
+                      <HiXMark className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => imageInputRef.current?.click()}
+                    className="flex items-center gap-2 px-4 py-2.5 bg-white border border-dashed border-gray-300 rounded-xl text-sm text-gray-500 active:border-primary-400 active:text-primary-600 transition-colors"
+                  >
+                    <HiOutlineCloudArrowUp className="h-4 w-4" />
+                    Upload foto (opsional)
+                  </button>
+                )}
+                <input ref={imageInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageChange} />
+              </div>
+              <button type="submit" disabled={loading || imageUploading} className="w-full h-12 bg-primary-700 text-white rounded-xl text-sm font-semibold active:scale-[0.98] transition-all disabled:opacity-50 flex items-center justify-center gap-2">
+                {(loading || imageUploading) && <ImSpinner2 className="animate-spin h-4 w-4" />}
+                {imageUploading ? "Mengupload foto..." : "Kirim Kontak"}
               </button>
             </form>
           </>

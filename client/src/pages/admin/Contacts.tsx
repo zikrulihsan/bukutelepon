@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "../../lib/axios";
+import { supabase } from "../../lib/supabase";
 import { useCategories } from "../../context/CategoriesContext";
 import { Button } from "../../components/ui/Button";
 import { Badge } from "../../components/ui/Badge";
@@ -14,6 +15,7 @@ interface EditForm {
   website: string;
   mapsUrl: string;
   description: string;
+  imageUrl: string;
   cityId: string;
   categoryId: string;
   status: string;
@@ -26,6 +28,10 @@ export default function AdminContacts() {
   const [page, setPage] = useState(1);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<EditForm | null>(null);
+  const [editImageFile, setEditImageFile] = useState<File | null>(null);
+  const [editImagePreview, setEditImagePreview] = useState<string | null>(null);
+  const [editImageUploading, setEditImageUploading] = useState(false);
+  const editImageInputRef = useRef<HTMLInputElement>(null);
 
   const { data, isLoading } = useQuery<PaginatedResponse<Contact>>({
     queryKey: ["admin", "contacts", status, page],
@@ -55,18 +61,35 @@ export default function AdminContacts() {
   });
 
   const editMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: EditForm }) =>
-      apiClient.put(`/admin/contacts/${id}`, {
+    mutationFn: async ({ id, data }: { id: string; data: EditForm }) => {
+      let imageUrl = data.imageUrl || null;
+
+      if (editImageFile) {
+        setEditImageUploading(true);
+        const ext = editImageFile.name.split(".").pop();
+        const path = `contacts/${Date.now()}.${ext}`;
+        const { error } = await supabase.storage.from("contact-images").upload(path, editImageFile, { upsert: false });
+        setEditImageUploading(false);
+        if (error) throw error;
+        const { data: urlData } = supabase.storage.from("contact-images").getPublicUrl(path);
+        imageUrl = urlData.publicUrl;
+      }
+
+      return apiClient.put(`/admin/contacts/${id}`, {
         ...data,
         address: data.address || null,
         website: data.website || null,
         mapsUrl: data.mapsUrl || null,
         description: data.description || null,
-      }),
+        imageUrl,
+      });
+    },
     onSuccess: () => {
       invalidateAll();
       setEditingId(null);
       setEditForm(null);
+      setEditImageFile(null);
+      setEditImagePreview(null);
     },
   });
 
@@ -79,15 +102,35 @@ export default function AdminContacts() {
       website: contact.website || "",
       mapsUrl: contact.mapsUrl || "",
       description: contact.description || "",
+      imageUrl: contact.imageUrl || "",
       cityId: contact.cityId,
       categoryId: contact.categoryId,
       status: contact.status,
     });
+    setEditImageFile(null);
+    setEditImagePreview(contact.imageUrl || null);
   }
 
   function cancelEdit() {
     setEditingId(null);
     setEditForm(null);
+    setEditImageFile(null);
+    setEditImagePreview(null);
+  }
+
+  function handleEditImageChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setEditImageFile(file);
+    setEditImagePreview(URL.createObjectURL(file));
+    e.target.value = "";
+  }
+
+  function removeEditImage() {
+    setEditImageFile(null);
+    if (editImagePreview && editImageFile) URL.revokeObjectURL(editImagePreview);
+    setEditImagePreview(null);
+    if (editForm) setEditForm({ ...editForm, imageUrl: "" });
   }
 
   const cities = citiesData?.data ?? [];
@@ -180,9 +223,39 @@ export default function AdminContacts() {
                     <label className="block text-xs font-medium text-gray-500 mb-1">Deskripsi</label>
                     <textarea value={editForm.description} onChange={(e) => setEditForm({ ...editForm, description: e.target.value })} rows={2} className={`${inputClass} resize-none`} placeholder="Opsional" />
                   </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-500 mb-1">Foto</label>
+                    {editImagePreview ? (
+                      <div className="relative w-16 h-16">
+                        <img src={editImagePreview} alt="Preview" className="w-16 h-16 rounded-xl object-cover border border-gray-200" />
+                        <button
+                          type="button"
+                          onClick={removeEditImage}
+                          className="absolute -top-1.5 -right-1.5 bg-white border border-gray-200 rounded-full p-0.5 shadow text-gray-500 hover:text-red-500"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => editImageInputRef.current?.click()}
+                        className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-dashed border-gray-300 rounded-xl text-xs text-gray-500 hover:border-primary-400 hover:text-primary-600 transition-colors"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        Upload foto
+                      </button>
+                    )}
+                    <input ref={editImageInputRef} type="file" accept="image/*" className="hidden" onChange={handleEditImageChange} />
+                  </div>
+
                   <div className="flex gap-2 pt-1">
-                    <Button size="sm" onClick={() => editMutation.mutate({ id: contact.id, data: editForm })} loading={editMutation.isPending}>
-                      Simpan
+                    <Button size="sm" onClick={() => editMutation.mutate({ id: contact.id, data: editForm })} loading={editMutation.isPending || editImageUploading}>
+                      {editImageUploading ? "Mengupload..." : "Simpan"}
                     </Button>
                     <button onClick={cancelEdit} className="px-3 py-1.5 text-sm text-gray-600 hover:text-gray-800 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors">
                       Batal

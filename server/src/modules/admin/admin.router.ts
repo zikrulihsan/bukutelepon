@@ -137,6 +137,7 @@ const adminEditContactSchema = z.object({
   website: z.string().url().optional().nullable().or(z.literal("")),
   mapsUrl: z.string().url().optional().nullable().or(z.literal("")),
   description: z.string().max(500).optional().nullable(),
+  imageUrl: z.string().url().optional().nullable().or(z.literal("")),
   cityId: z.string().uuid().optional(),
   categoryId: z.string().uuid().optional(),
   status: z.enum(["PENDING", "APPROVED", "REJECTED"]).optional(),
