@@ -59,10 +59,10 @@ export default function SavedPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F1F3EE] max-w-md mx-auto pb-24">
+    <div className="min-h-screen bg-white max-w-md mx-auto pb-24">
       <div className="px-5 pt-6 pb-3">
         <h1 className="text-[22px] font-extrabold text-gray-900 tracking-tight">Kontak Tersimpan</h1>
-        <p className="text-[13px] text-gray-500 mt-1">Kontak yang kamu simpan untuk akses cepat</p>
+        <p className="text-sm text-gray-500 mt-1">Kontak yang kamu simpan untuk akses cepat</p>
       </div>
 
       <div className="px-4 pt-4">

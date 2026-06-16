@@ -141,7 +141,7 @@ export default function SearchResultsPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-white">
       <div className="max-w-3xl mx-auto px-4 py-8">
         {/* Header */}
         <Link
@@ -400,7 +400,7 @@ export default function SearchResultsPage() {
                   <button
                     onClick={() => setPage((p) => Math.max(1, p - 1))}
                     disabled={page === 1}
-                    className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 disabled:opacity-40 hover:bg-gray-50 transition-colors"
+                    className="px-4 py-2 border border-gray-300 rounded-xl text-sm font-medium text-gray-700 disabled:opacity-40 hover:bg-gray-50 transition-colors"
                   >
                     Sebelumnya
                   </button>
@@ -410,7 +410,7 @@ export default function SearchResultsPage() {
                   <button
                     onClick={() => setPage((p) => p + 1)}
                     disabled={page >= contactsData.meta.totalPages}
-                    className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 disabled:opacity-40 hover:bg-gray-50 transition-colors"
+                    className="px-4 py-2 border border-gray-300 rounded-xl text-sm font-medium text-gray-700 disabled:opacity-40 hover:bg-gray-50 transition-colors"
                   >
                     Selanjutnya
                   </button>

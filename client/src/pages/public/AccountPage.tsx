@@ -7,7 +7,7 @@ export default function AccountPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 max-w-md mx-auto pb-24">
+      <div className="min-h-screen bg-white max-w-md mx-auto pb-24">
         <div className="px-4 pt-8">
           <div className="flex flex-col items-center">
             <div className="w-16 h-16 rounded-full shimmer mb-3" />
@@ -21,7 +21,7 @@ export default function AccountPage() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-gray-50 max-w-md mx-auto pb-24">
+      <div className="min-h-screen bg-white max-w-md mx-auto pb-24">
         <div className="px-4 pt-16 text-center">
           <div className="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-5">
             <HiOutlineUser className="h-9 w-9 text-gray-400" />
@@ -50,7 +50,7 @@ export default function AccountPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 max-w-md mx-auto pb-24">
+    <div className="min-h-screen bg-white max-w-md mx-auto pb-24">
       {/* Profile header */}
       <div className="bg-white px-4 pt-6 pb-5 border-b border-gray-100">
         <div className="flex items-center gap-4">

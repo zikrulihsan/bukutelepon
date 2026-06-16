@@ -124,9 +124,9 @@ export default function SearchPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F1F3EE] max-w-md mx-auto pb-24">
+    <div className="min-h-screen bg-white max-w-md mx-auto pb-24">
       {/* Search header */}
-      <div className="bg-[#F1F3EE]/95 backdrop-blur-md px-4 pt-4 pb-3 border-b border-black/5 sticky top-0 z-20">
+      <div className="bg-white/95 backdrop-blur-md px-4 pt-4 pb-3 border-b border-black/5 sticky top-0 z-20">
         <div className="flex items-center gap-2">
           <button
             type="button"

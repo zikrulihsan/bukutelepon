@@ -36,7 +36,7 @@ export default function AdminReviews() {
             key={s}
             onClick={() => { setStatus(s); setPage(1); }}
             className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
-              status === s ? "bg-primary-600 text-white" : "bg-white border border-gray-300 text-gray-700"
+              status === s ? "bg-primary-700 text-white" : "bg-white border border-gray-300 text-gray-700"
             }`}
           >
             {s}

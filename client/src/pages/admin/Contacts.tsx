@@ -92,7 +92,7 @@ export default function AdminContacts() {
 
   const cities = citiesData?.data ?? [];
   const categories = categoriesData ?? [];
-  const inputClass = "w-full rounded-lg border border-gray-300 px-3 py-1.5 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none";
+  const inputClass = "w-full rounded-xl border border-gray-300 px-3 py-1.5 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none";
 
   return (
     <div>
@@ -104,7 +104,7 @@ export default function AdminContacts() {
             key={s}
             onClick={() => { setStatus(s); setPage(1); }}
             className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
-              status === s ? "bg-primary-600 text-white" : "bg-white border border-gray-300 text-gray-700"
+              status === s ? "bg-primary-700 text-white" : "bg-white border border-gray-300 text-gray-700"
             }`}
           >
             {s}
@@ -184,7 +184,7 @@ export default function AdminContacts() {
                     <Button size="sm" onClick={() => editMutation.mutate({ id: contact.id, data: editForm })} loading={editMutation.isPending}>
                       Simpan
                     </Button>
-                    <button onClick={cancelEdit} className="px-3 py-1.5 text-sm text-gray-600 hover:text-gray-800">
+                    <button onClick={cancelEdit} className="px-3 py-1.5 text-sm text-gray-600 hover:text-gray-800 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors">
                       Batal
                     </button>
                   </div>
@@ -208,7 +208,7 @@ export default function AdminContacts() {
                   <div className="flex gap-2 flex-shrink-0">
                     <button
                       onClick={() => startEdit(contact)}
-                      className="p-1.5 text-gray-400 hover:text-primary-600 rounded-lg hover:bg-gray-50 transition-colors"
+                      className="p-1.5 text-gray-400 hover:text-primary-700 rounded-xl hover:bg-gray-50 transition-colors"
                       title="Edit"
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -238,7 +238,7 @@ export default function AdminContacts() {
           <button
             onClick={() => setPage((p) => Math.max(1, p - 1))}
             disabled={page === 1}
-            className="px-4 py-2 border rounded-xl disabled:opacity-50 text-sm"
+            className="px-4 py-2 border border-gray-200 rounded-xl disabled:opacity-50 text-sm"
           >
             Sebelumnya
           </button>
@@ -248,7 +248,7 @@ export default function AdminContacts() {
           <button
             onClick={() => setPage((p) => p + 1)}
             disabled={page >= data.meta.totalPages}
-            className="px-4 py-2 border rounded-xl disabled:opacity-50 text-sm"
+            className="px-4 py-2 border border-gray-200 rounded-xl disabled:opacity-50 text-sm"
           >
             Selanjutnya
           </button>

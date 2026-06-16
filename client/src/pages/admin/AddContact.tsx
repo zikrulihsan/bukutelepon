@@ -246,7 +246,7 @@ export default function AdminAddContact() {
         <p className="text-sm text-gray-500 mb-4">Impor dari kontak HP atau file VCF/CSV, langsung approved.</p>
 
         {bulkSuccess && (
-          <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-xl text-green-700 text-sm">
+          <div className="mb-4 p-3 bg-primary-50 border border-primary-200 rounded-xl text-primary-700 text-sm">
             {bulkSuccess}
           </div>
         )}
@@ -263,7 +263,7 @@ export default function AdminAddContact() {
             <button
               type="button"
               onClick={handlePickContacts}
-              className="inline-flex items-center gap-2 px-4 py-2.5 bg-primary-600 text-white text-sm font-medium rounded-xl hover:bg-primary-700 transition-colors"
+              className="inline-flex items-center gap-2 px-4 py-2.5 bg-primary-700 text-white text-sm font-medium rounded-xl hover:bg-primary-800 transition-colors"
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -302,7 +302,7 @@ export default function AdminAddContact() {
                     type="checkbox"
                     checked={selectedCount === imported.length}
                     onChange={(e) => toggleAll(e.target.checked)}
-                    className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                    className="rounded border-gray-300 text-primary-700 focus:ring-primary-500"
                   />
                   <span className="text-gray-700 font-medium">{selectedCount} dari {imported.length} dipilih</span>
                 </label>
@@ -324,7 +324,7 @@ export default function AdminAddContact() {
                     type="checkbox"
                     checked={contact.selected}
                     onChange={() => toggleContact(i)}
-                    className="rounded border-gray-300 text-primary-600 focus:ring-primary-500 flex-shrink-0"
+                    className="rounded border-gray-300 text-primary-700 focus:ring-primary-500 flex-shrink-0"
                   />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-gray-900 truncate">{contact.name}</p>
@@ -372,7 +372,7 @@ export default function AdminAddContact() {
                 type="button"
                 onClick={handleBulkSubmit}
                 disabled={selectedCount === 0 || !importCityId || !importCategoryId || bulkMutation.isPending}
-                className="w-full bg-primary-600 text-white font-semibold py-2.5 rounded-xl hover:bg-primary-700 transition-colors disabled:opacity-50"
+                className="w-full bg-primary-700 text-white font-semibold py-2.5 rounded-xl hover:bg-primary-800 transition-colors disabled:opacity-50"
               >
                 {bulkMutation.isPending
                   ? "Mengimpor..."
@@ -407,7 +407,7 @@ export default function AdminAddContact() {
         <p className="text-sm text-gray-500 mb-4">Input satu kontak, langsung approved.</p>
 
         {success && (
-          <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-xl text-green-700 text-sm">
+          <div className="mb-4 p-3 bg-primary-50 border border-primary-200 rounded-xl text-primary-700 text-sm">
             Kontak berhasil ditambahkan!
           </div>
         )}
@@ -511,7 +511,7 @@ export default function AdminAddContact() {
           <button
             type="submit"
             disabled={mutation.isPending}
-            className="w-full bg-primary-600 text-white font-semibold py-2.5 rounded-xl hover:bg-primary-700 transition-colors disabled:opacity-50"
+            className="w-full bg-primary-700 text-white font-semibold py-2.5 rounded-xl hover:bg-primary-800 transition-colors disabled:opacity-50"
           >
             {mutation.isPending ? "Menyimpan..." : "Tambah Kontak"}
           </button>

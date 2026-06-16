@@ -131,7 +131,7 @@ export default function SubmitPage() {
   // ── Auth states ──
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 max-w-md mx-auto pb-24">
+      <div className="min-h-screen bg-white max-w-md mx-auto pb-24">
         <div className="px-4 pt-8 space-y-4">
           {Array.from({ length: 5 }).map((_, i) => (
             <div key={i}>
@@ -146,7 +146,7 @@ export default function SubmitPage() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-gray-50 max-w-md mx-auto pb-24">
+      <div className="min-h-screen bg-white max-w-md mx-auto pb-24">
         <div className="px-4 pt-16 text-center">
           <div className="w-16 h-16 rounded-full bg-primary-50 flex items-center justify-center mx-auto mb-4">
             <HiOutlinePlusCircle className="h-7 w-7 text-primary-700" />
@@ -171,7 +171,7 @@ export default function SubmitPage() {
   // ── Success state (manual) ──
   if (success) {
     return (
-      <div className="min-h-screen bg-gray-50 max-w-md mx-auto pb-24">
+      <div className="min-h-screen bg-white max-w-md mx-auto pb-24">
         <div className="px-4 pt-16 text-center">
           <div className="w-16 h-16 rounded-full bg-green-50 flex items-center justify-center mx-auto mb-4">
             <HiCheck className="h-8 w-8 text-green-600" />
@@ -291,11 +291,10 @@ export default function SubmitPage() {
   const approvedCount = contributions.filter((c) => c.status === "APPROVED").length;
   const pendingCount = contributions.filter((c) => c.status === "PENDING").length;
 
-  const inputClass = "w-full h-11 bg-gray-50 border border-gray-200 rounded-xl px-3.5 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors";
   const labelClass = "block text-xs font-semibold text-gray-700 mb-1.5";
 
   return (
-    <div className="min-h-screen bg-gray-50 max-w-md mx-auto pb-24">
+    <div className="min-h-screen bg-white max-w-md mx-auto pb-24">
       {/* Header */}
       <div className="bg-white px-4 pt-4 pb-3 border-b border-gray-100">
         <h1 className="text-lg font-bold text-gray-900">Kontribusi</h1>
@@ -404,16 +403,16 @@ export default function SubmitPage() {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label className={labelClass}>Nama Bisnis / Tempat *</label>
-                <input type="text" required value={form.name} onChange={(e) => update("name", e.target.value)} placeholder="Contoh: RS Harapan Kita" className={inputClass} />
+                <input type="text" required value={form.name} onChange={(e) => update("name", e.target.value)} placeholder="Contoh: RS Harapan Kita" className="form-input" />
               </div>
               <div>
                 <label className={labelClass}>Nomor Telepon *</label>
-                <input type="tel" required value={form.phone} onChange={(e) => update("phone", e.target.value)} placeholder="Contoh: 021-1234567" className={inputClass} />
+                <input type="tel" required value={form.phone} onChange={(e) => update("phone", e.target.value)} placeholder="Contoh: 021-1234567" className="form-input" />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className={labelClass}>Kota *</label>
-                  <select required value={form.cityId} onChange={(e) => update("cityId", e.target.value)} className={`${inputClass} appearance-none`}>
+                  <select required value={form.cityId} onChange={(e) => update("cityId", e.target.value)} className="form-input appearance-none">
                     <option value="">Pilih Kota</option>
                     {citiesData?.data.map((city) => (
                       <option key={city.id} value={city.id}>{city.name}</option>
@@ -422,7 +421,7 @@ export default function SubmitPage() {
                 </div>
                 <div>
                   <label className={labelClass}>Kategori *</label>
-                  <select required value={form.categoryId} onChange={(e) => update("categoryId", e.target.value)} className={`${inputClass} appearance-none`}>
+                  <select required value={form.categoryId} onChange={(e) => update("categoryId", e.target.value)} className="form-input appearance-none">
                     <option value="">Pilih Kategori</option>
                     {categoriesData.map((cat) => (
                       <option key={cat.id} value={cat.id}>{cat.name}</option>
@@ -432,19 +431,19 @@ export default function SubmitPage() {
               </div>
               <div>
                 <label className={labelClass}>Alamat</label>
-                <input type="text" value={form.address} onChange={(e) => update("address", e.target.value)} placeholder="Jl. Contoh No. 123" className={inputClass} />
+                <input type="text" value={form.address} onChange={(e) => update("address", e.target.value)} placeholder="Jl. Contoh No. 123" className="form-input" />
               </div>
               <div>
                 <label className={labelClass}>Website</label>
-                <input type="url" value={form.website} onChange={(e) => update("website", e.target.value)} placeholder="https://contoh.com" className={inputClass} />
+                <input type="url" value={form.website} onChange={(e) => update("website", e.target.value)} placeholder="https://contoh.com" className="form-input" />
               </div>
               <div>
                 <label className={labelClass}>Link Google Maps</label>
-                <input type="url" value={form.mapsUrl} onChange={(e) => update("mapsUrl", e.target.value)} placeholder="https://maps.google.com/..." className={inputClass} />
+                <input type="url" value={form.mapsUrl} onChange={(e) => update("mapsUrl", e.target.value)} placeholder="https://maps.google.com/..." className="form-input" />
               </div>
               <div>
                 <label className={labelClass}>Deskripsi</label>
-                <textarea rows={3} value={form.description} onChange={(e) => update("description", e.target.value)} placeholder="Deskripsi singkat tentang tempat ini..." className={`${inputClass} h-auto py-2.5 resize-none`} />
+                <textarea rows={3} value={form.description} onChange={(e) => update("description", e.target.value)} placeholder="Deskripsi singkat tentang tempat ini..." className="form-input h-auto py-2.5 resize-none" />
               </div>
               <button type="submit" disabled={loading} className="w-full h-12 bg-primary-700 text-white rounded-xl text-sm font-semibold active:scale-[0.98] transition-all disabled:opacity-50 flex items-center justify-center gap-2">
                 {loading && <ImSpinner2 className="animate-spin h-4 w-4" />}
@@ -534,7 +533,7 @@ export default function SubmitPage() {
                     <select
                       value={importCityId}
                       onChange={(e) => setImportCityId(e.target.value)}
-                      className={`${inputClass} h-10 text-xs`}
+                      className="form-input h-10 text-xs"
                     >
                       <option value="">Pilih kota *</option>
                       {citiesData?.data.map((c) => (
@@ -544,7 +543,7 @@ export default function SubmitPage() {
                     <select
                       value={importCategoryId}
                       onChange={(e) => setImportCategoryId(e.target.value)}
-                      className={`${inputClass} h-10 text-xs`}
+                      className="form-input h-10 text-xs"
                     >
                       <option value="">Pilih kategori *</option>
                       {categoriesData.map((c) => (
