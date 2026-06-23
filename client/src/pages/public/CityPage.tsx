@@ -4,7 +4,6 @@ import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "../../lib/axios";
 import { useContacts } from "../../hooks/useContacts";
 import { ContactCard } from "../../components/shared/ContactCard";
-import { ContributionWall } from "../../components/shared/ContributionWall";
 import type { City } from "../../types";
 import { HiChevronLeft } from "react-icons/hi2";
 
@@ -27,7 +26,6 @@ export default function CityPage() {
   });
 
   const city = cityData?.data;
-  const isGuestLimited = contactsData?.meta.guestLimited;
 
   return (
     <div className="min-h-screen bg-white">
@@ -70,14 +68,7 @@ export default function CityPage() {
               ))}
             </div>
 
-            {isGuestLimited && (
-              <div className="mt-6">
-                <ContributionWall />
-              </div>
-            )}
-
-            {!isGuestLimited &&
-              contactsData?.meta &&
+            {contactsData?.meta &&
               contactsData.meta.totalPages > 1 && (
                 <div className="flex justify-center items-center gap-3 mt-8">
                   <button

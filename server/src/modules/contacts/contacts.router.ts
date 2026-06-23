@@ -2,14 +2,11 @@ import { Router } from "express";
 import { prisma } from "../../utils/prisma";
 import { z } from "zod";
 import { authenticate, AuthenticatedRequest } from "../../middleware/authenticate";
-import { checkAccess, AccessRequest } from "../../middleware/checkAccess";
 import { submitLimiter, apiLimiter } from "../../middleware/rateLimiter";
 import { sanitize } from "../../middleware/sanitize";
 import { AppError } from "../../middleware/errorHandler";
 
 const router = Router();
-
-const GUEST_VIEW_THRESHOLD = parseInt(process.env.GUEST_VIEW_THRESHOLD || "3", 10);
 
 const createContactSchema = z.object({
   name: z.string().min(2).max(200),
@@ -23,8 +20,8 @@ const createContactSchema = z.object({
   categoryId: z.string().uuid(),
 });
 
-// GET /api/contacts — public with gated access
-router.get("/", apiLimiter, checkAccess, async (req: AccessRequest, res, next) => {
+// GET /api/contacts — public
+router.get("/", apiLimiter, async (req, res, next) => {
   try {
     const page = parseInt(req.query.page as string) || 1;
     const limit = parseInt(req.query.limit as string) || 20;
@@ -57,24 +54,6 @@ router.get("/", apiLimiter, checkAccess, async (req: AccessRequest, res, next) =
       prisma.contact.count({ where }),
     ]);
 
-    // Guests see limited results
-    if (!req.isAuthenticated) {
-      const limited = contacts.slice(0, GUEST_VIEW_THRESHOLD);
-      res.json({
-        success: true,
-        data: limited,
-        meta: {
-          page,
-          limit,
-          total,
-          totalPages: Math.ceil(total / limit),
-          guestLimited: true,
-          guestThreshold: GUEST_VIEW_THRESHOLD,
-        },
-      });
-      return;
-    }
-
     res.json({
       success: true,
       data: contacts,
@@ -83,7 +62,6 @@ router.get("/", apiLimiter, checkAccess, async (req: AccessRequest, res, next) =
         limit,
         total,
         totalPages: Math.ceil(total / limit),
-        guestLimited: false,
       },
     });
   } catch (err) {
@@ -127,7 +105,7 @@ router.get("/all", apiLimiter, async (_req, res, next) => {
 });
 
 // GET /api/contacts/:id
-router.get("/:id", apiLimiter, checkAccess, async (req: AccessRequest, res, next) => {
+router.get("/:id", apiLimiter, async (req, res, next) => {
   try {
     const contact = await prisma.contact.findUnique({
       where: { id: req.params.id as string },

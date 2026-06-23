@@ -5,7 +5,6 @@ import { apiClient } from "../../lib/axios";
 import { useCategories } from "../../context/CategoriesContext";
 import { useContacts } from "../../hooks/useContacts";
 import { ContactCard } from "../../components/shared/ContactCard";
-import { ContributionWall } from "../../components/shared/ContributionWall";
 import type { Category, City } from "../../types";
 
 export default function SearchResultsPage() {
@@ -74,7 +73,6 @@ export default function SearchResultsPage() {
     city: selectedCity || undefined,
   });
 
-  const isGuestLimited = contactsData?.meta?.guestLimited;
   const total = contactsData?.meta?.total ?? 0;
   const showing = contactsData?.data?.length ?? 0;
 
@@ -387,14 +385,7 @@ export default function SearchResultsPage() {
               )}
             </div>
 
-            {isGuestLimited && (
-              <div className="mt-6">
-                <ContributionWall />
-              </div>
-            )}
-
-            {!isGuestLimited &&
-              contactsData?.meta &&
+            {contactsData?.meta &&
               contactsData.meta.totalPages > 1 && (
                 <div className="flex justify-center items-center gap-3 mt-8">
                   <button

@@ -4,7 +4,6 @@ import { useCity } from "../../context/CityContext";
 import { useCategories } from "../../context/CategoriesContext";
 import { useInfiniteContacts } from "../../hooks/useContacts";
 import { ContactCard } from "../../components/shared/ContactCard";
-import { ContributionWall } from "../../components/shared/ContributionWall";
 import { CategoryIcon } from "../../components/shared/CategoryIcon";
 import { ContactListShimmer } from "../../components/shared/Shimmer";
 import { HiChevronLeft, HiMagnifyingGlass, HiXMark, HiCheckBadge, HiCheck } from "react-icons/hi2";
@@ -91,7 +90,6 @@ export default function SearchPage() {
 
   const allContacts = infiniteData?.pages.flatMap((p) => p.data) ?? [];
   const total = infiniteData?.pages[0]?.meta.total ?? 0;
-  const isGuestLimited = infiniteData?.pages.some((p) => p.meta.guestLimited);
 
   // URL sync
   useEffect(() => {
@@ -261,11 +259,6 @@ export default function SearchPage() {
               </div>
             )}
 
-            {isGuestLimited && (
-              <div className="mt-5">
-                <ContributionWall />
-              </div>
-            )}
           </>
         )}
       </div>

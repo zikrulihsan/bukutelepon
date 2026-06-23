@@ -7,7 +7,6 @@ import { useCategories } from "../../context/CategoriesContext";
 import { useContacts, useInfiniteContacts } from "../../hooks/useContacts";
 import { useContactsData } from "../../context/ContactsContext";
 import { ContactCard } from "../../components/shared/ContactCard";
-import { ContributionWall } from "../../components/shared/ContributionWall";
 import { CityPickerOverlay } from "../../components/shared/CityPickerOverlay";
 import { CategoryIcon } from "../../components/shared/CategoryIcon";
 import { OnboardingTutorial, hasCompletedOnboarding } from "../../components/shared/OnboardingTutorial";
@@ -167,7 +166,6 @@ export default function MainScreen() {
 
   const allContacts = infiniteData?.pages.flatMap((p) => p.data) ?? [];
   const total = infiniteData?.pages[0]?.meta.total ?? 0;
-  const isGuestLimited = infiniteData?.pages.some((p) => p.meta.guestLimited);
 
   // ── URL sync ──
   useEffect(() => {
@@ -624,11 +622,6 @@ export default function MainScreen() {
                   </div>
                 )}
 
-                {isGuestLimited && (
-                  <div className="mt-5">
-                    <ContributionWall />
-                  </div>
-                )}
               </>
             )}
           </div>
