@@ -1,8 +1,11 @@
 import { Link } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
-import { HiOutlineUser, HiOutlineCog6Tooth, HiOutlineBookmark, HiOutlinePlusCircle, HiChevronRight, HiArrowRightOnRectangle } from "react-icons/hi2";
+import { HiOutlineUser, HiOutlineCog6Tooth, HiOutlineBookmark, HiOutlinePlusCircle, HiChevronRight, HiArrowRightOnRectangle, HiOutlineLanguage } from "react-icons/hi2";
+import { LanguageToggle } from "../../components/shared/LanguageToggle";
+import { useI18n } from "../../i18n/LanguageContext";
 
 export default function AccountPage() {
+  const { t } = useI18n();
   const { user, profile, signOut, loading } = useAuth();
 
   if (loading) {
@@ -26,23 +29,27 @@ export default function AccountPage() {
           <div className="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-5">
             <HiOutlineUser className="h-9 w-9 text-gray-400" />
           </div>
-          <h2 className="text-lg font-bold text-gray-900 mb-1">Masuk ke Akun</h2>
+          <h2 className="text-lg font-bold text-gray-900 mb-1">{t("account.signInTitle")}</h2>
           <p className="text-xs text-gray-500 mb-6 max-w-xs mx-auto leading-relaxed">
-            Masuk atau daftar untuk menyimpan kontak, berkontribusi, dan melihat semua data direktori.
+            {t("account.signInSubtitle")}
           </p>
           <div className="flex flex-col gap-2.5 max-w-xs mx-auto">
             <Link
               to="/login"
               className="block bg-primary-700 text-white px-5 py-3 rounded-xl text-sm font-semibold text-center hover:bg-primary-800 active:scale-[0.98] transition-all"
             >
-              Masuk
+              {t("auth.login")}
             </Link>
             <Link
               to="/register"
               className="block bg-gray-100 text-gray-700 px-5 py-3 rounded-xl text-sm font-semibold text-center hover:bg-gray-200 active:scale-[0.98] transition-all"
             >
-              Daftar Gratis
+              {t("auth.registerFree")}
             </Link>
+          </div>
+
+          <div className="mt-8 flex justify-center">
+            <LanguageToggle variant="row" />
           </div>
         </div>
       </div>
@@ -76,29 +83,35 @@ export default function AccountPage() {
         {profile?.role === "ADMIN" && (
           <Link to="/admin" className="flex items-center gap-3 bg-white rounded-xl px-4 py-3.5 shadow-sm">
             <HiOutlineCog6Tooth className="h-5 w-5 text-gray-500" />
-            <span className="text-sm font-medium text-gray-900">Admin Dashboard</span>
+            <span className="text-sm font-medium text-gray-900">{t("account.adminDashboard")}</span>
             <HiChevronRight className="h-4 w-4 text-gray-400 ml-auto" />
           </Link>
         )}
 
         <Link to="/saved" className="flex items-center gap-3 bg-white rounded-xl px-4 py-3.5 shadow-sm">
           <HiOutlineBookmark className="h-5 w-5 text-gray-500" />
-          <span className="text-sm font-medium text-gray-900">Kontak Tersimpan</span>
+          <span className="text-sm font-medium text-gray-900">{t("account.savedContacts")}</span>
           <HiChevronRight className="h-4 w-4 text-gray-400 ml-auto" />
         </Link>
 
         <Link to="/submit" className="flex items-center gap-3 bg-white rounded-xl px-4 py-3.5 shadow-sm">
           <HiOutlinePlusCircle className="h-5 w-5 text-gray-500" />
-          <span className="text-sm font-medium text-gray-900">Kontribusi Kontak</span>
+          <span className="text-sm font-medium text-gray-900">{t("account.contributeContact")}</span>
           <HiChevronRight className="h-4 w-4 text-gray-400 ml-auto" />
         </Link>
+
+        <div className="flex items-center gap-3 bg-white rounded-xl px-4 py-3.5 shadow-sm">
+          <HiOutlineLanguage className="h-5 w-5 text-gray-500" />
+          <span className="text-sm font-medium text-gray-900">{t("common.language")}</span>
+          <LanguageToggle className="ml-auto" />
+        </div>
 
         <button
           onClick={signOut}
           className="flex items-center gap-3 bg-white rounded-xl px-4 py-3.5 shadow-sm w-full text-left"
         >
           <HiArrowRightOnRectangle className="h-5 w-5 text-red-500" />
-          <span className="text-sm font-medium text-red-600">Keluar</span>
+          <span className="text-sm font-medium text-red-600">{t("account.signOut")}</span>
         </button>
       </div>
     </div>

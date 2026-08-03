@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import type { City } from "../../types";
 import { HiXMark } from "react-icons/hi2";
+import { useI18n } from "../../i18n/LanguageContext";
 
 interface CityPickerOverlayProps {
   cities: City[];
@@ -9,6 +10,8 @@ interface CityPickerOverlayProps {
 }
 
 export function CityPickerOverlay({ cities, onSelect, onClose }: CityPickerOverlayProps) {
+  const { t } = useI18n();
+
   useEffect(() => {
     document.body.style.overflow = "hidden";
     return () => { document.body.style.overflow = ""; };
@@ -29,8 +32,8 @@ export function CityPickerOverlay({ cities, onSelect, onClose }: CityPickerOverl
         {/* Header */}
         <div className="flex items-center justify-between px-5 pb-3">
           <div>
-            <h2 className="text-lg font-bold text-gray-900">Pilih Kota</h2>
-            <p className="text-xs text-gray-500">Temukan kontak di kota kamu</p>
+            <h2 className="text-lg font-bold text-gray-900">{t("city.pickTitle")}</h2>
+            <p className="text-xs text-gray-500">{t("city.pickSubtitle")}</p>
           </div>
           {onClose && (
             <button
@@ -55,7 +58,7 @@ export function CityPickerOverlay({ cities, onSelect, onClose }: CityPickerOverl
                 <span className="text-[11px] text-gray-400 mt-0.5">{city.province}</span>
                 {city._count?.contacts !== undefined && city._count.contacts > 0 && (
                   <span className="text-[11px] text-primary-600 font-medium mt-1.5">
-                    {city._count.contacts} kontak
+                    {t("common.contactsCount", { count: city._count.contacts })}
                   </span>
                 )}
               </button>

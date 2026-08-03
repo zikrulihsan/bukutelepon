@@ -3,8 +3,10 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import { Button } from "../../components/ui/Button";
 import { HiExclamationCircle, HiCheckCircle } from "react-icons/hi2";
+import { useI18n } from "../../i18n/LanguageContext";
 
 export default function RegisterPage() {
+  const { t } = useI18n();
   const { signUp } = useAuth();
   const navigate = useNavigate();
 
@@ -23,7 +25,7 @@ export default function RegisterPage() {
     setError("");
 
     if (password !== confirmPassword) {
-      setError("Password dan konfirmasi password tidak cocok");
+      setError(t("auth.passwordMismatchError"));
       setLoading(false);
       return;
     }
@@ -34,7 +36,7 @@ export default function RegisterPage() {
     } catch (err: unknown) {
       const message = (err as { response?: { data?: { message?: string } } })?.response?.data?.message
         || (err as { message?: string })?.message
-        || "Registrasi gagal";
+        || t("auth.registerFailed");
       setError(message);
     } finally {
       setLoading(false);
@@ -44,7 +46,7 @@ export default function RegisterPage() {
   return (
     <div className="min-h-screen bg-white flex flex-col items-center justify-center px-4">
       <div className="max-w-md w-full">
-        <h1 className="text-2xl font-bold text-gray-900 text-center mb-8">Daftar</h1>
+        <h1 className="text-2xl font-bold text-gray-900 text-center mb-8">{t("auth.registerTitle")}</h1>
 
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
@@ -54,7 +56,7 @@ export default function RegisterPage() {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Nama Lengkap</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">{t("auth.fullName")}</label>
             <input
               type="text"
               required
@@ -65,7 +67,7 @@ export default function RegisterPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">{t("auth.email")}</label>
             <input
               type="email"
               required
@@ -76,7 +78,7 @@ export default function RegisterPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">{t("auth.password")}</label>
             <input
               type="password"
               required
@@ -85,11 +87,11 @@ export default function RegisterPage() {
               onChange={(e) => setPassword(e.target.value)}
               className="form-input"
             />
-            <p className="text-xs text-gray-400 mt-1">Minimal 8 karakter</p>
+            <p className="text-xs text-gray-400 mt-1">{t("auth.minChars")}</p>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Konfirmasi Password</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">{t("auth.confirmPassword")}</label>
             <input
               type="password"
               required
@@ -105,26 +107,26 @@ export default function RegisterPage() {
             {!passwordsMatch && (
               <p className="text-xs text-red-500 mt-1 flex items-center gap-1">
                 <HiExclamationCircle className="h-3 w-3" />
-                Password tidak cocok
+                {t("auth.passwordMismatch")}
               </p>
             )}
             {passwordsMatch && confirmPassword.length > 0 && (
               <p className="text-xs text-green-600 mt-1 flex items-center gap-1">
                 <HiCheckCircle className="h-3 w-3" />
-                Password cocok
+                {t("auth.passwordMatch")}
               </p>
             )}
           </div>
 
           <Button type="submit" size="lg" loading={loading} disabled={!passwordsMatch} className="w-full">
-            Daftar
+            {t("auth.register")}
           </Button>
         </form>
 
         <p className="text-center text-sm text-gray-500 mt-6">
-          Sudah punya akun?{" "}
+          {t("auth.haveAccount")}{" "}
           <Link to="/login" className="text-primary-700 hover:underline">
-            Masuk
+            {t("auth.login")}
           </Link>
         </p>
       </div>

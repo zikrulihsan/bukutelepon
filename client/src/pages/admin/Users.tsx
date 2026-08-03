@@ -3,8 +3,10 @@ import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "../../lib/axios";
 import { Badge } from "../../components/ui/Badge";
 import type { Profile, PaginatedResponse } from "../../types";
+import { useI18n } from "../../i18n/LanguageContext";
 
 export default function AdminUsers() {
+  const { t, formatDate } = useI18n();
   const [page, setPage] = useState(1);
 
   const { data, isLoading } = useQuery<PaginatedResponse<Profile>>({
@@ -14,7 +16,7 @@ export default function AdminUsers() {
 
   return (
     <div>
-      <h1 className="text-xl font-bold text-gray-900 mb-6">Pengguna</h1>
+      <h1 className="text-xl font-bold text-gray-900 mb-6">{t("admin.users")}</h1>
 
       {isLoading ? (
         <div className="space-y-3">
@@ -30,11 +32,11 @@ export default function AdminUsers() {
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nama</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Role</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Kontribusi</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Terdaftar</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t("admin.colName")}</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t("admin.colEmail")}</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t("admin.colRole")}</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t("admin.colContributions")}</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t("admin.colRegistered")}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
@@ -47,11 +49,11 @@ export default function AdminUsers() {
                     </td>
                     <td className="px-4 py-3">
                       <Badge variant={user.hasContributed ? "success" : "warning"}>
-                        {user.hasContributed ? "Ya" : "Belum"}
+                        {user.hasContributed ? t("common.yes") : t("common.notYet")}
                       </Badge>
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-500 whitespace-nowrap">
-                      {new Date(user.createdAt).toLocaleDateString("id-ID")}
+                      {formatDate(user.createdAt)}
                     </td>
                   </tr>
                 ))}
@@ -68,7 +70,7 @@ export default function AdminUsers() {
             disabled={page === 1}
             className="px-4 py-2 border border-gray-200 rounded-xl disabled:opacity-50 text-sm"
           >
-            Sebelumnya
+            {t("pagination.prev")}
           </button>
           <span className="px-4 py-2 text-sm text-gray-600">
             {page} / {data.meta.totalPages}
@@ -78,7 +80,7 @@ export default function AdminUsers() {
             disabled={page >= data.meta.totalPages}
             className="px-4 py-2 border border-gray-200 rounded-xl disabled:opacity-50 text-sm"
           >
-            Selanjutnya
+            {t("pagination.next")}
           </button>
         </div>
       )}

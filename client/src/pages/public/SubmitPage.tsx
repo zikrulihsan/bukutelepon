@@ -10,6 +10,7 @@ import { Badge } from "../../components/ui/Badge";
 import type { City, Category, Contact } from "../../types";
 import { HiOutlinePlusCircle, HiXMark, HiCheck, HiOutlineUsers, HiOutlineCloudArrowUp } from "react-icons/hi2";
 import { ImSpinner2 } from "react-icons/im";
+import { useI18n } from "../../i18n/LanguageContext";
 
 interface ImportedContact {
   name: string;
@@ -83,6 +84,7 @@ function hasContactPicker(): boolean {
 type Tab = "riwayat" | "manual" | "import";
 
 export default function SubmitPage() {
+  const { t, categoryName, formatDate } = useI18n();
   const { user, loading: authLoading } = useAuth();
   const { citySlug } = useCity();
   const navigate = useNavigate();
@@ -156,16 +158,16 @@ export default function SubmitPage() {
           <div className="w-16 h-16 rounded-full bg-primary-50 flex items-center justify-center mx-auto mb-4">
             <HiOutlinePlusCircle className="h-7 w-7 text-primary-700" />
           </div>
-          <h2 className="text-lg font-bold text-gray-900 mb-1">Kontribusi Kontak</h2>
+          <h2 className="text-lg font-bold text-gray-900 mb-1">{t("submit.signInTitle")}</h2>
           <p className="text-xs text-gray-500 mb-6 max-w-xs mx-auto leading-relaxed">
-            Masuk terlebih dahulu untuk menambahkan kontak ke direktori.
+            {t("submit.signInSubtitle")}
           </p>
           <div className="flex flex-col gap-2.5 max-w-xs mx-auto">
             <Link to="/login" className="block bg-primary-700 text-white px-5 py-3 rounded-xl text-sm font-semibold text-center active:scale-[0.98] transition-all">
-              Masuk
+              {t("auth.login")}
             </Link>
             <Link to="/register" className="block bg-gray-100 text-gray-700 px-5 py-3 rounded-xl text-sm font-semibold text-center active:scale-[0.98] transition-all">
-              Daftar Gratis
+              {t("auth.registerFree")}
             </Link>
           </div>
         </div>
@@ -181,22 +183,22 @@ export default function SubmitPage() {
           <div className="w-16 h-16 rounded-full bg-green-50 flex items-center justify-center mx-auto mb-4">
             <HiCheck className="h-8 w-8 text-green-600" />
           </div>
-          <h2 className="text-lg font-bold text-gray-900 mb-1">Kontak Terkirim!</h2>
+          <h2 className="text-lg font-bold text-gray-900 mb-1">{t("submit.successTitle")}</h2>
           <p className="text-xs text-gray-500 mb-6 max-w-xs mx-auto leading-relaxed">
-            Terima kasih atas kontribusimu. Kontak akan ditinjau oleh admin sebelum ditampilkan.
+            {t("submit.successSubtitle")}
           </p>
           <div className="flex gap-2.5 justify-center">
             <button
               onClick={() => { setSuccess(false); setForm({ name: "", phone: "", address: "", website: "", mapsUrl: "", description: "", cityId: defaultCityId, categoryId: "" }); setImageFile(null); setImagePreview(null); }}
               className="bg-primary-700 text-white px-5 py-2.5 rounded-xl text-sm font-semibold active:scale-[0.98] transition-all"
             >
-              Tambah Lagi
+              {t("submit.addMore")}
             </button>
             <button
               onClick={() => { setSuccess(false); setTab("riwayat"); }}
               className="bg-gray-100 text-gray-700 px-5 py-2.5 rounded-xl text-sm font-semibold active:scale-[0.98] transition-all"
             >
-              Lihat Riwayat
+              {t("submit.viewHistory")}
             </button>
           </div>
         </div>
@@ -232,7 +234,7 @@ export default function SubmitPage() {
         const path = `contacts/${Date.now()}.${ext}`;
         const { error: uploadError } = await supabase.storage.from("contact-images").upload(path, imageFile, { upsert: false });
         setImageUploading(false);
-        if (uploadError) throw new Error("Gagal mengupload foto");
+        if (uploadError) throw new Error(t("error.uploadPhoto"));
         const { data: urlData } = supabase.storage.from("contact-images").getPublicUrl(path);
         imageUrl = urlData.publicUrl;
       }
@@ -243,7 +245,7 @@ export default function SubmitPage() {
       setImagePreview(null);
     } catch (err: unknown) {
       const message = (err as { response?: { data?: { message?: string } }; message?: string })?.response?.data?.message ?? (err as { message?: string })?.message;
-      setError(message || "Gagal mengirim kontak");
+      setError(message || t("error.submitContact"));
     } finally {
       setLoading(false);
       setImageUploading(false);
@@ -311,11 +313,11 @@ export default function SubmitPage() {
         cityId: importCityId,
         categoryId: importCategoryId,
       });
-      setBulkSuccess(`${data.data.count} kontak berhasil dikirim untuk ditinjau!`);
+      setBulkSuccess(t("import.bulkSuccess", { count: data.data.count }));
       setImported([]);
       setTimeout(() => setBulkSuccess(""), 4000);
     } catch {
-      setBulkError("Gagal mengirim kontak. Coba lagi.");
+      setBulkError(t("import.bulkError"));
     } finally {
       setBulkLoading(false);
     }
@@ -332,16 +334,16 @@ export default function SubmitPage() {
     <div className="min-h-screen bg-white max-w-md mx-auto pb-24">
       {/* Header */}
       <div className="bg-white px-4 pt-4 pb-3 border-b border-gray-100">
-        <h1 className="text-lg font-bold text-gray-900">Kontribusi</h1>
-        <p className="text-xs text-gray-500 mt-0.5">Bantu lengkapi direktori kotamu</p>
+        <h1 className="text-lg font-bold text-gray-900">{t("submit.title")}</h1>
+        <p className="text-xs text-gray-500 mt-0.5">{t("submit.subtitle")}</p>
       </div>
 
       {/* Tabs */}
       <div className="bg-white border-b border-gray-100 px-4 flex gap-1">
         {([
-          { key: "riwayat" as Tab, label: "Riwayat" },
-          { key: "manual" as Tab, label: "Tambah" },
-          { key: "import" as Tab, label: "Impor" },
+          { key: "riwayat" as Tab, label: t("submit.tabHistory") },
+          { key: "manual" as Tab, label: t("submit.tabManual") },
+          { key: "import" as Tab, label: t("submit.tabImport") },
         ]).map((t) => (
           <button
             key={t.key}
@@ -363,15 +365,15 @@ export default function SubmitPage() {
             <div className="grid grid-cols-3 gap-2 mb-4">
               <div className="bg-white rounded-xl border border-gray-200 p-3 text-center">
                 <p className="text-xl font-bold text-gray-900">{contributions.length}</p>
-                <p className="text-[10px] text-gray-500 font-medium">Total</p>
+                <p className="text-[10px] text-gray-500 font-medium">{t("submit.statTotal")}</p>
               </div>
               <div className="bg-green-50 rounded-xl border border-green-200 p-3 text-center">
                 <p className="text-xl font-bold text-green-700">{approvedCount}</p>
-                <p className="text-[10px] text-green-600 font-medium">Approved</p>
+                <p className="text-[10px] text-green-600 font-medium">{t("status.approved")}</p>
               </div>
               <div className="bg-yellow-50 rounded-xl border border-yellow-200 p-3 text-center">
                 <p className="text-xl font-bold text-yellow-700">{pendingCount}</p>
-                <p className="text-[10px] text-yellow-600 font-medium">Pending</p>
+                <p className="text-[10px] text-yellow-600 font-medium">{t("status.pending")}</p>
               </div>
             </div>
 
@@ -389,13 +391,13 @@ export default function SubmitPage() {
                 <div className="w-14 h-14 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-3">
                   <HiOutlinePlusCircle className="h-6 w-6 text-gray-400" />
                 </div>
-                <p className="text-sm font-medium text-gray-600">Belum ada kontribusi</p>
-                <p className="text-xs text-gray-400 mt-1">Mulai tambahkan kontak untuk kotamu</p>
+                <p className="text-sm font-medium text-gray-600">{t("submit.noContributions")}</p>
+                <p className="text-xs text-gray-400 mt-1">{t("submit.noContributionsHint")}</p>
                 <button
                   onClick={() => setTab("manual")}
                   className="mt-4 bg-primary-700 text-white px-5 py-2.5 rounded-xl text-sm font-semibold active:scale-[0.98] transition-all"
                 >
-                  Tambah Kontak
+                  {t("submit.addContact")}
                 </button>
               </div>
             ) : (
@@ -407,17 +409,17 @@ export default function SubmitPage() {
                         <h3 className="text-sm font-semibold text-gray-900 truncate">{contact.name}</h3>
                         <p className="text-xs text-gray-500 mt-0.5">{contact.phone}</p>
                         <p className="text-[11px] text-gray-400 mt-0.5">
-                          {contact.city?.name} &middot; {contact.category?.name}
+                          {contact.city?.name} &middot; {categoryName(contact.category)}
                         </p>
                       </div>
                       <div className="flex-shrink-0">
                         <Badge variant={contact.status === "APPROVED" ? "success" : contact.status === "REJECTED" ? "danger" : "warning"}>
-                          {contact.status === "APPROVED" ? "Disetujui" : contact.status === "REJECTED" ? "Ditolak" : "Menunggu"}
+                          {contact.status === "APPROVED" ? t("status.approved") : contact.status === "REJECTED" ? t("status.rejected") : t("status.pending")}
                         </Badge>
                       </div>
                     </div>
                     <p className="text-[10px] text-gray-400 mt-2">
-                      {new Date(contact.createdAt).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" })}
+                      {formatDate(contact.createdAt, { day: "numeric", month: "short", year: "numeric" })}
                     </p>
                   </div>
                 ))}
@@ -437,51 +439,51 @@ export default function SubmitPage() {
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className={labelClass}>Nama Bisnis / Tempat *</label>
-                <input type="text" required value={form.name} onChange={(e) => update("name", e.target.value)} placeholder="Contoh: RS Harapan Kita" className="form-input" />
+                <label className={labelClass}>{t("form.name")} *</label>
+                <input type="text" required value={form.name} onChange={(e) => update("name", e.target.value)} placeholder={t("form.namePlaceholder")} className="form-input" />
               </div>
               <div>
-                <label className={labelClass}>Nomor Telepon *</label>
-                <input type="tel" required value={form.phone} onChange={(e) => update("phone", e.target.value)} placeholder="Contoh: 021-1234567" className="form-input" />
+                <label className={labelClass}>{t("form.phone")} *</label>
+                <input type="tel" required value={form.phone} onChange={(e) => update("phone", e.target.value)} placeholder={t("form.phonePlaceholder")} className="form-input" />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className={labelClass}>Kota *</label>
+                  <label className={labelClass}>{t("form.city")} *</label>
                   <select required value={form.cityId} onChange={(e) => update("cityId", e.target.value)} className="form-input appearance-none">
-                    <option value="">Pilih Kota</option>
+                    <option value="">{t("form.selectCity")}</option>
                     {citiesData?.data.map((city) => (
                       <option key={city.id} value={city.id}>{city.name}</option>
                     ))}
                   </select>
                 </div>
                 <div>
-                  <label className={labelClass}>Kategori *</label>
+                  <label className={labelClass}>{t("form.category")} *</label>
                   <select required value={form.categoryId} onChange={(e) => update("categoryId", e.target.value)} className="form-input appearance-none">
-                    <option value="">Pilih Kategori</option>
+                    <option value="">{t("form.selectCategory")}</option>
                     {categoriesData.map((cat) => (
-                      <option key={cat.id} value={cat.id}>{cat.name}</option>
+                      <option key={cat.id} value={cat.id}>{categoryName(cat)}</option>
                     ))}
                   </select>
                 </div>
               </div>
               <div>
-                <label className={labelClass}>Alamat</label>
-                <input type="text" value={form.address} onChange={(e) => update("address", e.target.value)} placeholder="Jl. Contoh No. 123" className="form-input" />
+                <label className={labelClass}>{t("form.address")}</label>
+                <input type="text" value={form.address} onChange={(e) => update("address", e.target.value)} placeholder={t("form.addressPlaceholder")} className="form-input" />
               </div>
               <div>
-                <label className={labelClass}>Website</label>
-                <input type="url" value={form.website} onChange={(e) => update("website", e.target.value)} placeholder="https://contoh.com" className="form-input" />
+                <label className={labelClass}>{t("form.website")}</label>
+                <input type="url" value={form.website} onChange={(e) => update("website", e.target.value)} placeholder={t("form.websitePlaceholder")} className="form-input" />
               </div>
               <div>
-                <label className={labelClass}>Link Google Maps</label>
-                <input type="url" value={form.mapsUrl} onChange={(e) => update("mapsUrl", e.target.value)} placeholder="https://maps.google.com/..." className="form-input" />
+                <label className={labelClass}>{t("form.mapsUrl")}</label>
+                <input type="url" value={form.mapsUrl} onChange={(e) => update("mapsUrl", e.target.value)} placeholder={t("form.mapsUrlPlaceholder")} className="form-input" />
               </div>
               <div>
-                <label className={labelClass}>Deskripsi</label>
-                <textarea rows={3} value={form.description} onChange={(e) => update("description", e.target.value)} placeholder="Deskripsi singkat tentang tempat ini..." className="form-input h-auto py-2.5 resize-none" />
+                <label className={labelClass}>{t("form.description")}</label>
+                <textarea rows={3} value={form.description} onChange={(e) => update("description", e.target.value)} placeholder={t("form.descriptionPlaceholder")} className="form-input h-auto py-2.5 resize-none" />
               </div>
               <div>
-                <label className={labelClass}>Foto</label>
+                <label className={labelClass}>{t("form.photo")}</label>
                 {imagePreview ? (
                   <div className="relative w-20 h-20">
                     <img src={imagePreview} alt="Preview" className="w-20 h-20 rounded-xl object-cover border border-gray-200" />
@@ -500,14 +502,14 @@ export default function SubmitPage() {
                     className="flex items-center gap-2 px-4 py-2.5 bg-white border border-dashed border-gray-300 rounded-xl text-sm text-gray-500 active:border-primary-400 active:text-primary-600 transition-colors"
                   >
                     <HiOutlineCloudArrowUp className="h-4 w-4" />
-                    Upload foto (opsional)
+                    {t("form.uploadPhotoOptional")}
                   </button>
                 )}
                 <input ref={imageInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageChange} />
               </div>
               <button type="submit" disabled={loading || imageUploading} className="w-full h-12 bg-primary-700 text-white rounded-xl text-sm font-semibold active:scale-[0.98] transition-all disabled:opacity-50 flex items-center justify-center gap-2">
                 {(loading || imageUploading) && <ImSpinner2 className="animate-spin h-4 w-4" />}
-                {imageUploading ? "Mengupload foto..." : "Kirim Kontak"}
+                {imageUploading ? t("form.uploadingPhoto") : t("submit.send")}
               </button>
             </form>
           </>
@@ -536,7 +538,7 @@ export default function SubmitPage() {
                   className="inline-flex items-center gap-2 px-4 py-2.5 bg-primary-700 text-white text-sm font-medium rounded-xl active:scale-[0.98] transition-all"
                 >
                   <HiOutlineUsers className="h-4 w-4" />
-                  Pilih dari Kontak HP
+                  {t("import.pickFromPhone")}
                 </button>
               )}
               <button
@@ -545,7 +547,7 @@ export default function SubmitPage() {
                 className="inline-flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 text-gray-700 text-sm font-medium rounded-xl active:scale-[0.98] transition-all"
               >
                 <HiOutlineCloudArrowUp className="h-4 w-4" />
-                Upload .vcf / .csv
+                {t("import.uploadFile")}
               </button>
               <input ref={fileInputRef} type="file" accept=".vcf,.vcard,.csv" className="hidden" onChange={handleFileImport} />
             </div>
@@ -561,10 +563,10 @@ export default function SubmitPage() {
                       onChange={(e) => toggleAll(e.target.checked)}
                       className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
                     />
-                    <span className="text-gray-700 font-medium">{selectedCount}/{imported.length} dipilih</span>
+                    <span className="text-gray-700 font-medium">{t("import.selectedCount", { selected: selectedCount, total: imported.length })}</span>
                   </label>
                   <button type="button" onClick={() => setImported([])} className="text-xs text-red-600 font-medium">
-                    Hapus Semua
+                    {t("import.removeAll")}
                   </button>
                 </div>
 
@@ -595,7 +597,7 @@ export default function SubmitPage() {
                       onChange={(e) => setImportCityId(e.target.value)}
                       className="form-input h-10 text-xs"
                     >
-                      <option value="">Pilih kota *</option>
+                      <option value="">{t("import.selectCityRequired")}</option>
                       {citiesData?.data.map((c) => (
                         <option key={c.id} value={c.id}>{c.name}</option>
                       ))}
@@ -605,9 +607,9 @@ export default function SubmitPage() {
                       onChange={(e) => setImportCategoryId(e.target.value)}
                       className="form-input h-10 text-xs"
                     >
-                      <option value="">Pilih kategori *</option>
+                      <option value="">{t("import.selectCategoryRequired")}</option>
                       {categoriesData.map((c) => (
-                        <option key={c.id} value={c.id}>{c.name}</option>
+                        <option key={c.id} value={c.id}>{categoryName(c)}</option>
                       ))}
                     </select>
                   </div>
@@ -618,19 +620,17 @@ export default function SubmitPage() {
                     className="w-full h-11 bg-primary-700 text-white rounded-xl text-sm font-semibold active:scale-[0.98] transition-all disabled:opacity-50 flex items-center justify-center gap-2"
                   >
                     {bulkLoading && <ImSpinner2 className="animate-spin h-4 w-4" />}
-                    Kirim {selectedCount} Kontak
+                    {t("import.sendCount", { count: selectedCount })}
                   </button>
-                  <p className="text-[11px] text-gray-400 text-center">Kontak akan ditinjau admin sebelum ditampilkan</p>
+                  <p className="text-[11px] text-gray-400 text-center">{t("import.reviewNote")}</p>
                 </div>
               </div>
             ) : (
               <div className="bg-white rounded-xl border border-dashed border-gray-300 p-10 text-center">
                 <HiOutlineUsers className="h-10 w-10 text-gray-300 mx-auto mb-3" />
-                <p className="text-sm text-gray-500 font-medium">Belum ada kontak diimpor</p>
+                <p className="text-sm text-gray-500 font-medium">{t("import.emptyTitle")}</p>
                 <p className="text-xs text-gray-400 mt-1">
-                  {hasContactPicker()
-                    ? "Pilih dari kontak HP atau upload file VCF/CSV"
-                    : "Upload file VCF/CSV yang diekspor dari kontak HP"}
+                  {hasContactPicker() ? t("import.emptyHintPicker") : t("import.emptyHintFile")}
                 </p>
               </div>
             )}

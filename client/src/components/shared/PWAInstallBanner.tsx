@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { HiXMark, HiOutlinePlusCircle } from "react-icons/hi2";
 import { HiOutlineShare } from "react-icons/hi";
+import { useI18n } from "../../i18n/LanguageContext";
 
 const DISMISSED_KEY = "pwa_install_dismissed";
 const DISMISSED_EXPIRY_DAYS = 7;
@@ -46,6 +47,7 @@ interface BeforeInstallPromptEvent extends Event {
 }
 
 export function PWAInstallBanner() {
+  const { t } = useI18n();
   const [visible, setVisible] = useState(false);
   const [animateIn, setAnimateIn] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
@@ -147,19 +149,19 @@ export function PWAInstallBanner() {
               {isIOSMode ? (
                 <>
                   <p className="text-white text-[13px] font-bold leading-tight">
-                    Pasang di iPhone kamu
+                    {t("pwa.iosTitle")}
                   </p>
                   <p className="text-[#6ee7b7]/80 text-[11px] mt-0.5 leading-tight">
-                    Ketuk <HiOutlineShare className="inline h-3.5 w-3.5" /> lalu «Tambah ke Layar Utama»
+                    {t("pwa.iosTap")} <HiOutlineShare className="inline h-3.5 w-3.5" /> {t("pwa.iosThen")}
                   </p>
                 </>
               ) : (
                 <>
                   <p className="text-white text-[13px] font-bold leading-tight">
-                    Pasang CariKontak
+                    {t("pwa.title")}
                   </p>
                   <p className="text-[#6ee7b7]/80 text-[11px] mt-0.5 leading-tight">
-                    Akses lebih cepat · Bisa dipakai offline
+                    {t("pwa.subtitle")}
                   </p>
                 </>
               )}
@@ -173,7 +175,7 @@ export function PWAInstallBanner() {
                   disabled={installing}
                   className="px-4 py-2 bg-[#6ee7b7] text-[#0d3b2e] text-[12px] font-bold rounded-xl active:scale-95 transition-all disabled:opacity-60 whitespace-nowrap shadow-sm"
                 >
-                  {installing ? "..." : "Pasang"}
+                  {installing ? "..." : t("pwa.install")}
                 </button>
               )}
               {/* Dev label */}
@@ -183,7 +185,7 @@ export function PWAInstallBanner() {
               <button
                 onClick={dismiss}
                 className="w-7 h-7 flex items-center justify-center rounded-full bg-white/10 text-white/60 hover:bg-white/20 active:scale-90 transition-all"
-                aria-label="Tutup"
+                aria-label={t("common.close")}
               >
                 <HiXMark className="h-3.5 w-3.5" />
               </button>
@@ -195,11 +197,11 @@ export function PWAInstallBanner() {
             <div className="px-4 pb-3.5">
               <div className="flex items-center gap-2.5 bg-white/10 rounded-xl px-3 py-2.5">
                 <Step number="1" />
-                <span className="text-[11px] text-white/70">Ketuk</span>
+                <span className="text-[11px] text-white/70">{t("pwa.iosTap")}</span>
                 <HiOutlineShare className="h-3.5 w-3.5 text-white flex-shrink-0" />
                 <div className="w-px h-3 bg-white/20 flex-shrink-0" />
                 <Step number="2" />
-                <span className="text-[11px] text-white/70 truncate">Tambah ke Layar Utama</span>
+                <span className="text-[11px] text-white/70 truncate">{t("pwa.addToHome")}</span>
                 <HiOutlinePlusCircle className="h-3.5 w-3.5 text-[#6ee7b7] flex-shrink-0 ml-auto" />
               </div>
             </div>

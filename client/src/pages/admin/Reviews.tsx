@@ -5,8 +5,10 @@ import { Button } from "../../components/ui/Button";
 import { Badge } from "../../components/ui/Badge";
 import { StarRating } from "../../components/shared/StarRating";
 import type { Review, PaginatedResponse } from "../../types";
+import { useI18n } from "../../i18n/LanguageContext";
 
 export default function AdminReviews() {
+  const { t } = useI18n();
   const queryClient = useQueryClient();
   const [status, setStatus] = useState("PENDING");
   const [page, setPage] = useState(1);
@@ -28,7 +30,7 @@ export default function AdminReviews() {
 
   return (
     <div>
-      <h1 className="text-xl font-bold text-gray-900 mb-6">Kelola Ulasan</h1>
+      <h1 className="text-xl font-bold text-gray-900 mb-6">{t("admin.manageReviews")}</h1>
 
       <div className="flex gap-2 mb-6">
         {["PENDING", "APPROVED", "REJECTED"].map((s) => (
@@ -55,7 +57,7 @@ export default function AdminReviews() {
       ) : (
         <div className="space-y-3">
           {data?.data.length === 0 && (
-            <div className="text-center py-12 text-gray-400 text-sm">Tidak ada ulasan {status.toLowerCase()}</div>
+            <div className="text-center py-12 text-gray-400 text-sm">{t("admin.noReviewsWithStatus", { status: status.toLowerCase() })}</div>
           )}
           {data?.data.map((review) => (
             <div key={review.id} className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
@@ -67,18 +69,18 @@ export default function AdminReviews() {
                       {review.status}
                     </Badge>
                   </div>
-                  <p className="text-sm text-gray-700">{review.comment || "(Tanpa komentar)"}</p>
+                  <p className="text-sm text-gray-700">{review.comment || t("admin.noComment")}</p>
                   <p className="text-xs text-gray-400 mt-1">
-                    Untuk: {review.contact?.name} | Oleh: {review.author?.name}
+                    {t("admin.reviewFor")}: {review.contact?.name} | {t("admin.reviewBy")}: {review.author?.name}
                   </p>
                 </div>
                 {review.status === "PENDING" && (
                   <div className="flex gap-2 flex-shrink-0">
                     <Button size="sm" onClick={() => approveMutation.mutate(review.id)} loading={approveMutation.isPending}>
-                      Setuju
+                      {t("admin.approve")}
                     </Button>
                     <Button variant="danger" size="sm" onClick={() => rejectMutation.mutate(review.id)} loading={rejectMutation.isPending}>
-                      Tolak
+                      {t("admin.reject")}
                     </Button>
                   </div>
                 )}

@@ -1,15 +1,19 @@
 import { NavLink, Outlet, Navigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
+import { useI18n } from "../../i18n/LanguageContext";
+import { LanguageToggle } from "../shared/LanguageToggle";
+import type { TranslationKey } from "../../i18n/translations";
 
-const navItems = [
-  { to: "/admin", label: "Dashboard", end: true },
-  { to: "/admin/contacts", label: "Kontak" },
-  { to: "/admin/add-contact", label: "Tambah Kontak" },
-  { to: "/admin/reviews", label: "Ulasan" },
-  { to: "/admin/users", label: "Pengguna" },
+const navItems: { to: string; labelKey: TranslationKey; end?: boolean }[] = [
+  { to: "/admin", labelKey: "admin.dashboard", end: true },
+  { to: "/admin/contacts", labelKey: "admin.contacts" },
+  { to: "/admin/add-contact", labelKey: "admin.addContact" },
+  { to: "/admin/reviews", labelKey: "admin.reviews" },
+  { to: "/admin/users", labelKey: "admin.users" },
 ];
 
 export function AdminLayout() {
+  const { t } = useI18n();
   const { profile, loading } = useAuth();
 
   if (loading) {
@@ -33,7 +37,8 @@ export function AdminLayout() {
             <NavLink to="/" className="text-primary-700 font-bold text-lg mr-4">
               BT
             </NavLink>
-            <span className="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded font-medium">Admin</span>
+            <span className="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded font-medium">{t("admin.badge")}</span>
+            <LanguageToggle className="ml-auto" />
           </div>
         </div>
       </div>
@@ -55,7 +60,7 @@ export function AdminLayout() {
                   }`
                 }
               >
-                {item.label}
+                {t(item.labelKey)}
               </NavLink>
             ))}
           </div>

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useRef, useMemo, type ReactNode } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "../../lib/axios";
@@ -10,50 +10,53 @@ import { ContactCard } from "../../components/shared/ContactCard";
 import { CityPickerOverlay } from "../../components/shared/CityPickerOverlay";
 import { CategoryIcon } from "../../components/shared/CategoryIcon";
 import { OnboardingTutorial, hasCompletedOnboarding } from "../../components/shared/OnboardingTutorial";
+import { LanguageToggle } from "../../components/shared/LanguageToggle";
 import {
   RecentContactsShimmer,
   ContactListShimmer,
 } from "../../components/shared/Shimmer";
+import { useI18n } from "../../i18n/LanguageContext";
+import type { TranslationKey } from "../../i18n/translations";
 import type { Category, City } from "../../types";
 
-const EMERGENCY_CONTACTS = [
+const EMERGENCY_CONTACTS: { labelKey: TranslationKey; phone: string; icon: ReactNode }[] = [
   {
-    name: "Darurat", phone: "112", icon: (
+    labelKey: "emergency.emergency", phone: "112", icon: (
       <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
         <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
       </svg>
     )
   },
   {
-    name: "Polisi", phone: "110", icon: (
+    labelKey: "emergency.police", phone: "110", icon: (
       <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
         <path d="M12 2L3 7v5c0 5.25 3.83 10.15 9 11 5.17-.85 9-5.75 9-11V7l-9-5z" />
       </svg>
     )
   },
   {
-    name: "Ambulans", phone: "119", icon: (
+    labelKey: "emergency.ambulance", phone: "119", icon: (
       <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
         <path d="M10 10H6m2-2v4m-2 6h12a2 2 0 002-2v-5.5a.5.5 0 00-.11-.33l-3-3.78A2 2 0 0015.33 6H4a2 2 0 00-2 2v8a2 2 0 002 2m2 0a2 2 0 104 0m-4 0h4m8 0a2 2 0 104 0" />
       </svg>
     )
   },
   {
-    name: "Pemadam", phone: "113", icon: (
+    labelKey: "emergency.fire", phone: "113", icon: (
       <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
         <path d="M12 12c2-2.96 0-7-1-8 0 3.038-1.773 4.741-3 6-1.226 1.26-2 3.24-2 5a6 6 0 1012 0c0-1.532-1.056-3.94-2-5-1.786 3-2.791 3-4 2z" />
       </svg>
     )
   },
   {
-    name: "SAR", phone: "115", icon: (
+    labelKey: "emergency.sar", phone: "115", icon: (
       <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
         <circle cx="12" cy="12" r="10" /><path d="M12 8v4l3 3" />
       </svg>
     )
   },
   {
-    name: "PLN", phone: "123", icon: (
+    labelKey: "emergency.electricity", phone: "123", icon: (
       <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
         <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
       </svg>
@@ -62,6 +65,7 @@ const EMERGENCY_CONTACTS = [
 ];
 
 export default function MainScreen() {
+  const { t, categoryName } = useI18n();
   const { citySlug, city, setCity, cities, setCities } = useCity();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -301,7 +305,7 @@ export default function MainScreen() {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
             </div>
-            <span className="flex-1 h-9 pl-2.5 pr-2 text-[14px] text-gray-500 font-medium flex items-center truncate">Cari kontak di {city?.name ?? "sekitarmu"}...</span>
+            <span className="flex-1 h-9 pl-2.5 pr-2 text-[14px] text-gray-500 font-medium flex items-center truncate">{t("home.searchInCity", { city: city?.name ?? t("home.nearYou") })}</span>
 
           </div>
         </div>
@@ -314,17 +318,20 @@ export default function MainScreen() {
           <span className="text-[26px] font-extrabold text-gray-900 font-display tracking-tight">
             CariKontak
           </span>
-          <a
-            href="https://wa.me/6282338588078?text=Permisi%20admin%20cari%20kontak%2C%20saya%20ingin%20bertanya"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-white border border-gray-200/70 shadow-[0_1px_3px_rgba(0,0,0,0.05)] active:scale-95 transition-transform"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-            </svg>
-            <span className="text-sm font-bold text-gray-800">Bantuan</span>
-          </a>
+          <div className="flex items-center gap-2">
+            <LanguageToggle />
+            <a
+              href={`https://wa.me/6282338588078?text=${encodeURIComponent(t("home.helpWhatsappText"))}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-white border border-gray-200/70 shadow-[0_1px_3px_rgba(0,0,0,0.05)] active:scale-95 transition-transform"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+              </svg>
+              <span className="text-sm font-bold text-gray-800">{t("home.help")}</span>
+            </a>
+          </div>
         </div>
 
         {/* Hero panel — soft green, holds location + search + stats */}
@@ -334,7 +341,7 @@ export default function MainScreen() {
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-primary-600" viewBox="0 0 20 20" fill="currentColor">
               <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
             </svg>
-            <span className="text-gray-900 font-bold text-lg tracking-tight">{city?.name ?? "Pilih Kota"}</span>
+            <span className="text-gray-900 font-bold text-lg tracking-tight">{city?.name ?? t("home.selectCity")}</span>
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
               <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
             </svg>
@@ -351,7 +358,7 @@ export default function MainScreen() {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
             </div>
-            <span className="flex-1 h-10 pl-3 pr-2 text-[15px] text-gray-400 flex items-center truncate">Cari kontak…</span>
+            <span className="flex-1 h-10 pl-3 pr-2 text-[15px] text-gray-400 flex items-center truncate">{t("home.searchPlaceholder")}</span>
             <button className="w-12 h-11 rounded-xl bg-primary-700 hover:bg-primary-600 flex items-center justify-center text-white active:scale-95 transition-all">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
@@ -361,13 +368,13 @@ export default function MainScreen() {
 
           {/* Stats strip */}
           <div className="flex items-center gap-2.5 mt-3.5 px-1 text-[13px] text-gray-500">
-            <span><span className="font-bold text-gray-900">{totalKontak}</span> kontak</span>
+            <span><span className="font-bold text-gray-900">{totalKontak}</span> {t("home.statContacts")}</span>
             <span className="w-1 h-1 rounded-full bg-gray-400/60" />
-            <span><span className="font-bold text-gray-900">{categories.length}</span> kategori</span>
+            <span><span className="font-bold text-gray-900">{categories.length}</span> {t("home.statCategories")}</span>
             {newThisWeek > 0 && (
               <>
                 <span className="w-1 h-1 rounded-full bg-gray-400/60" />
-                <span><span className="font-bold text-primary-700">+{newThisWeek}</span> minggu ini</span>
+                <span><span className="font-bold text-primary-700">+{newThisWeek}</span> {t("home.statThisWeek")}</span>
               </>
             )}
           </div>
@@ -393,8 +400,8 @@ export default function MainScreen() {
                     </svg>
                   </div>
                   <div className="text-left min-w-0">
-                    <p className="text-[15px] font-bold text-gray-900 tracking-tight leading-tight">Panggilan Darurat</p>
-                    <p className="text-[12.5px] text-gray-400 leading-tight mt-0.5 truncate">Polisi &middot; Ambulans &middot; Damkar</p>
+                    <p className="text-[15px] font-bold text-gray-900 tracking-tight leading-tight">{t("home.emergencyTitle")}</p>
+                    <p className="text-[12.5px] text-gray-400 leading-tight mt-0.5 truncate">{t("home.emergencySubtitle")}</p>
                   </div>
                 </div>
                 <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 text-gray-400 flex-shrink-0 transition-transform ${showEmergency ? 'rotate-90' : ''}`} viewBox="0 0 20 20" fill="currentColor">
@@ -417,7 +424,7 @@ export default function MainScreen() {
                         {ec.icon}
                       </div>
                       <div className="text-center">
-                        <p className="text-[10px] font-bold text-gray-900 leading-tight mb-1">{ec.name}</p>
+                        <p className="text-[10px] font-bold text-gray-900 leading-tight mb-1">{t(ec.labelKey)}</p>
                         <p className="text-[10px] text-red-500 font-semibold leading-none">{ec.phone}</p>
                       </div>
                     </a>
@@ -432,7 +439,7 @@ export default function MainScreen() {
                 onClick={() => setShowCategories((v) => !v)}
                 className="w-full flex items-center justify-between mb-3 px-1 active:opacity-70 transition-opacity"
               >
-                <h3 className="text-[12px] font-bold text-gray-400 uppercase tracking-[0.12em]">Kategori</h3>
+                <h3 className="text-[12px] font-bold text-gray-400 uppercase tracking-[0.12em]">{t("home.categories")}</h3>
                 <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 text-gray-400 transition-transform ${showCategories ? "" : "-rotate-90"}`} viewBox="0 0 20 20" fill="currentColor">
                   <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
                 </svg>
@@ -462,8 +469,8 @@ export default function MainScreen() {
                           <CategoryIcon slug={cat.slug} className="w-[22px] h-[22px]" />
                         </div>
                         <div className="min-w-0">
-                          <p className="text-[15px] font-bold text-gray-900 leading-tight truncate">{cat.name}</p>
-                          <p className="text-[12.5px] text-gray-400 leading-tight mt-0.5">{categoryCounts[cat.slug] ?? 0} kontak</p>
+                          <p className="text-[15px] font-bold text-gray-900 leading-tight truncate">{categoryName(cat)}</p>
+                          <p className="text-[12.5px] text-gray-400 leading-tight mt-0.5">{t("common.contactsCount", { count: categoryCounts[cat.slug] ?? 0 })}</p>
                         </div>
                       </button>
                     ))}
@@ -479,7 +486,7 @@ export default function MainScreen() {
               <div className="pb-6">
                 <div className="flex items-center justify-between mb-3">
                   <h3 className="text-[12px] font-bold text-gray-400 uppercase tracking-[0.12em]">
-                    Terbaru
+                    {t("home.recent")}
                   </h3>
                   <button
                     onClick={() => {
@@ -494,7 +501,7 @@ export default function MainScreen() {
                     }}
                     className="text-[13px] font-bold text-primary-600 active:scale-95 transition-transform"
                   >
-                    Lihat semua &rarr;
+                    {t("home.seeAll")} &rarr;
                   </button>
                 </div>
                 <div className="space-y-3">
@@ -505,7 +512,7 @@ export default function MainScreen() {
               </div>
             ) : (
               <div className="text-center py-12">
-                <p className="text-sm text-gray-400">Belum ada kontak di {city?.name ?? "kota ini"}</p>
+                <p className="text-sm text-gray-400">{t("home.noContactsInCity", { city: city?.name ?? t("home.thisCity") })}</p>
               </div>
             )}
           </>
@@ -532,9 +539,9 @@ export default function MainScreen() {
                 {showFilterMenu && (
                   <div className="absolute top-full left-0 mt-1.5 bg-white rounded-xl shadow-lg border border-gray-100 py-1 z-30 min-w-[160px]">
                     {([
-                      { value: "", label: "Semua" },
-                      { value: "true", label: "Terverifikasi" },
-                      { value: "false", label: "Belum Verifikasi" },
+                      { value: "", label: t("filter.all") },
+                      { value: "true", label: t("filter.verified") },
+                      { value: "false", label: t("filter.unverified") },
                     ] as const).map(({ value, label }) => (
                       <button
                         key={value}
@@ -567,7 +574,7 @@ export default function MainScreen() {
                     : "bg-white text-gray-600 shadow-sm border border-gray-100"
                     }`}
                 >
-                  Semua
+                  {t("filter.all")}
                 </button>
 
                 {categories.map((cat) => (
@@ -581,7 +588,7 @@ export default function MainScreen() {
                       }`}
                   >
                     <CategoryIcon slug={cat.slug} className="w-3.5 h-3.5" />
-                    {cat.name}
+                    {categoryName(cat)}
                   </button>
                 ))}
               </div>
@@ -589,8 +596,8 @@ export default function MainScreen() {
 
             {/* Results header */}
             <p className="text-xs text-gray-500 mb-3">
-              {`${total} kontak ${categories.find((c) => c.slug === activeCategory)?.name ?? ""}`}
-              {city ? ` di ${city.name}` : ""}
+              {`${t("common.contactsCount", { count: total })} ${categoryName(categories.find((c) => c.slug === activeCategory))}`.trim()}
+              {city ? ` ${t("common.inCity", { city: city.name })}` : ""}
             </p>
 
             {/* Contact list */}
@@ -604,9 +611,9 @@ export default function MainScreen() {
                   ))}
                   {allContacts.length === 0 && (
                     <div className="text-center py-16">
-                      <p className="text-gray-500 text-sm">Tidak ada kontak ditemukan</p>
+                      <p className="text-gray-500 text-sm">{t("search.noResults")}</p>
                       <button onClick={handleClearFilters} className="text-primary-600 text-sm font-medium mt-2">
-                        Hapus filter
+                        {t("filter.clear")}
                       </button>
                     </div>
                   )}

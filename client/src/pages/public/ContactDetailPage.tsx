@@ -8,6 +8,8 @@ import { formatWhatsAppUrl, formatTelUrl } from "../../lib/phone";
 import { HiChevronLeft, HiCheckBadge, HiMapPin, HiStar, HiBookmark, HiChevronRight, HiCheck, HiOutlineUser, HiOutlineGlobeAlt, HiArrowTopRightOnSquare, HiOutlineChatBubbleOvalLeft, HiOutlineMapPin } from "react-icons/hi2";
 import { HiOutlineBookmark, HiOutlinePhone, HiOutlineClipboardCopy, HiOutlineShare } from "react-icons/hi";
 import { FaWhatsapp } from "react-icons/fa";
+import { useI18n } from "../../i18n/LanguageContext";
+import type { TranslationKey } from "../../i18n/translations";
 
 function getInitials(name: string): string {
   return name
@@ -18,20 +20,21 @@ function getInitials(name: string): string {
     .toUpperCase();
 }
 
-function timeAgo(dateStr: string): string {
+function timeAgo(dateStr: string): { key: TranslationKey; count: number } {
   const date = new Date(dateStr);
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();
   const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-  if (diffDays === 0) return "Hari ini";
-  if (diffDays === 1) return "Kemarin";
-  if (diffDays < 7) return `${diffDays} hari lalu`;
-  if (diffDays < 30) return `${Math.floor(diffDays / 7)} minggu lalu`;
-  if (diffDays < 365) return `${Math.floor(diffDays / 30)} bulan lalu`;
-  return `${Math.floor(diffDays / 365)} tahun lalu`;
+  if (diffDays === 0) return { key: "time.today", count: 0 };
+  if (diffDays === 1) return { key: "time.yesterday", count: 1 };
+  if (diffDays < 7) return { key: "time.daysAgo", count: diffDays };
+  if (diffDays < 30) return { key: "time.weeksAgo", count: Math.floor(diffDays / 7) };
+  if (diffDays < 365) return { key: "time.monthsAgo", count: Math.floor(diffDays / 30) };
+  return { key: "time.yearsAgo", count: Math.floor(diffDays / 365) };
 }
 
 export default function ContactDetailPage() {
+  const { t, categoryName } = useI18n();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { data, isLoading } = useContact(id!);
@@ -53,6 +56,11 @@ export default function ContactDetailPage() {
   function handleSave() {
     if (!id) return;
     setSaved(toggleSaved(id));
+  }
+
+  function relativeTime(dateStr: string) {
+    const { key, count } = timeAgo(dateStr);
+    return t(key, { count });
   }
 
   function handleShare() {
@@ -103,9 +111,9 @@ export default function ContactDetailPage() {
         <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gray-100 flex items-center justify-center">
           <HiOutlineUser className="h-8 w-8 text-gray-300" />
         </div>
-        <p className="text-gray-500 font-medium">Kontak tidak ditemukan</p>
+        <p className="text-gray-500 font-medium">{t("detail.notFound")}</p>
         <button onClick={() => navigate(-1)} className="mt-4 text-sm text-primary-600 font-semibold">
-          ← Kembali
+          ← {t("common.back")}
         </button>
       </div>
     );
@@ -130,7 +138,7 @@ export default function ContactDetailPage() {
           className="relative z-10 flex items-center gap-1.5 text-white/70 hover:text-white transition-colors mb-6 -ml-0.5"
         >
           <HiChevronLeft className="h-5 w-5" />
-          <span className="text-sm font-medium">Kembali</span>
+          <span className="text-sm font-medium">{t("common.back")}</span>
         </button>
 
         {/* Profile info */}
@@ -164,7 +172,7 @@ export default function ContactDetailPage() {
               {contact.category && (
                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white/10 text-[11px] font-bold text-white/80 border border-white/10">
                   <CategoryIcon slug={contact.category.slug} className="w-[11px] h-[11px]" />
-                  {contact.category.name}
+                  {categoryName(contact.category)}
                 </span>
               )}
             </div>
@@ -181,7 +189,7 @@ export default function ContactDetailPage() {
                   ))}
                 </div>
                 <span className="text-xs text-white/50 font-medium">
-                  {avgRating.toFixed(1)} · {reviews.length} ulasan
+                  {avgRating.toFixed(1)} · {t("common.reviewsCount", { count: reviews.length })}
                 </span>
               </div>
             )}
@@ -201,14 +209,14 @@ export default function ContactDetailPage() {
               className="flex-1 h-12 rounded-xl bg-primary-700 hover:bg-primary-600 shadow-sm flex items-center justify-center gap-2.5 active:scale-[0.97] transition-all"
             >
               <FaWhatsapp className="w-[18px] h-[18px] text-white" />
-              <span className="text-sm font-semibold text-white">WhatsApp</span>
+              <span className="text-sm font-semibold text-white">{t("contact.whatsapp")}</span>
             </a>
 
             {/* Telepon */}
             <a
               href={formatTelUrl(contact.phone)}
               className="h-12 w-14 rounded-xl border border-gray-200 bg-gray-50 flex items-center justify-center text-gray-600 hover:text-gray-900 hover:bg-gray-100 active:scale-95 transition-all"
-              title="Telepon"
+              title={t("contact.call")}
             >
               <HiOutlinePhone className="h-5 w-5" />
             </a>
@@ -217,7 +225,7 @@ export default function ContactDetailPage() {
             <button
               onClick={handleCopy}
               className="h-12 w-14 rounded-xl border border-gray-200 bg-gray-50 flex items-center justify-center text-gray-600 hover:text-gray-900 hover:bg-gray-100 active:scale-95 transition-all relative"
-              title="Salin nomor"
+              title={t("contact.copyNumber")}
             >
               {copied ? (
                 <HiCheck className="h-5 w-5 text-emerald-500" />
@@ -234,7 +242,7 @@ export default function ContactDetailPage() {
                   ? "bg-primary-50 border-primary-200 text-primary-700"
                   : "border-gray-200 bg-gray-50 text-gray-600 hover:text-gray-900 hover:bg-gray-100"
               }`}
-              title={saved ? "Hapus dari tersimpan" : "Simpan kontak"}
+              title={saved ? t("contact.unsave") : t("contact.save")}
             >
               {saved ? (
                 <HiBookmark className="h-5 w-5" />
@@ -255,7 +263,7 @@ export default function ContactDetailPage() {
               <HiOutlinePhone className="h-5 w-5 text-primary-600" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">Telepon</p>
+              <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">{t("detail.phone")}</p>
               <p className="text-[15px] font-semibold text-gray-900 tracking-wide">{contact.phone}</p>
             </div>
           </div>
@@ -269,7 +277,7 @@ export default function ContactDetailPage() {
                 <HiMapPin className="h-5 w-5 text-orange-500" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">Alamat</p>
+                <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">{t("detail.address")}</p>
                 <p className="text-[14px] font-medium text-gray-800 leading-relaxed">{contact.address}</p>
               </div>
             </div>
@@ -289,7 +297,7 @@ export default function ContactDetailPage() {
                 <HiOutlineGlobeAlt className="h-5 w-5 text-blue-500" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">Website</p>
+                <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">{t("detail.website")}</p>
                 <p className="text-[14px] font-medium text-primary-600 truncate">{contact.website}</p>
               </div>
               <HiArrowTopRightOnSquare className="h-4 w-4 text-gray-300 flex-shrink-0" />
@@ -310,8 +318,8 @@ export default function ContactDetailPage() {
                 <HiOutlineMapPin className="h-5 w-5 text-green-600" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">Google Maps</p>
-                <p className="text-[14px] font-medium text-primary-600">Lihat di Google Maps</p>
+                <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">{t("detail.maps")}</p>
+                <p className="text-[14px] font-medium text-primary-600">{t("detail.viewOnMaps")}</p>
               </div>
               <HiArrowTopRightOnSquare className="h-4 w-4 text-gray-300 flex-shrink-0" />
             </a>
@@ -321,7 +329,7 @@ export default function ContactDetailPage() {
         {/* Description */}
         {contact.description && (
           <div className="bg-white rounded-2xl border border-gray-100/80 shadow-[0_2px_12px_rgba(0,0,0,0.03)] p-5">
-            <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">Tentang</p>
+            <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">{t("detail.about")}</p>
             <p className="text-[14px] text-gray-700 leading-relaxed">{contact.description}</p>
           </div>
         )}
@@ -334,7 +342,7 @@ export default function ContactDetailPage() {
           <div className="w-10 h-10 rounded-xl bg-violet-50 flex items-center justify-center flex-shrink-0">
             <HiOutlineShare className="h-5 w-5 text-violet-500" />
           </div>
-          <span className="text-[14px] font-semibold text-gray-700">Bagikan kontak ini</span>
+          <span className="text-[14px] font-semibold text-gray-700">{t("detail.share")}</span>
           <HiChevronRight className="h-4 w-4 text-gray-300 ml-auto flex-shrink-0" />
         </button>
       </div>
@@ -344,7 +352,7 @@ export default function ContactDetailPage() {
         <div className="px-5 mt-8">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-bold text-gray-900">
-              Ulasan
+              {t("detail.reviews")}
               <span className="ml-1.5 text-sm font-semibold text-gray-400">({reviews.length})</span>
             </h2>
             {reviews.length > 0 && (
@@ -371,9 +379,9 @@ export default function ContactDetailPage() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold text-gray-900 truncate">
-                      {review.author?.name ?? "Anonim"}
+                      {review.author?.name ?? t("detail.anonymous")}
                     </p>
-                    <p className="text-[11px] text-gray-400">{timeAgo(review.createdAt)}</p>
+                    <p className="text-[11px] text-gray-400">{relativeTime(review.createdAt)}</p>
                   </div>
                   <StarRating rating={review.rating} size="sm" />
                 </div>
@@ -395,8 +403,8 @@ export default function ContactDetailPage() {
             <div className="w-12 h-12 mx-auto mb-3 rounded-2xl bg-gray-50 flex items-center justify-center">
               <HiOutlineChatBubbleOvalLeft className="h-6 w-6 text-gray-300" />
             </div>
-            <p className="text-sm font-medium text-gray-400">Belum ada ulasan</p>
-            <p className="text-xs text-gray-300 mt-1">Jadilah yang pertama memberikan ulasan</p>
+            <p className="text-sm font-medium text-gray-400">{t("detail.noReviews")}</p>
+            <p className="text-xs text-gray-300 mt-1">{t("detail.beFirstReview")}</p>
           </div>
         </div>
       )}

@@ -6,6 +6,7 @@ import { formatWhatsAppUrl, formatTelUrl } from "../../lib/phone";
 import { HiCheckBadge, HiBookmark } from "react-icons/hi2";
 import { HiOutlineBookmark, HiOutlinePhone } from "react-icons/hi";
 import { FaWhatsapp } from "react-icons/fa";
+import { useI18n } from "../../i18n/LanguageContext";
 
 interface ContactCardProps {
   contact: Contact;
@@ -18,6 +19,7 @@ const PHOTO_STRIPES =
 export function ContactCard({ contact, hideSave }: ContactCardProps) {
   const [saved, setSaved] = useState(() => isSaved(contact.id));
   const navigate = useNavigate();
+  const { t, categoryName } = useI18n();
 
   function handleSave() {
     setSaved(toggleSaved(contact.id));
@@ -38,12 +40,12 @@ export function ContactCard({ contact, hideSave }: ContactCardProps) {
           onClick={handleNavigate}
           className="flex-shrink-0 w-[84px] h-[84px] rounded-2xl overflow-hidden flex items-center justify-center active:scale-95 transition-transform"
           style={contact.imageUrl ? undefined : { background: PHOTO_STRIPES }}
-          aria-label={`Lihat ${contact.name}`}
+          aria-label={t("contact.viewAria", { name: contact.name })}
         >
           {contact.imageUrl ? (
             <img src={contact.imageUrl} alt={contact.name} className="w-full h-full object-cover" />
           ) : (
-            <span className="text-[11px] font-medium text-gray-400">foto</span>
+            <span className="text-[11px] font-medium text-gray-400">{t("contact.photo")}</span>
           )}
         </button>
 
@@ -54,14 +56,14 @@ export function ContactCard({ contact, hideSave }: ContactCardProps) {
             {contact.isVerified && (
               <HiCheckBadge
                 className="h-[18px] w-[18px] text-blue-500 flex-shrink-0"
-                aria-label="Terverifikasi"
+                aria-label={t("common.verified")}
               />
             )}
           </h3>
 
           {(contact.category || location) && (
             <p className="text-[11px] font-bold uppercase tracking-wide text-primary-600 mt-1 truncate">
-              {contact.category?.name}
+              {categoryName(contact.category)}
               {contact.category && location && (
                 <span className="text-primary-300"> &middot; </span>
               )}
@@ -87,17 +89,17 @@ export function ContactCard({ contact, hideSave }: ContactCardProps) {
           className="flex-1 h-11 rounded-xl bg-primary-700 hover:bg-primary-600 flex items-center justify-center gap-2 active:scale-[0.97] transition-all"
         >
           <FaWhatsapp className="w-[17px] h-[17px] text-white" />
-          <span className="text-[13.5px] font-semibold text-white">WhatsApp</span>
+          <span className="text-[13.5px] font-semibold text-white">{t("contact.whatsapp")}</span>
         </a>
 
         {/* Secondary: Telepon */}
         <a
           href={formatTelUrl(contact.phone)}
           className="h-11 px-4 rounded-xl border border-gray-200 flex items-center justify-center gap-2 text-gray-700 hover:bg-gray-50 active:scale-95 transition-all"
-          title="Telepon"
+          title={t("contact.call")}
         >
           <HiOutlinePhone className="h-[18px] w-[18px]" />
-          <span className="text-[13.5px] font-semibold">Telepon</span>
+          <span className="text-[13.5px] font-semibold">{t("contact.call")}</span>
         </a>
 
         {/* Save */}
@@ -109,7 +111,7 @@ export function ContactCard({ contact, hideSave }: ContactCardProps) {
                 ? "bg-[#e8f6f0] border-primary-100 text-primary-700"
                 : "border-gray-200 text-gray-400 hover:bg-gray-50"
             }`}
-            title={saved ? "Hapus dari tersimpan" : "Simpan kontak"}
+            title={saved ? t("contact.unsave") : t("contact.save")}
           >
             {saved ? (
               <HiBookmark className="h-[18px] w-[18px]" />

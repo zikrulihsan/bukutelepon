@@ -4,6 +4,7 @@ import { apiClient } from "../../lib/axios";
 import { supabase } from "../../lib/supabase";
 import { useCategories } from "../../context/CategoriesContext";
 import type { City, Category } from "../../types";
+import { useI18n } from "../../i18n/LanguageContext";
 
 interface ImportedContact {
   name: string;
@@ -91,6 +92,7 @@ function hasContactPicker(): boolean {
 }
 
 export default function AdminAddContact() {
+  const { t, categoryName } = useI18n();
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -155,7 +157,7 @@ export default function AdminAddContact() {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["admin"] });
-      setBulkSuccess(`${data.data.count} kontak berhasil diimpor!`);
+      setBulkSuccess(t("admin.importSuccess", { count: data.data.count }));
       setImported([]);
       setTimeout(() => setBulkSuccess(""), 4000);
     },
@@ -281,8 +283,8 @@ export default function AdminAddContact() {
     <div className="space-y-8">
       {/* ── Section 1: Import from contacts ── */}
       <div>
-        <h1 className="text-xl font-bold text-gray-900 mb-1">Impor Kontak</h1>
-        <p className="text-sm text-gray-500 mb-4">Impor dari kontak HP atau file VCF/CSV, langsung approved.</p>
+        <h1 className="text-xl font-bold text-gray-900 mb-1">{t("admin.importTitle")}</h1>
+        <p className="text-sm text-gray-500 mb-4">{t("admin.importSubtitle")}</p>
 
         {bulkSuccess && (
           <div className="mb-4 p-3 bg-primary-50 border border-primary-200 rounded-xl text-primary-700 text-sm">
@@ -292,7 +294,7 @@ export default function AdminAddContact() {
 
         {bulkMutation.isError && (
           <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm">
-            Gagal mengimpor kontak.
+            {t("admin.importFailed")}
           </div>
         )}
 
@@ -307,7 +309,7 @@ export default function AdminAddContact() {
               <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
               </svg>
-              Pilih dari Kontak HP
+              {t("import.pickFromPhone")}
             </button>
           )}
 
@@ -319,7 +321,7 @@ export default function AdminAddContact() {
             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
             </svg>
-            Upload File (.vcf / .csv)
+            {t("admin.importFileButton")}
           </button>
           <input
             ref={fileInputRef}
@@ -343,7 +345,7 @@ export default function AdminAddContact() {
                     onChange={(e) => toggleAll(e.target.checked)}
                     className="rounded border-gray-300 text-primary-700 focus:ring-primary-500"
                   />
-                  <span className="text-gray-700 font-medium">{selectedCount} dari {imported.length} dipilih</span>
+                  <span className="text-gray-700 font-medium">{t("import.selectedOf", { selected: selectedCount, total: imported.length })}</span>
                 </label>
               </div>
               <button
@@ -351,7 +353,7 @@ export default function AdminAddContact() {
                 onClick={() => setImported([])}
                 className="text-xs text-red-600 hover:text-red-700 font-medium"
               >
-                Hapus Semua
+                {t("import.removeAll")}
               </button>
             </div>
 
@@ -390,7 +392,7 @@ export default function AdminAddContact() {
                   onChange={(e) => setImportCityId(e.target.value)}
                   className="rounded-xl border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none bg-white"
                 >
-                  <option value="">Pilih kota *</option>
+                  <option value="">{t("import.selectCityRequired")}</option>
                   {cities.map((c) => (
                     <option key={c.id} value={c.id}>{c.name}</option>
                   ))}
@@ -400,9 +402,9 @@ export default function AdminAddContact() {
                   onChange={(e) => setImportCategoryId(e.target.value)}
                   className="rounded-xl border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none bg-white"
                 >
-                  <option value="">Pilih kategori *</option>
+                  <option value="">{t("import.selectCategoryRequired")}</option>
                   {categories.map((c) => (
-                    <option key={c.id} value={c.id}>{c.name}</option>
+                    <option key={c.id} value={c.id}>{categoryName(c)}</option>
                   ))}
                 </select>
               </div>
@@ -414,8 +416,8 @@ export default function AdminAddContact() {
                 className="w-full bg-primary-700 text-white font-semibold py-2.5 rounded-xl hover:bg-primary-800 transition-colors disabled:opacity-50"
               >
                 {bulkMutation.isPending
-                  ? "Mengimpor..."
-                  : `Impor ${selectedCount} Kontak`}
+                  ? t("admin.importing")
+                  : t("admin.importCount", { count: selectedCount })}
               </button>
             </div>
           </div>
@@ -427,11 +429,9 @@ export default function AdminAddContact() {
             <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-gray-300 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
             </svg>
-            <p className="text-sm text-gray-500">Belum ada kontak diimpor</p>
+            <p className="text-sm text-gray-500">{t("import.emptyTitle")}</p>
             <p className="text-xs text-gray-400 mt-1">
-              {hasContactPicker()
-                ? "Pilih dari kontak HP atau upload file VCF/CSV"
-                : "Upload file VCF/CSV dari kontak HP kamu"}
+              {hasContactPicker() ? t("import.emptyHintPicker") : t("import.emptyHintFile")}
             </p>
           </div>
         )}
@@ -442,36 +442,36 @@ export default function AdminAddContact() {
 
       {/* ── Section 2: Manual add ── */}
       <div>
-        <h2 className="text-xl font-bold text-gray-900 mb-1">Tambah Manual</h2>
-        <p className="text-sm text-gray-500 mb-4">Input satu kontak, langsung approved.</p>
+        <h2 className="text-xl font-bold text-gray-900 mb-1">{t("admin.manualTitle")}</h2>
+        <p className="text-sm text-gray-500 mb-4">{t("admin.manualSubtitle")}</p>
 
         {success && (
           <div className="mb-4 p-3 bg-primary-50 border border-primary-200 rounded-xl text-primary-700 text-sm">
-            Kontak berhasil ditambahkan!
+            {t("admin.addSuccess")}
           </div>
         )}
 
         {mutation.isError && (
           <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm">
-            Gagal menambahkan kontak. Periksa kembali data yang diisi.
+            {t("admin.addFailed")}
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="bg-white rounded-xl border border-gray-200 p-5 space-y-4 max-w-xl">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Nama *</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">{t("admin.colName")} *</label>
             <input
               type="text"
               required
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
               className="w-full rounded-xl border border-gray-300 px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
-              placeholder="Nama kontak / tempat"
+              placeholder={t("admin.namePlaceholder")}
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Telepon *</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">{t("admin.phone")} *</label>
             <input
               type="text"
               required
@@ -484,14 +484,14 @@ export default function AdminAddContact() {
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Kota *</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t("form.city")} *</label>
               <select
                 required
                 value={form.cityId}
                 onChange={(e) => setForm({ ...form, cityId: e.target.value })}
                 className="w-full rounded-xl border border-gray-300 px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none bg-white"
               >
-                <option value="">Pilih kota</option>
+                <option value="">{t("form.selectCity")}</option>
                 {cities.map((c) => (
                   <option key={c.id} value={c.id}>{c.name}</option>
                 ))}
@@ -499,34 +499,34 @@ export default function AdminAddContact() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Kategori *</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t("form.category")} *</label>
               <select
                 required
                 value={form.categoryId}
                 onChange={(e) => setForm({ ...form, categoryId: e.target.value })}
                 className="w-full rounded-xl border border-gray-300 px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none bg-white"
               >
-                <option value="">Pilih kategori</option>
+                <option value="">{t("form.selectCategory")}</option>
                 {categories.map((c) => (
-                  <option key={c.id} value={c.id}>{c.name}</option>
+                  <option key={c.id} value={c.id}>{categoryName(c)}</option>
                 ))}
               </select>
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Alamat</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">{t("form.address")}</label>
             <input
               type="text"
               value={form.address}
               onChange={(e) => setForm({ ...form, address: e.target.value })}
               className="w-full rounded-xl border border-gray-300 px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
-              placeholder="Jl. Contoh No. 1"
+              placeholder={t("form.addressPlaceholder")}
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Website</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">{t("form.website")}</label>
             <input
               type="url"
               value={form.website}
@@ -537,18 +537,18 @@ export default function AdminAddContact() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Deskripsi</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">{t("form.description")}</label>
             <textarea
               value={form.description}
               onChange={(e) => setForm({ ...form, description: e.target.value })}
               rows={3}
               className="w-full rounded-xl border border-gray-300 px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none resize-none"
-              placeholder="Deskripsi singkat..."
+              placeholder={t("admin.descriptionPlaceholder")}
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Foto</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">{t("form.photo")}</label>
             {imagePreview ? (
               <div className="relative w-24 h-24">
                 <img src={imagePreview} alt="Preview" className="w-24 h-24 rounded-xl object-cover border border-gray-200" />
@@ -571,7 +571,7 @@ export default function AdminAddContact() {
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
-                Upload foto
+                {t("form.uploadPhoto")}
               </button>
             )}
             <input
@@ -588,7 +588,7 @@ export default function AdminAddContact() {
             disabled={mutation.isPending || imageUploading}
             className="w-full bg-primary-700 text-white font-semibold py-2.5 rounded-xl hover:bg-primary-800 transition-colors disabled:opacity-50"
           >
-            {imageUploading ? "Mengupload foto..." : mutation.isPending ? "Menyimpan..." : "Tambah Kontak"}
+            {imageUploading ? t("form.uploadingPhoto") : mutation.isPending ? t("admin.saving") : t("admin.addContact")}
           </button>
         </form>
       </div>

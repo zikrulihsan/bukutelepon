@@ -2,8 +2,10 @@ import { useState, FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import { Button } from "../../components/ui/Button";
+import { useI18n } from "../../i18n/LanguageContext";
 
 export default function LoginPage() {
+  const { t } = useI18n();
   const { signIn } = useAuth();
   const navigate = useNavigate();
 
@@ -22,7 +24,7 @@ export default function LoginPage() {
       navigate("/");
     } catch (err: unknown) {
       const message = (err as { message?: string })?.message;
-      setError(message || "Login gagal");
+      setError(message || t("auth.loginFailed"));
     } finally {
       setLoading(false);
     }
@@ -31,7 +33,7 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-white flex flex-col items-center justify-center px-4">
       <div className="max-w-md w-full">
-        <h1 className="text-2xl font-bold text-gray-900 text-center mb-8">Masuk</h1>
+        <h1 className="text-2xl font-bold text-gray-900 text-center mb-8">{t("auth.loginTitle")}</h1>
 
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
@@ -41,7 +43,7 @@ export default function LoginPage() {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">{t("auth.email")}</label>
             <input
               type="email"
               required
@@ -52,7 +54,7 @@ export default function LoginPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">{t("auth.password")}</label>
             <input
               type="password"
               required
@@ -63,14 +65,14 @@ export default function LoginPage() {
           </div>
 
           <Button type="submit" size="lg" loading={loading} className="w-full">
-            Masuk
+            {t("auth.login")}
           </Button>
         </form>
 
         <p className="text-center text-sm text-gray-500 mt-6">
-          Belum punya akun?{" "}
+          {t("auth.noAccount")}{" "}
           <Link to="/register" className="text-primary-700 hover:underline">
-            Daftar
+            {t("auth.register")}
           </Link>
         </p>
       </div>

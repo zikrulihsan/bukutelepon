@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useI18n } from "../../i18n/LanguageContext";
 
 const ONBOARDING_KEY = "bukutelepon_onboarding_done";
 
@@ -9,6 +10,7 @@ interface OnboardingTutorialProps {
 }
 
 export function OnboardingTutorial({ show, onComplete }: OnboardingTutorialProps) {
+  const { t } = useI18n();
   const [step, setStep] = useState(0);
   const [visible, setVisible] = useState(false);
   const [spotlightRect, setSpotlightRect] = useState<DOMRect | null>(null);
@@ -23,9 +25,9 @@ export function OnboardingTutorial({ show, onComplete }: OnboardingTutorialProps
         if (!bottomNav) return null;
         return bottomNav.children[3] as HTMLElement;
       },
-      title: "Bantu Lengkapi Kontak Di Kotamu! 🤝",
-      description: "Kamu bisa menambahkan kontak penting ke portal ini agar bermanfaat bagi warga di kotamu.",
-      buttonText: "Mengerti!",
+      title: t("onboarding.title"),
+      description: t("onboarding.description"),
+      buttonText: t("onboarding.button"),
     },
   ];
 

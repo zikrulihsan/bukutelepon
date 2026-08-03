@@ -1,11 +1,13 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { HiHome, HiOutlineHome, HiMagnifyingGlass, HiBookmark, HiOutlineBookmark, HiPlusCircle, HiOutlinePlusCircle, HiUser, HiOutlineUser } from "react-icons/hi2";
+import { useI18n } from "../../i18n/LanguageContext";
 
 const HIDDEN_ROUTES = ["/login", "/register", "/admin", "/kontak"];
 
 export function BottomNav() {
   const location = useLocation();
   const navigate = useNavigate();
+  const { t } = useI18n();
 
   if (HIDDEN_ROUTES.some((r) => location.pathname.startsWith(r))) return null;
 
@@ -30,7 +32,7 @@ export function BottomNav() {
                 <HiOutlineHome className="h-6 w-6 text-gray-400" />
               )}
               <span className={`text-[10px] leading-tight ${active("/") ? "font-bold text-primary-700" : "font-medium text-gray-500"}`}>
-                Beranda
+                {t("nav.home")}
               </span>
             </button>
 
@@ -38,7 +40,7 @@ export function BottomNav() {
             <button onClick={() => navigate("/search")} className="flex flex-col items-center pt-2.5 pb-2 gap-1 active:scale-95 transition-transform">
               <HiMagnifyingGlass className={`h-6 w-6 ${active("/search") ? "text-primary-700 stroke-[0.5]" : "text-gray-400"}`} />
               <span className={`text-[10px] leading-tight ${active("/search") ? "font-bold text-primary-700" : "font-medium text-gray-500"}`}>
-                Cari
+                {t("nav.search")}
               </span>
             </button>
 
@@ -50,7 +52,7 @@ export function BottomNav() {
                 <HiOutlineBookmark className="h-6 w-6 text-gray-400" />
               )}
               <span className={`text-[10px] leading-tight ${active("/saved") ? "font-bold text-primary-700" : "font-medium text-gray-500"}`}>
-                Tersimpan
+                {t("nav.saved")}
               </span>
             </button>
 
@@ -62,7 +64,7 @@ export function BottomNav() {
                 <HiOutlinePlusCircle className="h-6 w-6 text-gray-400" />
               )}
               <span className={`text-[10px] leading-tight ${active("/submit") ? "font-bold text-primary-700" : "font-medium text-gray-500"}`}>
-                Kontribusi
+                {t("nav.contribute")}
               </span>
             </button>
 
@@ -74,7 +76,7 @@ export function BottomNav() {
                 <HiOutlineUser className="h-6 w-6 text-gray-400" />
               )}
               <span className={`text-[10px] leading-tight ${active("/account") ? "font-bold text-primary-700" : "font-medium text-gray-500"}`}>
-                Akun
+                {t("nav.account")}
               </span>
             </button>
           </div>

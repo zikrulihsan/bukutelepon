@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { apiClient } from "../../lib/axios";
+import { useI18n } from "../../i18n/LanguageContext";
 
 interface AdminStats {
   totalContacts: number;
@@ -10,6 +11,7 @@ interface AdminStats {
 }
 
 export default function AdminDashboard() {
+  const { t } = useI18n();
   const { data, isLoading } = useQuery<{ success: boolean; data: AdminStats }>({
     queryKey: ["admin", "stats"],
     queryFn: async () => (await apiClient.get("/admin/stats")).data,
@@ -19,7 +21,7 @@ export default function AdminDashboard() {
 
   return (
     <div>
-      <h1 className="text-xl font-bold text-gray-900 mb-6">Dashboard</h1>
+      <h1 className="text-xl font-bold text-gray-900 mb-6">{t("admin.dashboard")}</h1>
 
       {isLoading ? (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -33,28 +35,28 @@ export default function AdminDashboard() {
       ) : (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
-            <p className="text-sm text-gray-500">Total Kontak</p>
+            <p className="text-sm text-gray-500">{t("admin.totalContacts")}</p>
             <p className="text-3xl font-bold text-gray-900 mt-1">{stats?.totalContacts}</p>
           </div>
           <Link
             to="/admin/contacts?status=PENDING"
             className="bg-yellow-50 rounded-xl shadow-sm border border-yellow-200 p-5 hover:shadow-md transition-shadow"
           >
-            <p className="text-sm text-yellow-700">Menunggu Review</p>
+            <p className="text-sm text-yellow-700">{t("admin.pendingReview")}</p>
             <p className="text-3xl font-bold text-yellow-800 mt-1">{stats?.pendingContacts}</p>
           </Link>
           <Link
             to="/admin/users"
             className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 hover:shadow-md transition-shadow"
           >
-            <p className="text-sm text-gray-500">Total Pengguna</p>
+            <p className="text-sm text-gray-500">{t("admin.totalUsers")}</p>
             <p className="text-3xl font-bold text-gray-900 mt-1">{stats?.totalUsers}</p>
           </Link>
           <Link
             to="/admin/reviews"
             className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 hover:shadow-md transition-shadow"
           >
-            <p className="text-sm text-gray-500">Total Ulasan</p>
+            <p className="text-sm text-gray-500">{t("admin.totalReviews")}</p>
             <p className="text-3xl font-bold text-gray-900 mt-1">{stats?.totalReviews}</p>
           </Link>
         </div>

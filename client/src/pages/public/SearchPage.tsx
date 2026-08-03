@@ -8,8 +8,10 @@ import { CategoryIcon } from "../../components/shared/CategoryIcon";
 import { ContactListShimmer } from "../../components/shared/Shimmer";
 import { HiChevronLeft, HiMagnifyingGlass, HiXMark, HiCheckBadge, HiCheck } from "react-icons/hi2";
 import { HiFilter } from "react-icons/hi";
+import { useI18n } from "../../i18n/LanguageContext";
 
 export default function SearchPage() {
+  const { t, categoryName } = useI18n();
   const { citySlug, city } = useCity();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -130,7 +132,7 @@ export default function SearchPage() {
             type="button"
             onClick={() => navigate(-1)}
             className="p-1.5 -ml-1 text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded-full transition-colors flex-shrink-0"
-            aria-label="Kembali"
+            aria-label={t("common.back")}
           >
             <HiChevronLeft className="h-6 w-6" />
           </button>
@@ -144,7 +146,7 @@ export default function SearchPage() {
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder={`Cari kontak di ${city?.name ?? "sekitarmu"}...`}
+              placeholder={t("home.searchInCity", { city: city?.name ?? t("home.nearYou") })}
               className="flex-1 w-full h-12 pl-3 pr-2 text-[16px] font-medium text-gray-900 placeholder-gray-400 bg-transparent outline-none"
             />
             {search && (
@@ -176,9 +178,9 @@ export default function SearchPage() {
             {showFilterMenu && (
               <div className="absolute top-full left-0 mt-1.5 bg-white rounded-xl shadow-lg border border-gray-100 py-1 z-30 min-w-[160px]">
                 {([
-                  { value: "", label: "Semua" },
-                  { value: "true", label: "Terverifikasi" },
-                  { value: "false", label: "Belum Verifikasi" },
+                  { value: "", label: t("filter.all") },
+                  { value: "true", label: t("filter.verified") },
+                  { value: "false", label: t("filter.unverified") },
                 ] as const).map(({ value, label }) => (
                   <button
                     key={value}
@@ -213,7 +215,7 @@ export default function SearchPage() {
                 }`}
               >
                 <CategoryIcon slug={cat.slug} className="w-3.5 h-3.5" />
-                {cat.name}
+                {categoryName(cat)}
               </button>
             ))}
           </div>
@@ -227,9 +229,9 @@ export default function SearchPage() {
             <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
               <HiMagnifyingGlass className="h-7 w-7 text-gray-400" />
             </div>
-            <p className="text-sm font-medium text-gray-900 mb-1">Cari kontak</p>
+            <p className="text-sm font-medium text-gray-900 mb-1">{t("search.emptyTitle")}</p>
             <p className="text-xs text-gray-500">
-              Ketik nama atau pilih kategori{city ? ` di ${city.name}` : ""}
+              {t("search.emptyHint")}{city ? ` ${t("common.inCity", { city: city.name })}` : ""}
             </p>
           </div>
         ) : isLoading ? (
@@ -237,13 +239,15 @@ export default function SearchPage() {
         ) : (
           <>
             <p className="text-xs text-gray-500 mb-3">
-              {searchQuery ? `Hasil "${searchQuery}"` : `${total} kontak ${categories.find((c) => c.slug === activeCategory)?.name ?? ""}`}
-              {city ? ` di ${city.name}` : ""}
+              {searchQuery
+                ? t("search.resultsFor", { query: searchQuery })
+                : `${t("common.contactsCount", { count: total })} ${categoryName(categories.find((c) => c.slug === activeCategory))}`.trim()}
+              {city ? ` ${t("common.inCity", { city: city.name })}` : ""}
             </p>
 
             {allContacts.length === 0 ? (
               <div className="text-center py-16">
-                <p className="text-gray-500 text-sm">Tidak ada kontak ditemukan</p>
+                <p className="text-gray-500 text-sm">{t("search.noResults")}</p>
               </div>
             ) : (
               <div className="space-y-2.5">

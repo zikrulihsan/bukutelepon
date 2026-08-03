@@ -7,6 +7,7 @@ import { useCategories } from "../../context/CategoriesContext";
 import { Button } from "../../components/ui/Button";
 import { Badge } from "../../components/ui/Badge";
 import type { Contact, City, Category, PaginatedResponse } from "../../types";
+import { useI18n } from "../../i18n/LanguageContext";
 
 interface EditForm {
   name: string;
@@ -22,6 +23,7 @@ interface EditForm {
 }
 
 export default function AdminContacts() {
+  const { t, categoryName } = useI18n();
   const queryClient = useQueryClient();
   const [searchParams] = useSearchParams();
   const [status, setStatus] = useState(searchParams.get("status") || "PENDING");
@@ -139,7 +141,7 @@ export default function AdminContacts() {
 
   return (
     <div>
-      <h1 className="text-xl font-bold text-gray-900 mb-6">Kelola Kontak</h1>
+      <h1 className="text-xl font-bold text-gray-900 mb-6">{t("admin.manageContacts")}</h1>
 
       <div className="flex gap-2 mb-6">
         {["PENDING", "APPROVED", "REJECTED"].map((s) => (
@@ -166,7 +168,7 @@ export default function AdminContacts() {
       ) : (
         <div className="space-y-3">
           {data?.data.length === 0 && (
-            <div className="text-center py-12 text-gray-400 text-sm">Tidak ada kontak {status.toLowerCase()}</div>
+            <div className="text-center py-12 text-gray-400 text-sm">{t("admin.noContactsWithStatus", { status: status.toLowerCase() })}</div>
           )}
           {data?.data.map((contact) => (
             <div key={contact.id} className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
@@ -175,40 +177,40 @@ export default function AdminContacts() {
                 <div className="space-y-3">
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-xs font-medium text-gray-500 mb-1">Nama</label>
+                      <label className="block text-xs font-medium text-gray-500 mb-1">{t("admin.colName")}</label>
                       <input value={editForm.name} onChange={(e) => setEditForm({ ...editForm, name: e.target.value })} className={inputClass} />
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-gray-500 mb-1">Telepon</label>
+                      <label className="block text-xs font-medium text-gray-500 mb-1">{t("admin.phone")}</label>
                       <input value={editForm.phone} onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })} className={inputClass} />
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-xs font-medium text-gray-500 mb-1">Kota</label>
+                      <label className="block text-xs font-medium text-gray-500 mb-1">{t("form.city")}</label>
                       <select value={editForm.cityId} onChange={(e) => setEditForm({ ...editForm, cityId: e.target.value })} className={`${inputClass} bg-white`}>
                         {cities.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
                       </select>
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-gray-500 mb-1">Kategori</label>
+                      <label className="block text-xs font-medium text-gray-500 mb-1">{t("form.category")}</label>
                       <select value={editForm.categoryId} onChange={(e) => setEditForm({ ...editForm, categoryId: e.target.value })} className={`${inputClass} bg-white`}>
-                        {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                        {categories.map((c) => <option key={c.id} value={c.id}>{categoryName(c)}</option>)}
                       </select>
                     </div>
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-gray-500 mb-1">Alamat</label>
-                    <input value={editForm.address} onChange={(e) => setEditForm({ ...editForm, address: e.target.value })} className={inputClass} placeholder="Opsional" />
+                    <label className="block text-xs font-medium text-gray-500 mb-1">{t("form.address")}</label>
+                    <input value={editForm.address} onChange={(e) => setEditForm({ ...editForm, address: e.target.value })} className={inputClass} placeholder={t("common.optional")} />
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-xs font-medium text-gray-500 mb-1">Website</label>
-                      <input value={editForm.website} onChange={(e) => setEditForm({ ...editForm, website: e.target.value })} className={inputClass} placeholder="Opsional" />
+                      <label className="block text-xs font-medium text-gray-500 mb-1">{t("form.website")}</label>
+                      <input value={editForm.website} onChange={(e) => setEditForm({ ...editForm, website: e.target.value })} className={inputClass} placeholder={t("common.optional")} />
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-gray-500 mb-1">Link Google Maps</label>
-                      <input value={editForm.mapsUrl} onChange={(e) => setEditForm({ ...editForm, mapsUrl: e.target.value })} className={inputClass} placeholder="Opsional" />
+                      <label className="block text-xs font-medium text-gray-500 mb-1">{t("form.mapsUrl")}</label>
+                      <input value={editForm.mapsUrl} onChange={(e) => setEditForm({ ...editForm, mapsUrl: e.target.value })} className={inputClass} placeholder={t("common.optional")} />
                     </div>
                   </div>
                   <div>
@@ -220,11 +222,11 @@ export default function AdminContacts() {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-gray-500 mb-1">Deskripsi</label>
-                    <textarea value={editForm.description} onChange={(e) => setEditForm({ ...editForm, description: e.target.value })} rows={2} className={`${inputClass} resize-none`} placeholder="Opsional" />
+                    <label className="block text-xs font-medium text-gray-500 mb-1">{t("form.description")}</label>
+                    <textarea value={editForm.description} onChange={(e) => setEditForm({ ...editForm, description: e.target.value })} rows={2} className={`${inputClass} resize-none`} placeholder={t("common.optional")} />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-gray-500 mb-1">Foto</label>
+                    <label className="block text-xs font-medium text-gray-500 mb-1">{t("form.photo")}</label>
                     {editImagePreview ? (
                       <div className="relative w-16 h-16">
                         <img src={editImagePreview} alt="Preview" className="w-16 h-16 rounded-xl object-cover border border-gray-200" />
@@ -247,7 +249,7 @@ export default function AdminContacts() {
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                           <path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                         </svg>
-                        Upload foto
+                        {t("form.uploadPhoto")}
                       </button>
                     )}
                     <input ref={editImageInputRef} type="file" accept="image/*" className="hidden" onChange={handleEditImageChange} />
@@ -255,10 +257,10 @@ export default function AdminContacts() {
 
                   <div className="flex gap-2 pt-1">
                     <Button size="sm" onClick={() => editMutation.mutate({ id: contact.id, data: editForm })} loading={editMutation.isPending || editImageUploading}>
-                      {editImageUploading ? "Mengupload..." : "Simpan"}
+                      {editImageUploading ? t("admin.uploading") : t("common.save")}
                     </Button>
                     <button onClick={cancelEdit} className="px-3 py-1.5 text-sm text-gray-600 hover:text-gray-800 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors">
-                      Batal
+                      {t("common.cancel")}
                     </button>
                   </div>
                 </div>
@@ -269,7 +271,7 @@ export default function AdminContacts() {
                     <h3 className="font-semibold text-gray-900">{contact.name}</h3>
                     <p className="text-sm text-gray-500">{contact.phone}</p>
                     <p className="text-xs text-gray-400 mt-0.5">
-                      {contact.city?.name} &middot; {contact.category?.name}
+                      {contact.city?.name} &middot; {categoryName(contact.category)}
                     </p>
                     {contact.address && <p className="text-xs text-gray-400">{contact.address}</p>}
                     <div className="mt-2">
@@ -282,7 +284,7 @@ export default function AdminContacts() {
                     <button
                       onClick={() => startEdit(contact)}
                       className="p-1.5 text-gray-400 hover:text-primary-700 rounded-xl hover:bg-gray-50 transition-colors"
-                      title="Edit"
+                      title={t("common.edit")}
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -291,10 +293,10 @@ export default function AdminContacts() {
                     {contact.status === "PENDING" && (
                       <>
                         <Button size="sm" onClick={() => approveMutation.mutate(contact.id)} loading={approveMutation.isPending}>
-                          Setuju
+                          {t("admin.approve")}
                         </Button>
                         <Button variant="danger" size="sm" onClick={() => rejectMutation.mutate(contact.id)} loading={rejectMutation.isPending}>
-                          Tolak
+                          {t("admin.reject")}
                         </Button>
                       </>
                     )}
@@ -313,7 +315,7 @@ export default function AdminContacts() {
             disabled={page === 1}
             className="px-4 py-2 border border-gray-200 rounded-xl disabled:opacity-50 text-sm"
           >
-            Sebelumnya
+            {t("pagination.prev")}
           </button>
           <span className="px-4 py-2 text-sm text-gray-600">
             {page} / {data.meta.totalPages}
@@ -323,7 +325,7 @@ export default function AdminContacts() {
             disabled={page >= data.meta.totalPages}
             className="px-4 py-2 border border-gray-200 rounded-xl disabled:opacity-50 text-sm"
           >
-            Selanjutnya
+            {t("pagination.next")}
           </button>
         </div>
       )}

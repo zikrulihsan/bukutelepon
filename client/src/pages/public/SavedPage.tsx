@@ -6,8 +6,10 @@ import { ContactListShimmer } from "../../components/shared/Shimmer";
 import { getSavedIds, toggleSaved } from "../../lib/saved";
 import type { Contact } from "../../types";
 import { HiOutlineBookmark, HiXMark } from "react-icons/hi2";
+import { useI18n } from "../../i18n/LanguageContext";
 
 export default function SavedPage() {
+  const { t } = useI18n();
   const { getById, isLoading: cacheLoading } = useContactsData();
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [loading, setLoading] = useState(true);
@@ -61,8 +63,8 @@ export default function SavedPage() {
   return (
     <div className="min-h-screen bg-white max-w-md mx-auto pb-24">
       <div className="px-5 pt-6 pb-3">
-        <h1 className="text-[22px] font-extrabold text-gray-900 tracking-tight">Kontak Tersimpan</h1>
-        <p className="text-sm text-gray-500 mt-1">Kontak yang kamu simpan untuk akses cepat</p>
+        <h1 className="text-[22px] font-extrabold text-gray-900 tracking-tight">{t("saved.title")}</h1>
+        <p className="text-sm text-gray-500 mt-1">{t("saved.subtitle")}</p>
       </div>
 
       <div className="px-4 pt-4">
@@ -73,8 +75,8 @@ export default function SavedPage() {
             <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
               <HiOutlineBookmark className="h-7 w-7 text-gray-400" />
             </div>
-            <p className="text-sm font-medium text-gray-900 mb-1">Belum ada kontak tersimpan</p>
-            <p className="text-xs text-gray-500">Simpan kontak dari halaman beranda untuk akses cepat</p>
+            <p className="text-sm font-medium text-gray-900 mb-1">{t("saved.emptyTitle")}</p>
+            <p className="text-xs text-gray-500">{t("saved.emptyHint")}</p>
           </div>
         ) : (
           <div className="space-y-2.5">
@@ -84,7 +86,7 @@ export default function SavedPage() {
                 <button
                   onClick={() => handleRemove(contact.id)}
                   className="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-white border border-gray-200 shadow-sm flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 hover:border-red-200 transition-colors z-20"
-                  title="Hapus dari tersimpan"
+                  title={t("contact.unsave")}
                 >
                   <HiXMark className="h-3.5 w-3.5" />
                 </button>
