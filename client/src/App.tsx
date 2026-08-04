@@ -13,6 +13,8 @@ import ContactDetailPage from "./pages/public/ContactDetailPage";
 import SubmitPage from "./pages/public/SubmitPage";
 import LoginPage from "./pages/public/LoginPage";
 import RegisterPage from "./pages/public/RegisterPage";
+import ForgotPasswordPage from "./pages/public/ForgotPasswordPage";
+import ResetPasswordPage from "./pages/public/ResetPasswordPage";
 import AdminDashboard from "./pages/admin/Dashboard";
 import AdminContacts from "./pages/admin/Contacts";
 import AdminAddContact from "./pages/admin/AddContact";
@@ -41,6 +43,8 @@ export default function App() {
                     <Route path="/submit" element={<SubmitPage />} />
                     <Route path="/login" element={<LoginPage />} />
                     <Route path="/register" element={<RegisterPage />} />
+                    <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+                    <Route path="/reset-password" element={<ResetPasswordPage />} />
                   </Routes>
                 </main>
                 <PWAInstallBanner />

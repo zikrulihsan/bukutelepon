@@ -33,6 +33,7 @@ const id = {
   "common.reviewsCount": "{count} ulasan",
   "common.inCity": "di {city}",
   "common.language": "Bahasa",
+  "common.loading": "Memuat...",
 
   // ── Filters ──
   "filter.all": "Semua",
@@ -147,6 +148,20 @@ const id = {
   "auth.registerFailed": "Registrasi gagal",
   "auth.noAccount": "Belum punya akun?",
   "auth.haveAccount": "Sudah punya akun?",
+  "auth.forgotPassword": "Lupa password?",
+  "auth.forgotPasswordTitle": "Lupa Password",
+  "auth.forgotPasswordSubtitle": "Masukkan email akunmu, kami akan mengirim tautan untuk mengatur ulang password.",
+  "auth.sendResetLink": "Kirim Tautan Reset",
+  "auth.resetEmailSent": "Kalau email tersebut terdaftar, tautan reset password sudah dikirim. Cek kotak masuk dan folder spam.",
+  "auth.resetRequestFailed": "Gagal mengirim tautan reset",
+  "auth.backToLogin": "Kembali ke halaman masuk",
+  "auth.resetPasswordTitle": "Atur Password Baru",
+  "auth.resetPasswordSubtitle": "Buat password baru untuk akunmu.",
+  "auth.newPassword": "Password Baru",
+  "auth.savePassword": "Simpan Password",
+  "auth.resetPasswordSuccess": "Password berhasil diubah. Mengalihkan...",
+  "auth.resetPasswordFailed": "Gagal mengubah password",
+  "auth.resetLinkInvalid": "Tautan reset tidak valid atau sudah kedaluwarsa. Silakan minta tautan baru.",
 
   // ── Account ──
   "account.signInTitle": "Masuk ke Akun",
@@ -311,6 +326,7 @@ const en: Record<TranslationKey, string> = {
   "common.reviewsCount": "{count} reviews",
   "common.inCity": "in {city}",
   "common.language": "Language",
+  "common.loading": "Loading...",
 
   // ── Filters ──
   "filter.all": "All",
@@ -425,6 +441,20 @@ const en: Record<TranslationKey, string> = {
   "auth.registerFailed": "Registration failed",
   "auth.noAccount": "Don't have an account?",
   "auth.haveAccount": "Already have an account?",
+  "auth.forgotPassword": "Forgot password?",
+  "auth.forgotPasswordTitle": "Forgot Password",
+  "auth.forgotPasswordSubtitle": "Enter your account email and we'll send you a link to reset your password.",
+  "auth.sendResetLink": "Send Reset Link",
+  "auth.resetEmailSent": "If that email is registered, a password reset link has been sent. Check your inbox and spam folder.",
+  "auth.resetRequestFailed": "Failed to send reset link",
+  "auth.backToLogin": "Back to sign in",
+  "auth.resetPasswordTitle": "Set a New Password",
+  "auth.resetPasswordSubtitle": "Create a new password for your account.",
+  "auth.newPassword": "New Password",
+  "auth.savePassword": "Save Password",
+  "auth.resetPasswordSuccess": "Password updated. Redirecting...",
+  "auth.resetPasswordFailed": "Failed to update password",
+  "auth.resetLinkInvalid": "This reset link is invalid or has expired. Please request a new one.",
 
   // ── Account ──
   "account.signInTitle": "Sign in to your account",
