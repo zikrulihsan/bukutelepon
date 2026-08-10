@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, FormEvent } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "../../lib/axios";
-import { supabase } from "../../lib/supabase";
+import { uploadContactImage, UploadError } from "../../lib/uploadImage";
 import { useAuth } from "../../hooks/useAuth";
 import { useCity } from "../../context/CityContext";
 import { useCategories } from "../../context/CategoriesContext";
@@ -230,13 +230,15 @@ export default function SubmitPage() {
 
       if (imageFile) {
         setImageUploading(true);
-        const ext = imageFile.name.split(".").pop();
-        const path = `contacts/${Date.now()}.${ext}`;
-        const { error: uploadError } = await supabase.storage.from("contact-images").upload(path, imageFile, { upsert: false });
-        setImageUploading(false);
-        if (uploadError) throw new Error(t("error.uploadPhoto"));
-        const { data: urlData } = supabase.storage.from("contact-images").getPublicUrl(path);
-        imageUrl = urlData.publicUrl;
+        try {
+          imageUrl = await uploadContactImage(imageFile);
+        } catch (uploadErr) {
+          throw new Error(
+            uploadErr instanceof UploadError ? t(uploadErr.messageKey) : t("error.uploadPhoto")
+          );
+        } finally {
+          setImageUploading(false);
+        }
       }
 
       await apiClient.post("/contacts", { ...form, imageUrl });

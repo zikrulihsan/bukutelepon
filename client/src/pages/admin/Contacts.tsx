@@ -2,7 +2,7 @@ import { useState, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "../../lib/axios";
-import { supabase } from "../../lib/supabase";
+import { uploadContactImage, UploadError } from "../../lib/uploadImage";
 import { useCategories } from "../../context/CategoriesContext";
 import { Button } from "../../components/ui/Button";
 import { Badge } from "../../components/ui/Badge";
@@ -20,6 +20,12 @@ interface EditForm {
   cityId: string;
   categoryId: string;
   status: string;
+}
+
+/** Prefer the API's own message, then the thrown error's, then a generic fallback. */
+function errorMessage(err: unknown, fallback: string): string {
+  const e = err as { response?: { data?: { message?: string } }; message?: string } | null;
+  return e?.response?.data?.message || e?.message || fallback;
 }
 
 export default function AdminContacts() {
@@ -68,13 +74,13 @@ export default function AdminContacts() {
 
       if (editImageFile) {
         setEditImageUploading(true);
-        const ext = editImageFile.name.split(".").pop();
-        const path = `contacts/${Date.now()}.${ext}`;
-        const { error } = await supabase.storage.from("contact-images").upload(path, editImageFile, { upsert: false });
-        setEditImageUploading(false);
-        if (error) throw error;
-        const { data: urlData } = supabase.storage.from("contact-images").getPublicUrl(path);
-        imageUrl = urlData.publicUrl;
+        try {
+          imageUrl = await uploadContactImage(editImageFile);
+        } catch (err) {
+          throw new Error(err instanceof UploadError ? t(err.messageKey) : t("error.uploadPhoto"));
+        } finally {
+          setEditImageUploading(false);
+        }
       }
 
       return apiClient.put(`/admin/contacts/${id}`, {
@@ -96,6 +102,7 @@ export default function AdminContacts() {
   });
 
   function startEdit(contact: Contact) {
+    editMutation.reset();
     setEditingId(contact.id);
     setEditForm({
       name: contact.name,
@@ -118,6 +125,7 @@ export default function AdminContacts() {
     setEditForm(null);
     setEditImageFile(null);
     setEditImagePreview(null);
+    editMutation.reset();
   }
 
   function handleEditImageChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -254,6 +262,12 @@ export default function AdminContacts() {
                     )}
                     <input ref={editImageInputRef} type="file" accept="image/*" className="hidden" onChange={handleEditImageChange} />
                   </div>
+
+                  {editMutation.isError && (
+                    <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm">
+                      {errorMessage(editMutation.error, t("admin.saveFailed"))}
+                    </div>
+                  )}
 
                   <div className="flex gap-2 pt-1">
                     <Button size="sm" onClick={() => editMutation.mutate({ id: contact.id, data: editForm })} loading={editMutation.isPending || editImageUploading}>

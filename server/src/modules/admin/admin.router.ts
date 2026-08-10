@@ -4,6 +4,7 @@ import { prisma } from "../../utils/prisma";
 import { authenticate, AuthenticatedRequest } from "../../middleware/authenticate";
 import { requireRole } from "../../middleware/requireRole";
 import { AppError } from "../../middleware/errorHandler";
+import { deleteContactImage } from "../../utils/storage";
 
 const router = Router();
 
@@ -146,12 +147,24 @@ const adminEditContactSchema = z.object({
 router.put("/contacts/:id", async (req: AuthenticatedRequest, res, next) => {
   try {
     const data = adminEditContactSchema.parse(req.body);
+    const id = req.params.id as string;
+
+    const previous = await prisma.contact.findUnique({
+      where: { id },
+      select: { imageUrl: true },
+    });
 
     const contact = await prisma.contact.update({
-      where: { id: req.params.id as string },
+      where: { id },
       data,
       include: { city: true, category: true },
     });
+
+    // The photo was replaced or cleared — drop the old object so the bucket
+    // doesn't accumulate files nothing references.
+    if (previous?.imageUrl && previous.imageUrl !== contact.imageUrl) {
+      await deleteContactImage(previous.imageUrl);
+    }
 
     res.json({ success: true, data: contact });
   } catch (err) {

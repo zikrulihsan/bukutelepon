@@ -252,6 +252,9 @@ const id = {
 
   // ── Errors ──
   "error.uploadPhoto": "Gagal mengupload foto",
+  "error.uploadTooLarge": "Ukuran foto maksimal 1 MB. Perkecil dulu fotonya.",
+  "error.uploadInvalidType": "File harus berupa gambar (JPG, PNG, atau WebP).",
+  "error.uploadNotSignedIn": "Sesi kamu sudah berakhir. Silakan masuk lagi, lalu ulangi upload.",
   "error.submitContact": "Gagal mengirim kontak",
 
   // ── Admin ──
@@ -293,6 +296,7 @@ const id = {
   "admin.manualSubtitle": "Input satu kontak, langsung approved.",
   "admin.addSuccess": "Kontak berhasil ditambahkan!",
   "admin.addFailed": "Gagal menambahkan kontak. Periksa kembali data yang diisi.",
+  "admin.saveFailed": "Gagal menyimpan perubahan.",
   "admin.namePlaceholder": "Nama kontak / tempat",
   "admin.descriptionPlaceholder": "Deskripsi singkat...",
 
@@ -545,6 +549,9 @@ const en: Record<TranslationKey, string> = {
 
   // ── Errors ──
   "error.uploadPhoto": "Failed to upload photo",
+  "error.uploadTooLarge": "Photos must be 1 MB or smaller. Please resize it first.",
+  "error.uploadInvalidType": "The file must be an image (JPG, PNG, or WebP).",
+  "error.uploadNotSignedIn": "Your session has expired. Please sign in again, then retry the upload.",
   "error.submitContact": "Failed to submit contact",
 
   // ── Admin ──
@@ -586,6 +593,7 @@ const en: Record<TranslationKey, string> = {
   "admin.manualSubtitle": "Add a single contact — approved instantly.",
   "admin.addSuccess": "Contact added successfully!",
   "admin.addFailed": "Failed to add contact. Please double-check the data.",
+  "admin.saveFailed": "Failed to save changes.",
   "admin.namePlaceholder": "Contact / place name",
   "admin.descriptionPlaceholder": "Short description...",
 

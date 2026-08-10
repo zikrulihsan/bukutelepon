@@ -1,7 +1,7 @@
 import { useState, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "../../lib/axios";
-import { supabase } from "../../lib/supabase";
+import { uploadContactImage, UploadError } from "../../lib/uploadImage";
 import { useCategories } from "../../context/CategoriesContext";
 import type { City, Category } from "../../types";
 import { useI18n } from "../../i18n/LanguageContext";
@@ -110,6 +110,7 @@ export default function AdminAddContact() {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [imageUploading, setImageUploading] = useState(false);
   const imageInputRef = useRef<HTMLInputElement>(null);
+  const [imageError, setImageError] = useState("");
   const [success, setSuccess] = useState(false);
 
   // Import state
@@ -179,21 +180,21 @@ export default function AdminAddContact() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setImageError("");
 
     let imageUrl: string | undefined;
 
     if (imageFile) {
       setImageUploading(true);
-      const ext = imageFile.name.split(".").pop();
-      const path = `contacts/${Date.now()}.${ext}`;
-      const { error } = await supabase.storage.from("contact-images").upload(path, imageFile, { upsert: false });
-      setImageUploading(false);
-      if (error) {
+      try {
+        imageUrl = await uploadContactImage(imageFile);
+      } catch (err) {
         mutation.reset();
+        setImageError(err instanceof UploadError ? t(err.messageKey) : t("error.uploadPhoto"));
         return;
+      } finally {
+        setImageUploading(false);
       }
-      const { data: urlData } = supabase.storage.from("contact-images").getPublicUrl(path);
-      imageUrl = urlData.publicUrl;
     }
 
     mutation.mutate({ formData: form, imageUrl });
@@ -448,6 +449,12 @@ export default function AdminAddContact() {
         {success && (
           <div className="mb-4 p-3 bg-primary-50 border border-primary-200 rounded-xl text-primary-700 text-sm">
             {t("admin.addSuccess")}
+          </div>
+        )}
+
+        {imageError && (
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm">
+            {imageError}
           </div>
         )}
 
