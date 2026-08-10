@@ -7,14 +7,12 @@ import { HiCheckBadge, HiBookmark } from "react-icons/hi2";
 import { HiOutlineBookmark, HiOutlinePhone } from "react-icons/hi";
 import { FaWhatsapp } from "react-icons/fa";
 import { useI18n } from "../../i18n/LanguageContext";
+import { CategoryPhoto } from "./CategoryPhoto";
 
 interface ContactCardProps {
   contact: Contact;
   hideSave?: boolean;
 }
-
-const PHOTO_STRIPES =
-  "repeating-linear-gradient(135deg, #eef1f3 0px, #eef1f3 7px, #e4e8eb 7px, #e4e8eb 14px)";
 
 export function ContactCard({ contact, hideSave }: ContactCardProps) {
   const [saved, setSaved] = useState(() => isSaved(contact.id));
@@ -39,13 +37,12 @@ export function ContactCard({ contact, hideSave }: ContactCardProps) {
         <button
           onClick={handleNavigate}
           className="flex-shrink-0 w-[84px] h-[84px] rounded-2xl overflow-hidden flex items-center justify-center active:scale-95 transition-transform"
-          style={contact.imageUrl ? undefined : { background: PHOTO_STRIPES }}
           aria-label={t("contact.viewAria", { name: contact.name })}
         >
           {contact.imageUrl ? (
             <img src={contact.imageUrl} alt={contact.name} className="w-full h-full object-cover" />
           ) : (
-            <span className="text-[11px] font-medium text-gray-400">{t("contact.photo")}</span>
+            <CategoryPhoto slug={contact.category?.slug} iconClassName="w-9 h-9" />
           )}
         </button>
 

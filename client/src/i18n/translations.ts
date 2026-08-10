@@ -95,7 +95,6 @@ const id = {
   "contact.copyNumber": "Salin nomor",
   "contact.save": "Simpan kontak",
   "contact.unsave": "Hapus dari tersimpan",
-  "contact.photo": "foto",
   "contact.viewAria": "Lihat {name}",
 
   // ── Contact detail ──
@@ -392,7 +391,6 @@ const en: Record<TranslationKey, string> = {
   "contact.copyNumber": "Copy number",
   "contact.save": "Save contact",
   "contact.unsave": "Remove from saved",
-  "contact.photo": "photo",
   "contact.viewAria": "View {name}",
 
   // ── Contact detail ──

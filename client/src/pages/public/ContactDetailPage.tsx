@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useContact } from "../../hooks/useContacts";
 import { StarRating } from "../../components/shared/StarRating";
 import { CategoryIcon } from "../../components/shared/CategoryIcon";
+import { CategoryPhoto } from "../../components/shared/CategoryPhoto";
 import { isSaved, toggleSaved } from "../../lib/saved";
 import { formatWhatsAppUrl, formatTelUrl } from "../../lib/phone";
 import { HiChevronLeft, HiCheckBadge, HiMapPin, HiStar, HiBookmark, HiChevronRight, HiCheck, HiOutlineUser, HiOutlineGlobeAlt, HiArrowTopRightOnSquare, HiOutlineChatBubbleOvalLeft, HiOutlineMapPin } from "react-icons/hi2";
@@ -148,9 +149,7 @@ export default function ContactDetailPage() {
             {contact.imageUrl ? (
               <img src={contact.imageUrl} alt={contact.name} className="w-full h-full object-cover" />
             ) : (
-              <span className="text-2xl font-bold text-white/90 tracking-wide">
-                {getInitials(contact.name)}
-              </span>
+              <CategoryPhoto slug={contact.category?.slug} iconClassName="w-8 h-8" />
             )}
           </div>
 
