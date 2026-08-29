@@ -1,6 +1,12 @@
 [build]
   command = "npm run build"
   publish = "dist"
+  edge_functions = "netlify/edge-functions"
+
+# Per-search link previews (title/description from the search keyword + city).
+[[edge_functions]]
+  path = "/search"
+  function = "search-preview"
 
 # SPA fallback — all routes go to index.html
 [[redirects]]

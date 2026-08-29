@@ -1,5 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { apiClient } from "../../lib/axios";
+import { buildSearchShareUrl } from "../../lib/searchShare";
 import { useCity } from "../../context/CityContext";
 import { useCategories } from "../../context/CategoriesContext";
 import { useInfiniteContacts } from "../../hooks/useContacts";
@@ -7,12 +10,13 @@ import { ContactCard } from "../../components/shared/ContactCard";
 import { CategoryIcon } from "../../components/shared/CategoryIcon";
 import { ContactListShimmer } from "../../components/shared/Shimmer";
 import { HiChevronLeft, HiMagnifyingGlass, HiXMark, HiCheckBadge, HiCheck } from "react-icons/hi2";
-import { HiFilter } from "react-icons/hi";
+import { HiFilter, HiOutlineShare } from "react-icons/hi";
 import { useI18n } from "../../i18n/LanguageContext";
+import type { City } from "../../types";
 
 export default function SearchPage() {
   const { t, categoryName } = useI18n();
-  const { citySlug, city } = useCity();
+  const { citySlug, city, setCity, cities, setCities } = useCity();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -29,7 +33,34 @@ export default function SearchPage() {
   const [activeCategory, setActiveCategory] = useState(urlCat);
   const [verifiedFilter, setVerifiedFilter] = useState(urlVerified);
   const [showFilterMenu, setShowFilterMenu] = useState(false);
+  const [shareCopied, setShareCopied] = useState(false);
   const filterRef = useRef<HTMLDivElement>(null);
+
+  // A shared link carries its own region — adopt it once so the receiver sees
+  // the same results as the sender, then let the usual city context take over.
+  const [cityFromLink, setCityFromLink] = useState(() => {
+    const shared = searchParams.get("city") || "";
+    return shared && shared !== citySlug ? shared : "";
+  });
+
+  const { data: citiesData } = useQuery<{ success: boolean; data: City[] }>({
+    queryKey: ["cities"],
+    queryFn: async () => (await apiClient.get("/cities")).data,
+    enabled: !!cityFromLink && cities.length === 0,
+  });
+
+  useEffect(() => {
+    if (!cityFromLink) return;
+    const known = cities.length > 0 ? cities : citiesData?.data;
+    if (!known || known.length === 0) return;
+
+    const match = known.find((c) => c.slug === cityFromLink);
+    if (match) {
+      if (cities.length === 0) setCities(known);
+      setCity(match);
+    }
+    setCityFromLink("");
+  }, [cityFromLink, cities, citiesData, setCities, setCity]);
 
   // Close filter menu on outside click
   useEffect(() => {
@@ -99,12 +130,46 @@ export default function SearchPage() {
     if (searchQuery) params.set("q", searchQuery);
     if (activeCategory) params.set("category", activeCategory);
     if (verifiedFilter) params.set("verified", verifiedFilter);
+    if (citySlug) params.set("city", citySlug);
     setSearchParams(params, { replace: true });
-  }, [searchQuery, activeCategory, verifiedFilter, setSearchParams]);
+  }, [searchQuery, activeCategory, verifiedFilter, citySlug, setSearchParams]);
 
   function handleSearch(e: React.FormEvent) {
     e.preventDefault();
     setSearchQuery(search.trim());
+  }
+
+  /** What the shared card is about — "Rumah Sakit di Bandung". */
+  function shareSubject() {
+    const keyword =
+      searchQuery || categoryName(categories.find((c) => c.slug === activeCategory));
+    if (keyword && city?.name) {
+      return t("search.shareSubject", { keyword, city: city.name });
+    }
+    return keyword || city?.name || "";
+  }
+
+  function handleShare() {
+    const subject = shareSubject();
+    const text = t("search.shareText", { subject });
+    const url = buildSearchShareUrl({
+      q: searchQuery,
+      category: activeCategory,
+      city: citySlug,
+    });
+
+    if (navigator.share) {
+      navigator.share({ title: subject, text, url }).catch(() => {/* dismissed */});
+      return;
+    }
+
+    navigator.clipboard
+      .writeText(`${text} ${url}`)
+      .then(() => {
+        setShareCopied(true);
+        setTimeout(() => setShareCopied(false), 2000);
+      })
+      .catch(() => {/* clipboard not available */});
   }
 
   function handleCategoryClick(slug: string) {
@@ -238,12 +303,26 @@ export default function SearchPage() {
           <ContactListShimmer count={4} />
         ) : (
           <>
-            <p className="text-xs text-gray-500 mb-3">
-              {searchQuery
-                ? t("search.resultsFor", { query: searchQuery })
-                : `${t("common.contactsCount", { count: total })} ${categoryName(categories.find((c) => c.slug === activeCategory))}`.trim()}
-              {city ? ` ${t("common.inCity", { city: city.name })}` : ""}
-            </p>
+            <div className="flex items-center justify-between gap-2 mb-3">
+              <p className="text-xs text-gray-500">
+                {searchQuery
+                  ? t("search.resultsFor", { query: searchQuery })
+                  : `${t("common.contactsCount", { count: total })} ${categoryName(categories.find((c) => c.slug === activeCategory))}`.trim()}
+                {city ? ` ${t("common.inCity", { city: city.name })}` : ""}
+              </p>
+
+              {allContacts.length > 0 && (
+                <button
+                  type="button"
+                  onClick={handleShare}
+                  aria-label={t("search.shareAria")}
+                  className="flex-shrink-0 inline-flex items-center gap-1.5 rounded-full bg-gray-100 px-3 py-1.5 text-[11px] font-semibold text-gray-600 hover:bg-gray-200 active:scale-95 transition-colors"
+                >
+                  <HiOutlineShare className="h-3.5 w-3.5" />
+                  {shareCopied ? t("search.shareCopied") : t("search.share")}
+                </button>
+              )}
+            </div>
 
             {allContacts.length === 0 ? (
               <div className="text-center py-16">
