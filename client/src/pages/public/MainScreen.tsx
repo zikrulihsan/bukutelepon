@@ -19,7 +19,16 @@ import { useI18n } from "../../i18n/LanguageContext";
 import type { TranslationKey } from "../../i18n/translations";
 import type { Category, City } from "../../types";
 
-const EMERGENCY_CONTACTS: { labelKey: TranslationKey; phone: string; icon: ReactNode }[] = [
+type EmergencyContact = {
+  labelKey: TranslationKey;
+  icon: ReactNode;
+  /** Dialled directly via `tel:`. Omit when the entry links to a search instead. */
+  phone?: string;
+  /** Opens the search page with this keyword. Omit when the entry is a phone number. */
+  search?: string;
+};
+
+const EMERGENCY_CONTACTS: EmergencyContact[] = [
   {
     labelKey: "emergency.emergency", phone: "112", icon: (
       <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
@@ -61,7 +70,26 @@ const EMERGENCY_CONTACTS: { labelKey: TranslationKey; phone: string; icon: React
         <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
       </svg>
     )
+  },
+  {
+    labelKey: "emergency.rabies", search: "rabies", icon: (
+      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+        <path d="M10 5.172C10 3.782 8.423 2.679 6.5 3.5 4.577 4.321 4 6.5 4 8c0 3 1.5 5 3 6.5l5 5 5-5c1.5-1.5 3-3.5 3-6.5 0-1.5-.577-3.679-2.5-4.5-1.923-.821-3.5.282-3.5 1.672" />
+        <path d="M12 8v4m-2-2h4" />
+      </svg>
+    )
   }
+];
+
+const SEARCH_RECOMMENDATIONS = [
+  "Rabies",
+  "Rumah Sakit",
+  "Puskesmas",
+  "Polisi",
+  "Pemadam Kebakaran",
+  "Ambulans",
+  "PLN",
+  "PDAM",
 ];
 
 export default function MainScreen() {
@@ -194,6 +222,10 @@ export default function MainScreen() {
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [navigate]);
+
+  function goToSearch(keyword: string) {
+    navigate(`/search?q=${encodeURIComponent(keyword)}`);
+  }
 
   function handleCategoryClick(slug: string) {
     const next = activeCategory === slug ? "" : slug;
@@ -414,22 +446,60 @@ export default function MainScreen() {
                 className={`overflow-hidden ${showEmergency ? 'max-h-[200px] mt-3 opacity-100' : 'max-h-0 opacity-0'}`}
               >
                 <div className="flex gap-2.5 overflow-x-auto scrollbar-hide px-1 pb-1">
-                  {EMERGENCY_CONTACTS.map((ec) => (
-                    <a
-                      key={ec.phone}
-                      href={`tel:${ec.phone}`}
-                      className="flex-shrink-0 w-[90px] flex flex-col items-center gap-2 bg-white rounded-2xl py-3.5 border border-red-50 shadow-sm shadow-red-100/50 active:scale-95 transition-transform"
-                    >
-                      <div className="w-[38px] h-[38px] rounded-full bg-[#FFF5F5] flex items-center justify-center flex-shrink-0 text-red-500">
-                        {ec.icon}
-                      </div>
-                      <div className="text-center">
-                        <p className="text-[10px] font-bold text-gray-900 leading-tight mb-1">{t(ec.labelKey)}</p>
-                        <p className="text-[10px] text-red-500 font-semibold leading-none">{ec.phone}</p>
-                      </div>
-                    </a>
-                  ))}
+                  {EMERGENCY_CONTACTS.map((ec) => {
+                    const cardClass = "flex-shrink-0 w-[90px] flex flex-col items-center gap-2 bg-white rounded-2xl py-3.5 border border-red-50 shadow-sm shadow-red-100/50 active:scale-95 transition-transform";
+                    const inner = (
+                      <>
+                        <div className="w-[38px] h-[38px] rounded-full bg-[#FFF5F5] flex items-center justify-center flex-shrink-0 text-red-500">
+                          {ec.icon}
+                        </div>
+                        <div className="text-center">
+                          <p className="text-[10px] font-bold text-gray-900 leading-tight mb-1">{t(ec.labelKey)}</p>
+                          <p className="text-[10px] text-red-500 font-semibold leading-none">
+                            {ec.phone ?? t("emergency.searchAction")}
+                          </p>
+                        </div>
+                      </>
+                    );
+
+                    return ec.search ? (
+                      <button
+                        key={ec.labelKey}
+                        type="button"
+                        onClick={() => goToSearch(ec.search!)}
+                        className={cardClass}
+                      >
+                        {inner}
+                      </button>
+                    ) : (
+                      <a key={ec.labelKey} href={`tel:${ec.phone}`} className={cardClass}>
+                        {inner}
+                      </a>
+                    );
+                  })}
                 </div>
+              </div>
+            </div>
+
+            {/* Search recommendations */}
+            <div className="mb-7">
+              <h3 className="text-[12px] font-bold text-gray-400 uppercase tracking-[0.12em] mb-3 px-1">
+                {t("home.recommendTitle")}
+              </h3>
+              <div className="flex gap-2 overflow-x-auto scrollbar-hide px-1 pb-1">
+                {SEARCH_RECOMMENDATIONS.map((keyword) => (
+                  <button
+                    key={keyword}
+                    type="button"
+                    onClick={() => goToSearch(keyword)}
+                    className="flex-shrink-0 flex items-center gap-1.5 bg-white rounded-full pl-3 pr-3.5 py-2 shadow-[0_2px_8px_rgba(0,0,0,0.04)] active:scale-95 hover:shadow-[0_4px_12px_rgba(0,0,0,0.07)] transition-all"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 text-gray-400 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="11" cy="11" r="7" /><path d="M21 21l-4.35-4.35" />
+                    </svg>
+                    <span className="text-[13px] font-semibold text-gray-700 whitespace-nowrap">{keyword}</span>
+                  </button>
+                ))}
               </div>
             </div>
 

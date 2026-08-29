@@ -70,6 +70,7 @@ const id = {
   "home.statThisWeek": "minggu ini",
   "home.emergencyTitle": "Panggilan Darurat",
   "home.emergencySubtitle": "Polisi · Ambulans · Damkar",
+  "home.recommendTitle": "Rekomendasi Pencarian",
   "home.categories": "Kategori",
   "home.recent": "Terbaru",
   "home.seeAll": "Lihat semua",
@@ -82,6 +83,8 @@ const id = {
   "emergency.fire": "Pemadam",
   "emergency.sar": "SAR",
   "emergency.electricity": "PLN",
+  "emergency.rabies": "Rabies",
+  "emergency.searchAction": "Cari",
 
   // ── Search ──
   "search.emptyTitle": "Cari kontak",
@@ -366,6 +369,7 @@ const en: Record<TranslationKey, string> = {
   "home.statThisWeek": "this week",
   "home.emergencyTitle": "Emergency Calls",
   "home.emergencySubtitle": "Police · Ambulance · Fire",
+  "home.recommendTitle": "Search Suggestions",
   "home.categories": "Categories",
   "home.recent": "Recent",
   "home.seeAll": "See all",
@@ -378,6 +382,8 @@ const en: Record<TranslationKey, string> = {
   "emergency.fire": "Fire Dept",
   "emergency.sar": "Search & Rescue",
   "emergency.electricity": "Electricity",
+  "emergency.rabies": "Rabies",
+  "emergency.searchAction": "Search",
 
   // ── Search ──
   "search.emptyTitle": "Search contacts",
