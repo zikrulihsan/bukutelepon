@@ -20,6 +20,7 @@
 - 🔐 **Authentication** — Supabase-powered auth with email/password
 - 👤 **Guest Access** — Limited browsing without registration (contribution wall)
 - 📦 **Bulk Import** — Import contacts from your phone's contact list
+- 🔗 **Shareable Searches** — Shared links preview in chat apps with the search keyword and city
 
 ## 🛠️ Tech Stack
 
@@ -38,6 +39,8 @@
 ```
 bukutelepon/
 ├── client/                 # React frontend (Vite)
+│   ├── netlify/
+│   │   └── edge-functions/ # Per-search link preview (Open Graph) rewriting
 │   ├── src/
 │   │   ├── components/     # Reusable UI components
 │   │   ├── context/        # React context providers (Auth, City, Guest)
@@ -182,6 +185,33 @@ This starts:
 | `GET` | `/api/admin/users` | 🔒 Admin | List all users |
 
 > **Auth**: `✅` = requires Bearer token, `🔒 Admin` = requires admin role
+
+## 🔗 Link Previews (Share Cards)
+
+Search results are shareable: the **Bagikan** button on `/search` copies (or hands
+to the native share sheet) a link that carries the keyword, category, and city —
+e.g. `https://carikontak.com/search?q=rumah%20sakit&city=bandung`.
+
+WhatsApp, Telegram, and friends never run the SPA's JavaScript, so the card they
+draw comes from the HTML `<head>`. `client/netlify/edge-functions/search-preview.ts`
+rewrites that head at the CDN edge for every `/search` request:
+
+| Shared link | Preview title |
+|---|---|
+| `/search?q=rumah sakit&city=bandung` | **Rumah Sakit di Bandung — CariKontak** |
+| `/search?q=pemadam kebakaran` | **Pemadam Kebakaran — CariKontak** |
+| `/search?city=bandung` | **Kontak Penting di Bandung — CariKontak** |
+
+The card is intentionally the **compact, single-line** kind rather than the big
+square block. Chat apps pick the shape from the image: `og:image` points at
+`/og-thumb.jpg` (192×192) and `twitter:card` is `summary`, both of which stay
+under the threshold that triggers the large card. Swapping in a bigger image is
+all it takes to get the block card back.
+
+> The edge function is a Netlify feature (the client is deployed there). On the
+> self-hosted Docker/Nginx setup the static tags in `client/index.html` still
+> apply, so shared links preview with the app's default title instead of the
+> search keyword.
 
 ## 🐳 Docker
 

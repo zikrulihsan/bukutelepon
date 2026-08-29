@@ -88,6 +88,11 @@ const id = {
   "search.emptyHint": "Ketik nama atau pilih kategori",
   "search.resultsFor": "Hasil \"{query}\"",
   "search.noResults": "Tidak ada kontak ditemukan",
+  "search.share": "Bagikan",
+  "search.shareAria": "Bagikan hasil pencarian ini",
+  "search.shareCopied": "Link disalin",
+  "search.shareSubject": "{keyword} di {city}",
+  "search.shareText": "Nomor telepon & alamat {subject} — cek di CariKontak:",
 
   // ── Contact card / detail actions ──
   "contact.whatsapp": "WhatsApp",
@@ -384,6 +389,11 @@ const en: Record<TranslationKey, string> = {
   "search.emptyHint": "Type a name or pick a category",
   "search.resultsFor": "Results for \"{query}\"",
   "search.noResults": "No contacts found",
+  "search.share": "Share",
+  "search.shareAria": "Share these search results",
+  "search.shareCopied": "Link copied",
+  "search.shareSubject": "{keyword} in {city}",
+  "search.shareText": "Phone numbers & addresses for {subject} — see them on CariKontak:",
 
   // ── Contact card / detail actions ──
   "contact.whatsapp": "WhatsApp",
