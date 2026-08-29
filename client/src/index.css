@@ -37,6 +37,20 @@
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
   }
+
+  /* Viewport height that follows the mobile browser chrome as it collapses.
+     The vh line is the fallback for browsers without dvh. */
+  .h-viewport {
+    height: 100vh;
+    height: 100dvh;
+  }
+
+  /* Inner scroll region: momentum scrolling on iOS, and rubber-banding that
+     stops here instead of dragging the page (and the URL bar) around. */
+  .scroll-region {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain;
+  }
 }
 
 @keyframes slide-up {

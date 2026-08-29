@@ -80,3 +80,13 @@ export function ContactListShimmer({ count = 4 }: { count?: number }) {
     </div>
   );
 }
+
+export function CategoryChipsShimmer({ count = 5 }: { count?: number }) {
+  return (
+    <div className="flex items-center gap-2 overflow-hidden">
+      {Array.from({ length: count }).map((_, i) => (
+        <div key={i} className="h-7 w-24 rounded-full shimmer flex-shrink-0" />
+      ))}
+    </div>
+  );
+}

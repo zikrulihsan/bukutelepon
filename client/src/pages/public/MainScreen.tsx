@@ -98,7 +98,7 @@ export default function MainScreen() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const headerRef = useRef<HTMLDivElement>(null);
-  const loadMoreRef = useRef<HTMLDivElement>(null);
+  const [loadMoreNode, setLoadMoreNode] = useState<HTMLDivElement | null>(null);
   const chipScrollRef = useRef<HTMLDivElement>(null);
 
   const urlCategory = searchParams.get("category") || "";
@@ -183,18 +183,21 @@ export default function MainScreen() {
     enabled: isFiltered,
   });
 
-  // Intersection observer for infinite scroll
+  // Intersection observer for infinite scroll. The sentinel lives in state so
+  // the observer attaches when the node mounts: `hasNextPage` turns true before
+  // the filtered list (and its sentinel) is on screen, so an effect keyed only
+  // on it would run while there is nothing to observe and never run again.
   useEffect(() => {
-    if (!loadMoreRef.current || !hasNextPage || isFetchingNextPage) return;
+    if (!loadMoreNode || !hasNextPage || isFetchingNextPage) return;
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting) fetchNextPage();
       },
       { rootMargin: "200px" }
     );
-    observer.observe(loadMoreRef.current);
+    observer.observe(loadMoreNode);
     return () => observer.disconnect();
-  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+  }, [loadMoreNode, hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const allContacts = infiniteData?.pages.flatMap((p) => p.data) ?? [];
   const total = infiniteData?.pages[0]?.meta.total ?? 0;
@@ -690,7 +693,7 @@ export default function MainScreen() {
                 </div>
 
                 {hasNextPage && (
-                  <div ref={loadMoreRef} className="py-4">
+                  <div ref={setLoadMoreNode} className="py-4">
                     {isFetchingNextPage ? (
                       <ContactListShimmer count={2} />
                     ) : (

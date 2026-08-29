@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "../lib/axios";
 import { useContactsData } from "../context/ContactsContext";
@@ -60,10 +60,15 @@ export function useInfiniteContacts(options: UseInfiniteContactsOptions = {}) {
 
   const [pageCount, setPageCount] = useState(1);
 
+  // Reset the paging window during render rather than in an effect: an effect
+  // would let one frame paint the new filter with the old page count, which
+  // shows a too-tall list and makes the scroll position jump.
   const filterKey = `${city ?? ""}|${category ?? ""}|${search ?? ""}|${verified ?? ""}`;
-  useEffect(() => {
+  const [lastFilterKey, setLastFilterKey] = useState(filterKey);
+  if (filterKey !== lastFilterKey) {
+    setLastFilterKey(filterKey);
     setPageCount(1);
-  }, [filterKey]);
+  }
 
   const filtered = useMemo(
     () => filterContacts(contacts, { city, category, search, verified }),
@@ -94,9 +99,14 @@ export function useInfiniteContacts(options: UseInfiniteContactsOptions = {}) {
     return { pages, hasNextPage };
   }, [filtered, pageCount]);
 
+  // Stable identity: consumers put this in effect deps to drive an
+  // IntersectionObserver, and a new function each render would tear the
+  // observer down and rebuild it, re-firing the intersection every time.
+  const fetchNextPage = useCallback(() => setPageCount((c) => c + 1), []);
+
   return {
     data: { pages: result.pages },
-    fetchNextPage: () => setPageCount((c) => c + 1),
+    fetchNextPage,
     hasNextPage: result.hasNextPage,
     isFetchingNextPage: false,
     isLoading: enabled ? isLoading : false,
