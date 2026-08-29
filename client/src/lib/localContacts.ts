@@ -5,9 +5,6 @@ import type { Contact } from "../types";
 const LS_DATA_KEY = "bt_contacts_v2";
 const LS_VERSION_KEY = "bt_contacts_version";
 
-// Cosmetic guest gate — keep in sync with the server's GUEST_VIEW_THRESHOLD env.
-export const GUEST_VIEW_THRESHOLD = 3;
-
 export interface ContactsCache {
   contacts: Contact[];
   version: number;
