@@ -89,7 +89,5 @@ export interface PaginatedResponse<T> {
     limit: number;
     total: number;
     totalPages: number;
-    guestLimited?: boolean;
-    guestThreshold?: number;
   };
 }

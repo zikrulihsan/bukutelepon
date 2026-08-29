@@ -2,12 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "../lib/axios";
 import { useContactsData } from "../context/ContactsContext";
-import { useAuth } from "../context/AuthContext";
-import {
-  filterContacts,
-  GUEST_VIEW_THRESHOLD,
-  type ContactFilter,
-} from "../lib/localContacts";
+import { filterContacts, type ContactFilter } from "../lib/localContacts";
 import type { Contact, PaginatedResponse } from "../types";
 
 const PAGE_SIZE = 20;
@@ -20,15 +15,11 @@ interface UseContactsOptions extends ContactFilter {
 /**
  * Filters/paginates the locally cached contacts collection. Returns the same
  * shape the network-backed hook used to, so consuming pages need no changes.
- * Guests are capped at GUEST_VIEW_THRESHOLD (cosmetic gate).
+ * Results are identical for guests and signed-in users.
  */
 export function useContacts(options: UseContactsOptions = {}) {
   const { page = 1, limit = PAGE_SIZE, city, category, search, verified } = options;
   const { contacts, isLoading } = useContactsData();
-  const { user, loading: authLoading } = useAuth();
-  // Don't gate while auth is still resolving — avoids the wall flashing for
-  // logged-in users on first paint.
-  const isGuest = !authLoading && !user;
 
   const filtered = useMemo(
     () => filterContacts(contacts, { city, category, search, verified }),
@@ -37,11 +28,8 @@ export function useContacts(options: UseContactsOptions = {}) {
 
   const data = useMemo<PaginatedResponse<Contact>>(() => {
     const total = filtered.length;
-    const effective = isGuest ? filtered.slice(0, GUEST_VIEW_THRESHOLD) : filtered;
-    const guestLimited = isGuest && total > GUEST_VIEW_THRESHOLD;
-
     const start = (page - 1) * limit;
-    const pageItems = effective.slice(start, start + limit);
+    const pageItems = filtered.slice(start, start + limit);
 
     return {
       success: true,
@@ -50,12 +38,10 @@ export function useContacts(options: UseContactsOptions = {}) {
         page,
         limit,
         total,
-        totalPages: Math.max(1, Math.ceil(effective.length / limit)),
-        guestLimited,
-        guestThreshold: GUEST_VIEW_THRESHOLD,
+        totalPages: Math.max(1, Math.ceil(total / limit)),
       },
     };
-  }, [filtered, isGuest, page, limit]);
+  }, [filtered, page, limit]);
 
   return { data, isLoading };
 }
@@ -71,8 +57,6 @@ interface UseInfiniteContactsOptions extends ContactFilter {
 export function useInfiniteContacts(options: UseInfiniteContactsOptions = {}) {
   const { city, category, search, verified, enabled = true } = options;
   const { contacts, isLoading } = useContactsData();
-  const { user, loading: authLoading } = useAuth();
-  const isGuest = !authLoading && !user;
 
   const [pageCount, setPageCount] = useState(1);
 
@@ -88,31 +72,27 @@ export function useInfiniteContacts(options: UseInfiniteContactsOptions = {}) {
 
   const result = useMemo(() => {
     const total = filtered.length;
-    const effective = isGuest ? filtered.slice(0, GUEST_VIEW_THRESHOLD) : filtered;
-    const guestLimited = isGuest && total > GUEST_VIEW_THRESHOLD;
-    const totalPages = Math.max(1, Math.ceil(effective.length / PAGE_SIZE));
+    const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
     const pages: PaginatedResponse<Contact>[] = [];
     for (let i = 0; i < pageCount; i++) {
       pages.push({
         success: true,
-        data: effective.slice(i * PAGE_SIZE, (i + 1) * PAGE_SIZE),
+        data: filtered.slice(i * PAGE_SIZE, (i + 1) * PAGE_SIZE),
         meta: {
           page: i + 1,
           limit: PAGE_SIZE,
           total,
           totalPages,
-          guestLimited,
-          guestThreshold: GUEST_VIEW_THRESHOLD,
         },
       });
     }
 
-    const visibleCount = Math.min(pageCount * PAGE_SIZE, effective.length);
-    const hasNextPage = !guestLimited && visibleCount < effective.length;
+    const visibleCount = Math.min(pageCount * PAGE_SIZE, total);
+    const hasNextPage = visibleCount < total;
 
     return { pages, hasNextPage };
-  }, [filtered, isGuest, pageCount]);
+  }, [filtered, pageCount]);
 
   return {
     data: { pages: result.pages },
