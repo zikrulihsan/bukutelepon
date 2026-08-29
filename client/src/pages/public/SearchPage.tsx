@@ -5,10 +5,11 @@ import { apiClient } from "../../lib/axios";
 import { buildSearchShareUrl } from "../../lib/searchShare";
 import { useCity } from "../../context/CityContext";
 import { useCategories } from "../../context/CategoriesContext";
+import { useContactsData } from "../../context/ContactsContext";
 import { useInfiniteContacts } from "../../hooks/useContacts";
 import { ContactCard } from "../../components/shared/ContactCard";
 import { CategoryIcon } from "../../components/shared/CategoryIcon";
-import { ContactListShimmer } from "../../components/shared/Shimmer";
+import { ContactListShimmer, CategoryChipsShimmer } from "../../components/shared/Shimmer";
 import { HiChevronLeft, HiMagnifyingGlass, HiXMark, HiCheckBadge, HiCheck } from "react-icons/hi2";
 import { HiFilter, HiOutlineShare } from "react-icons/hi";
 import { useI18n } from "../../i18n/LanguageContext";
@@ -20,8 +21,9 @@ export default function SearchPage() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const inputRef = useRef<HTMLInputElement>(null);
-  const loadMoreRef = useRef<HTMLDivElement>(null);
+  const [loadMoreNode, setLoadMoreNode] = useState<HTMLDivElement | null>(null);
   const chipScrollRef = useRef<HTMLDivElement>(null);
+  const resultsRef = useRef<HTMLDivElement>(null);
 
   const urlQ = searchParams.get("q") || "";
   const urlCat = searchParams.get("category") || "";
@@ -43,7 +45,7 @@ export default function SearchPage() {
     return shared && shared !== citySlug ? shared : "";
   });
 
-  const { data: citiesData } = useQuery<{ success: boolean; data: City[] }>({
+  const { data: citiesData, isError: citiesError, isFetched: citiesFetched } = useQuery<{ success: boolean; data: City[] }>({
     queryKey: ["cities"],
     queryFn: async () => (await apiClient.get("/cities")).data,
     enabled: !!cityFromLink && cities.length === 0,
@@ -52,7 +54,12 @@ export default function SearchPage() {
   useEffect(() => {
     if (!cityFromLink) return;
     const known = cities.length > 0 ? cities : citiesData?.data;
-    if (!known || known.length === 0) return;
+    if (!known || known.length === 0) {
+      // Nothing to match against and nothing more on the way — stop waiting,
+      // or the loading placeholders would never give way to results.
+      if (citiesFetched || citiesError) setCityFromLink("");
+      return;
+    }
 
     const match = known.find((c) => c.slug === cityFromLink);
     if (match) {
@@ -60,7 +67,19 @@ export default function SearchPage() {
       setCity(match);
     }
     setCityFromLink("");
-  }, [cityFromLink, cities, citiesData, setCities, setCity]);
+  }, [cityFromLink, cities, citiesData, citiesFetched, citiesError, setCities, setCity]);
+
+  // The page owns the full viewport and scrolls its results internally, so the
+  // document itself must not scroll: a second scroller behind this one is what
+  // makes the browser chrome collapse and expand mid-gesture, dragging the
+  // header and the bottom bar with it.
+  useEffect(() => {
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previous;
+    };
+  }, []);
 
   // Close filter menu on outside click
   useEffect(() => {
@@ -90,15 +109,22 @@ export default function SearchPage() {
     return () => clearTimeout(timer);
   }, [search]);
 
-  const { categories } = useCategories();
+  const { categories, isLoading: categoriesLoading } = useCategories();
+  const { isLoading: contactsLoading } = useContactsData();
 
   const hasFilter = !!searchQuery || !!activeCategory || !!verifiedFilter;
+
+  // First paint of the page: the contact cache is still downloading, the chips
+  // have nothing to render, or a shared link's city has yet to resolve. Show
+  // placeholders rather than an empty screen that fills in a beat later.
+  const resolvingSharedCity = !!cityFromLink && !citiesError;
+  const initialLoading =
+    contactsLoading || (categoriesLoading && categories.length === 0) || resolvingSharedCity;
 
   const {
     data: infiniteData,
     fetchNextPage,
     hasNextPage,
-    isFetchingNextPage,
     isLoading,
   } = useInfiniteContacts({
     city: citySlug || undefined,
@@ -108,21 +134,31 @@ export default function SearchPage() {
     enabled: hasFilter,
   });
 
-  // Intersection observer
+  // Intersection observer, watched inside the results scroller rather than the
+  // document. The sentinel is held in state, not a ref, so the observer is
+  // attached the moment the node mounts — `hasNextPage` alone is already true
+  // while the results are hidden behind the empty state, and keying the effect
+  // on it would leave the observer watching nothing.
   useEffect(() => {
-    if (!loadMoreRef.current || !hasNextPage || isFetchingNextPage) return;
+    if (!loadMoreNode || !hasNextPage) return;
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting) fetchNextPage();
       },
-      { rootMargin: "200px" }
+      { root: resultsRef.current, rootMargin: "200px" }
     );
-    observer.observe(loadMoreRef.current);
+    observer.observe(loadMoreNode);
     return () => observer.disconnect();
-  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+  }, [loadMoreNode, hasNextPage, fetchNextPage]);
 
   const allContacts = infiniteData?.pages.flatMap((p) => p.data) ?? [];
   const total = infiniteData?.pages[0]?.meta.total ?? 0;
+
+  // A new filter means a new, shorter list. Start it from the top so the old
+  // scroll offset does not land the reader in the middle of nowhere.
+  useEffect(() => {
+    resultsRef.current?.scrollTo({ top: 0 });
+  }, [searchQuery, activeCategory, verifiedFilter]);
 
   // URL sync
   useEffect(() => {
@@ -131,12 +167,15 @@ export default function SearchPage() {
     if (activeCategory) params.set("category", activeCategory);
     if (verifiedFilter) params.set("verified", verifiedFilter);
     if (citySlug) params.set("city", citySlug);
+    // Skip no-op history writes; each one re-renders the whole route.
+    if (params.toString() === searchParams.toString()) return;
     setSearchParams(params, { replace: true });
-  }, [searchQuery, activeCategory, verifiedFilter, citySlug, setSearchParams]);
+  }, [searchQuery, activeCategory, verifiedFilter, citySlug, searchParams, setSearchParams]);
 
   function handleSearch(e: React.FormEvent) {
     e.preventDefault();
     setSearchQuery(search.trim());
+    inputRef.current?.blur();
   }
 
   /** What the shared card is about — "Rumah Sakit di Bandung". */
@@ -189,9 +228,9 @@ export default function SearchPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white max-w-md mx-auto pb-24">
-      {/* Search header */}
-      <div className="bg-white/95 backdrop-blur-md px-4 pt-4 pb-3 border-b border-black/5 sticky top-0 z-20">
+    <div className="h-viewport flex flex-col overflow-hidden bg-white max-w-md mx-auto">
+      {/* Search header — outside the scroller, so it never repaints on scroll */}
+      <div className="flex-shrink-0 bg-white px-4 pt-4 pb-3 border-b border-black/5 z-20">
         <div className="flex items-center gap-2">
           <button
             type="button"
@@ -267,29 +306,38 @@ export default function SearchPage() {
             )}
           </div>
 
-          <div ref={chipScrollRef} className="flex items-center gap-2 overflow-x-auto scrollbar-hide">
-            {categories.map((cat) => (
-              <button
-                key={cat.slug}
-                data-slug={cat.slug}
-                onClick={() => handleCategoryClick(cat.slug)}
-                className={`flex-shrink-0 inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors ${
-                  activeCategory === cat.slug
-                    ? "bg-primary-700 text-white shadow-sm"
-                    : "bg-white text-primary-700 shadow-sm border border-gray-100"
-                }`}
-              >
-                <CategoryIcon slug={cat.slug} className="w-3.5 h-3.5" />
-                {categoryName(cat)}
-              </button>
-            ))}
-          </div>
+          {categories.length === 0 && categoriesLoading ? (
+            <CategoryChipsShimmer />
+          ) : (
+            <div ref={chipScrollRef} className="flex items-center gap-2 overflow-x-auto scrollbar-hide">
+              {categories.map((cat) => (
+                <button
+                  key={cat.slug}
+                  data-slug={cat.slug}
+                  onClick={() => handleCategoryClick(cat.slug)}
+                  className={`flex-shrink-0 inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors ${
+                    activeCategory === cat.slug
+                      ? "bg-primary-700 text-white shadow-sm"
+                      : "bg-white text-primary-700 shadow-sm border border-gray-100"
+                  }`}
+                >
+                  <CategoryIcon slug={cat.slug} className="w-3.5 h-3.5" />
+                  {categoryName(cat)}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Content */}
-      <div className="px-4 pt-4">
-        {!hasFilter ? (
+      {/* Results — the only scrolling region on the page */}
+      <div
+        ref={resultsRef}
+        className="flex-1 min-h-0 overflow-y-auto scroll-region px-4 pt-4 pb-28"
+      >
+        {initialLoading ? (
+          <ContactListShimmer count={4} />
+        ) : !hasFilter ? (
           <div className="text-center py-16">
             <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
               <HiMagnifyingGlass className="h-7 w-7 text-gray-400" />
@@ -336,12 +384,9 @@ export default function SearchPage() {
               </div>
             )}
 
-            {hasNextPage && (
-              <div ref={loadMoreRef} className="py-4">
-                {isFetchingNextPage ? <ContactListShimmer count={2} /> : <div className="h-4" />}
-              </div>
-            )}
-
+            {/* Fixed-height sentinel: a placeholder that grows and shrinks here
+                would shift the list under the reader's thumb mid-scroll. */}
+            {hasNextPage && <div ref={setLoadMoreNode} className="h-12" aria-hidden="true" />}
           </>
         )}
       </div>

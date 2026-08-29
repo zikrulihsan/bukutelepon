@@ -1,6 +1,7 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { HiHome, HiOutlineHome, HiMagnifyingGlass, HiBookmark, HiOutlineBookmark, HiPlusCircle, HiOutlinePlusCircle, HiUser, HiOutlineUser } from "react-icons/hi2";
 import { useI18n } from "../../i18n/LanguageContext";
+import { useKeyboardOpen } from "../../hooks/useKeyboardOpen";
 
 const HIDDEN_ROUTES = ["/login", "/register", "/admin", "/kontak"];
 
@@ -8,8 +9,13 @@ export function BottomNav() {
   const location = useLocation();
   const navigate = useNavigate();
   const { t } = useI18n();
+  const keyboardOpen = useKeyboardOpen();
 
   if (HIDDEN_ROUTES.some((r) => location.pathname.startsWith(r))) return null;
+
+  // While typing there is nothing to navigate to, and on iOS the bar would be
+  // stranded halfway up the screen on top of the keyboard.
+  if (keyboardOpen) return null;
 
   const active = (path: string) => location.pathname === path;
 
