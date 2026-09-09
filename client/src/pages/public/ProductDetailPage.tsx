@@ -12,6 +12,7 @@ import {
 import { FaWhatsapp } from "react-icons/fa";
 import { InquiryDrawer } from "../../features/storefront/InquiryDrawer";
 import { trackStorefrontEvent, useInquiry } from "../../features/storefront/InquiryContext";
+import { StorefrontImage } from "../../features/storefront/StorefrontImage";
 import { business, formatPrice, getItem, storefrontItems } from "../../features/storefront/storefrontData";
 
 export default function ProductDetailPage() {
@@ -70,7 +71,7 @@ export default function ProductDetailPage() {
       <div className="mx-auto max-w-6xl lg:px-8 lg:py-7">
         <div className="overflow-hidden bg-[#FFFEFA] lg:grid lg:min-h-[640px] lg:grid-cols-[1.05fr_0.95fr] lg:rounded-[32px] lg:border lg:border-[#E6DFD2] lg:shadow-[0_24px_70px_rgba(41,58,47,0.12)]">
           <div className="relative min-h-[420px] bg-[#E9E2D6] sm:min-h-[560px] lg:min-h-full">
-            <img src={item.image} alt={item.name} className="absolute inset-0 h-full w-full object-cover" />
+            <StorefrontImage item={item} className="absolute inset-0 h-full w-full object-cover" />
             <div className="absolute inset-x-0 top-0 flex items-center justify-between bg-gradient-to-b from-black/45 to-transparent px-4 pb-12 pt-4 sm:px-6 sm:pt-6">
               <button onClick={() => navigate(-1)} className="grid h-11 w-11 place-items-center rounded-full border border-white/25 bg-[#152A20]/45 text-white backdrop-blur-md transition hover:bg-[#152A20]/70" aria-label="Kembali">
                 <HiChevronLeft className="h-5 w-5" />
@@ -159,7 +160,7 @@ export default function ProductDetailPage() {
             <div className="grid grid-cols-3 gap-3 sm:gap-5">
               {relatedItems.map((entry) => (
                 <button key={entry.id} onClick={() => navigate(`/catalog/${entry.slug}`)} className="overflow-hidden rounded-[18px] border border-[#E3DDCF] bg-white text-left shadow-sm transition hover:-translate-y-1 hover:shadow-lg">
-                  <img src={entry.image} alt={entry.name} className="aspect-square w-full object-cover" />
+                  <StorefrontImage item={entry} loading="lazy" className="aspect-square w-full object-cover" />
                   <div className="p-2.5 sm:p-4">
                     <p className="line-clamp-2 text-[10px] font-extrabold leading-snug text-[#254235] sm:text-sm">{entry.name}</p>
                     <p className="mt-1 text-[9px] font-bold text-[#A45A22] sm:text-xs">{formatPrice(entry)}</p>

@@ -2,6 +2,7 @@ import { HiMinus, HiPlus, HiShoppingBag, HiTrash, HiXMark } from "react-icons/hi
 import { FaWhatsapp } from "react-icons/fa";
 import { useInquiry, trackStorefrontEvent } from "./InquiryContext";
 import { formatPrice, storefrontItems } from "./storefrontData";
+import { StorefrontImage } from "./StorefrontImage";
 
 interface InquiryDrawerProps {
   open: boolean;
@@ -9,7 +10,7 @@ interface InquiryDrawerProps {
 }
 
 export function InquiryDrawer({ open, onClose }: InquiryDrawerProps) {
-  const { quantities, totalCount, totalPrice, setQuantity, clear, whatsappUrl } = useInquiry();
+  const { quantities, totalCount, totalPrice, hasUnpriced, setQuantity, clear, whatsappUrl } = useInquiry();
   const selectedItems = storefrontItems.filter((item) => (quantities[item.id] ?? 0) > 0);
 
   if (!open) return null;
@@ -45,7 +46,7 @@ export function InquiryDrawer({ open, onClose }: InquiryDrawerProps) {
           ) : (
             selectedItems.map((item) => (
               <div key={item.id} className="flex gap-3 rounded-2xl border border-[#EAE5D9] bg-white p-3">
-                <img src={item.image} alt="" className="h-20 w-20 flex-none rounded-xl object-cover" />
+                <StorefrontImage item={item} loading="lazy" className="h-20 w-20 flex-none rounded-xl object-cover" />
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-bold text-[#20382D]">{item.name}</p>
                   <p className="mt-0.5 text-xs font-semibold text-[#A3622A]">{formatPrice(item)}</p>
@@ -74,9 +75,11 @@ export function InquiryDrawer({ open, onClose }: InquiryDrawerProps) {
             <div className="mb-3 flex items-center justify-between text-sm">
               <button onClick={clear} className="font-semibold text-[#8B8175] hover:text-red-600">Hapus semua</button>
               <div className="text-right">
-                <span className="mr-2 text-xs text-[#8B8175]">Estimasi total</span>
+                <span className="mr-2 text-xs text-[#8B8175]">{hasUnpriced ? "Harga" : "Estimasi total"}</span>
                 <span className="font-extrabold text-[#1C3C2F]">
-                  {new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(totalPrice)}
+                  {hasUnpriced
+                    ? "Dikonfirmasi admin"
+                    : new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(totalPrice)}
                 </span>
               </div>
             </div>

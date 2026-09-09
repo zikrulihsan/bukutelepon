@@ -7,6 +7,7 @@ interface InquiryContextValue {
   quantities: InquiryMap;
   totalCount: number;
   totalPrice: number;
+  hasUnpriced: boolean;
   addItem: (itemId: string, amount?: number) => void;
   setQuantity: (itemId: string, quantity: number) => void;
   clear: () => void;
@@ -35,6 +36,7 @@ export function InquiryProvider({ children }: { children: ReactNode }) {
     const selectedItems = storefrontItems.filter((item) => (quantities[item.id] ?? 0) > 0);
     const totalCount = selectedItems.reduce((sum, item) => sum + quantities[item.id], 0);
     const totalPrice = selectedItems.reduce((sum, item) => sum + item.price * quantities[item.id], 0);
+    const hasUnpriced = selectedItems.some((item) => item.priceType === "contact");
     const message = [
       "Halo, saya melihat etalase Anda di CariKontak.",
       "",
@@ -48,6 +50,7 @@ export function InquiryProvider({ children }: { children: ReactNode }) {
       quantities,
       totalCount,
       totalPrice,
+      hasUnpriced,
       addItem: (itemId, amount = 1) =>
         setQuantities((current) => ({ ...current, [itemId]: (current[itemId] ?? 0) + amount })),
       setQuantity: (itemId, quantity) =>

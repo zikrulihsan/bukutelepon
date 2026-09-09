@@ -10,11 +10,11 @@ import {
   HiMinus,
   HiPlus,
   HiShoppingBag,
-  HiStar,
 } from "react-icons/hi2";
 import { FaInstagram, FaWhatsapp } from "react-icons/fa";
 import { InquiryDrawer } from "../../features/storefront/InquiryDrawer";
 import { trackStorefrontEvent, useInquiry } from "../../features/storefront/InquiryContext";
+import { StorefrontImage } from "../../features/storefront/StorefrontImage";
 import {
   business,
   formatPrice,
@@ -23,7 +23,7 @@ import {
   type StorefrontItem,
 } from "../../features/storefront/storefrontData";
 
-const categories = ["Semua", "Makanan", "Camilan", "Minuman", "Paket"];
+const categories = ["Semua", "Madu", "Camilan", "Minuman"];
 
 function ProductCard({ item, onOpen }: { item: StorefrontItem; onOpen: () => void }) {
   const { quantities, addItem, setQuantity } = useInquiry();
@@ -35,9 +35,8 @@ function ProductCard({ item, onOpen }: { item: StorefrontItem; onOpen: () => voi
       className="group flex cursor-pointer flex-col overflow-hidden rounded-[22px] border border-[#E8E2D5] bg-white shadow-[0_8px_24px_rgba(38,55,45,0.055)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_16px_38px_rgba(38,55,45,0.12)]"
     >
       <div className="relative aspect-[1.05] overflow-hidden bg-[#EDE8DE]">
-        <img
-          src={item.image}
-          alt={item.name}
+        <StorefrontImage
+          item={item}
           loading="lazy"
           className={`h-full w-full object-cover transition duration-500 group-hover:scale-105 ${!item.available ? "grayscale-[35%]" : ""}`}
         />
@@ -103,7 +102,7 @@ export default function BusinessShowcasePage() {
   const [collectionId, setCollectionId] = useState<string | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [shared, setShared] = useState(false);
-  const { totalCount, totalPrice } = useInquiry();
+  const { totalCount, totalPrice, hasUnpriced } = useInquiry();
 
   useEffect(() => {
     trackStorefrontEvent("profile_view");
@@ -169,19 +168,18 @@ export default function BusinessShowcasePage() {
           <div className="flex items-start gap-4 sm:gap-5">
             <div className="grid h-[72px] w-[72px] flex-none place-items-center rounded-[22px] border-4 border-white bg-[#245843] shadow-[0_8px_25px_rgba(36,88,67,0.24)] sm:h-24 sm:w-24 sm:rounded-[28px]">
               <div className="text-center text-white">
-                <span className="block font-serif text-[28px] font-black leading-none sm:text-4xl">M</span>
+                <span className="block font-serif text-[22px] font-black leading-none sm:text-3xl">EVI</span>
                 <span className="mt-1 block text-[7px] font-bold uppercase tracking-[0.2em] text-[#E7C982] sm:text-[8px]">Sumbawa</span>
               </div>
             </div>
             <div className="min-w-0 flex-1 pt-1">
               <div className="flex items-center gap-1.5">
                 <h1 className="truncate font-serif text-[25px] font-black leading-tight tracking-[-0.02em] text-[#173C2C] sm:text-4xl">{business.name}</h1>
-                <HiCheckBadge className="h-5 w-5 flex-none text-[#2B7A5A] sm:h-6 sm:w-6" title="Bisnis terverifikasi" />
+                <HiCheckBadge className="h-5 w-5 flex-none text-[#2B7A5A] sm:h-6 sm:w-6" title="Informasi bisnis dari pemilik" />
               </div>
               <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] font-semibold text-[#68756D] sm:text-xs">
-                <span className="flex items-center gap-1 text-[#1F7A51]"><span className="h-1.5 w-1.5 rounded-full bg-[#24A46D]" /> Buka sekarang</span>
-                <span className="flex items-center gap-1"><HiStar className="h-3.5 w-3.5 text-[#D99B28]" /> <b className="text-[#30473B]">{business.rating}</b> ({business.reviewCount})</span>
-                <span className="hidden sm:inline">Oleh-oleh khas</span>
+                <span className="flex items-center gap-1 text-[#7A6339]"><span className="h-1.5 w-1.5 rounded-full bg-[#D5A441]" /> Jam buka via WhatsApp</span>
+                <span className="hidden sm:inline">Oleh-oleh khas Sumbawa</span>
               </div>
             </div>
           </div>
@@ -206,9 +204,29 @@ export default function BusinessShowcasePage() {
             </a>
           </div>
 
+          <p className="mt-3 text-[11px] text-[#78837C] sm:ml-[116px]">
+            WA utama: <a href={`https://wa.me/${business.whatsapp}`} target="_blank" rel="noreferrer" className="font-extrabold text-[#246248] hover:underline">{business.whatsappDisplay}</a>
+            <span className="mx-1.5 text-[#C4BDB1]">•</span>
+            Alternatif: <a href={`https://wa.me/${business.whatsappSecondary}`} target="_blank" rel="noreferrer" className="font-extrabold text-[#246248] hover:underline">{business.whatsappSecondaryDisplay}</a>
+          </p>
+
           <div className="mt-5 grid gap-2 border-t border-[#EEE9DE] pt-4 text-[11px] font-semibold text-[#66736B] sm:ml-[116px] sm:grid-cols-2 sm:text-xs">
-            <p className="flex items-center gap-2"><HiClock className="h-4 w-4 text-[#8C6848]" /> Hari ini · {business.openingHours}</p>
+            <p className="flex items-center gap-2"><HiClock className="h-4 w-4 text-[#8C6848]" /> {business.openingHours}</p>
             <p className="flex items-center gap-2"><HiMapPin className="h-4 w-4 text-[#8C6848]" /> {business.address}</p>
+          </div>
+        </section>
+
+        <section className="mt-5 overflow-hidden rounded-[26px] border border-[#E5DED1] bg-[#FFFEFA] shadow-[0_10px_30px_rgba(38,55,45,0.07)] sm:grid sm:grid-cols-[0.9fr_1.1fr]">
+          <div className="h-48 overflow-hidden bg-[#F6E9D4] sm:h-64">
+            <img src={business.poster} alt="Poster resmi Toko Evi Oleh-Oleh Khas Sumbawa" className="h-full w-full object-cover object-top" />
+          </div>
+          <div className="flex flex-col justify-center p-5 sm:p-8">
+            <p className="text-[10px] font-extrabold uppercase tracking-[0.2em] text-[#A36B3F]">Toko asli di Sumbawa Besar</p>
+            <h2 className="mt-2 font-serif text-2xl font-black leading-tight text-[#193B2D]">Pulang dari Sumbawa, jangan lupa oleh-olehnya.</h2>
+            <p className="mt-3 text-xs leading-5 text-[#6E7A72]">Lihat produk terbaru dan kabar Toko Evi melalui akun Instagram resminya.</p>
+            <a href={`https://instagram.com/${business.instagram}`} target="_blank" rel="noreferrer" className="mt-5 inline-flex w-fit items-center gap-2 rounded-full border border-[#D7CFC1] px-4 py-2.5 text-xs font-extrabold text-[#7C4A42] transition hover:bg-[#F6EEE8]">
+              <FaInstagram className="h-4 w-4" /> @{business.instagram}
+            </a>
           </div>
         </section>
 
@@ -248,7 +266,7 @@ export default function BusinessShowcasePage() {
             </div>
             <label className="flex h-12 w-full items-center gap-2.5 rounded-full border border-[#DED8CB] bg-[#FFFEFA] px-4 shadow-sm focus-within:border-[#739380] focus-within:ring-4 focus-within:ring-[#72927F]/10 lg:w-[330px]">
               <HiMagnifyingGlass className="h-[18px] w-[18px] flex-none text-[#7B887F]" />
-              <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Cari madu, kopi, paket..." className="min-w-0 flex-1 bg-transparent text-sm font-medium text-[#294337] outline-none placeholder:text-[#A3A8A3]" />
+              <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Cari madu, susu, camilan..." className="min-w-0 flex-1 bg-transparent text-sm font-medium text-[#294337] outline-none placeholder:text-[#A3A8A3]" />
             </label>
           </div>
 
@@ -309,7 +327,9 @@ export default function BusinessShowcasePage() {
               <span className="block text-[10px] text-white/65">Kirim dan tanyakan ketersediaan via WhatsApp</span>
             </span>
             <span className="text-right text-xs font-bold text-[#F0D89D]">
-              {new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(totalPrice)}
+              {hasUnpriced
+                ? "Tanya harga"
+                : new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(totalPrice)}
             </span>
             <HiChevronRight className="h-4 w-4 flex-none text-white/60" />
           </button>
