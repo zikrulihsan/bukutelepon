@@ -5,10 +5,24 @@
 @tailwind utilities;
 
 @layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
   body {
     @apply bg-[#E8ECEF] text-gray-900 antialiased overflow-y-scroll;
     font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
   }
+}
+
+@font-face {
+  font-family: 'Storefront Serif';
+  src: local('Georgia');
+  font-display: swap;
+}
+
+.font-serif {
+  font-family: 'Storefront Serif', Georgia, 'Times New Roman', serif;
 }
 
 @layer components {

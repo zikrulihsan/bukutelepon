@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { HiXMark, HiOutlinePlusCircle } from "react-icons/hi2";
 import { HiOutlineShare } from "react-icons/hi";
 import { useI18n } from "../../i18n/LanguageContext";
+import { useLocation } from "react-router-dom";
 
 const DISMISSED_KEY = "pwa_install_dismissed";
 const DISMISSED_EXPIRY_DAYS = 7;
@@ -48,6 +49,7 @@ interface BeforeInstallPromptEvent extends Event {
 
 export function PWAInstallBanner() {
   const { t } = useI18n();
+  const location = useLocation();
   const [visible, setVisible] = useState(false);
   const [animateIn, setAnimateIn] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
@@ -115,7 +117,8 @@ export function PWAInstallBanner() {
     }
   }
 
-  if (!visible) return null;
+  const isStorefront = location.pathname.startsWith("/catalog");
+  if (!visible || isStorefront) return null;
 
   const isIOSMode = showIOSHint && !deferredPrompt;
 

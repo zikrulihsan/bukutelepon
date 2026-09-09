@@ -20,11 +20,15 @@ import AdminContacts from "./pages/admin/Contacts";
 import AdminAddContact from "./pages/admin/AddContact";
 import AdminReviews from "./pages/admin/Reviews";
 import AdminUsers from "./pages/admin/Users";
+import BusinessShowcasePage from "./pages/public/BusinessShowcasePage";
+import ProductDetailPage from "./pages/public/ProductDetailPage";
+import { InquiryProvider } from "./features/storefront/InquiryContext";
 
 export default function App() {
   return (
     <CityProvider>
       <CategoriesProvider>
+        <InquiryProvider>
         <div className="min-h-screen bg-white">
           <Routes>
           {/* Public routes */}
@@ -36,6 +40,8 @@ export default function App() {
                 <main>
                   <Routes>
                     <Route path="/" element={<MainScreen />} />
+                    <Route path="/catalog" element={<BusinessShowcasePage />} />
+                    <Route path="/catalog/:itemSlug" element={<ProductDetailPage />} />
                     <Route path="/search" element={<SearchPage />} />
                     <Route path="/saved" element={<SavedPage />} />
                     <Route path="/account" element={<AccountPage />} />
@@ -63,6 +69,7 @@ export default function App() {
           </Route>
         </Routes>
         </div>
+        </InquiryProvider>
       </CategoriesProvider>
     </CityProvider>
   );

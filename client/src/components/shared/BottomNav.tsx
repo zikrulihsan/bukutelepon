@@ -3,7 +3,7 @@ import { HiHome, HiOutlineHome, HiMagnifyingGlass, HiBookmark, HiOutlineBookmark
 import { useI18n } from "../../i18n/LanguageContext";
 import { useKeyboardOpen } from "../../hooks/useKeyboardOpen";
 
-const HIDDEN_ROUTES = ["/login", "/register", "/admin", "/kontak"];
+const HIDDEN_ROUTES = ["/login", "/register", "/admin", "/kontak", "/catalog"];
 
 export function BottomNav() {
   const location = useLocation();
