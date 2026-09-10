@@ -1,0 +1,36 @@
+[build]
+  command = "npm ci && npm --prefix server ci && npm --prefix client ci && npx prisma generate && npm --prefix server run build:netlify && npm --prefix client run build"
+  publish = "client/dist"
+  edge_functions = "client/netlify/edge-functions"
+
+[build.environment]
+  NODE_VERSION = "20"
+
+# Production migrations happen once during the production build, before the
+# new function bundle is published. Deploy previews never touch production DB.
+[context.production]
+  command = "npm ci && npm --prefix server ci && npm --prefix client ci && npx prisma generate && npx prisma migrate deploy --schema=prisma/schema.prisma && npm --prefix server run build:netlify && npm --prefix client run build"
+
+[functions]
+  directory = "server/netlify/functions"
+  node_bundler = "esbuild"
+external_node_modules = ["express", "serverless-http", "@prisma/client"]
+  included_files = ["prisma/**", "node_modules/.prisma/client/**"]
+
+# Preserve the existing share-preview behavior.
+[[edge_functions]]
+  path = "/search"
+  function = "search-preview"
+
+# Keep client calls on the existing /api/* contract.
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/api/:splat"
+  status = 200
+  force = true
+
+# SPA fallback — must come after the API rewrite.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
