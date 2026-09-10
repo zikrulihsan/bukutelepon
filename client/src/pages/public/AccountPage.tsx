@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
-import { HiOutlineUser, HiOutlineCog6Tooth, HiOutlineBookmark, HiOutlinePlusCircle, HiChevronRight, HiArrowRightOnRectangle, HiOutlineLanguage } from "react-icons/hi2";
+import { HiOutlineUser, HiOutlineCog6Tooth, HiOutlineBookmark, HiOutlinePlusCircle, HiChevronRight, HiArrowRightOnRectangle, HiOutlineLanguage, HiOutlineBuildingStorefront } from "react-icons/hi2";
 import { LanguageToggle } from "../../components/shared/LanguageToggle";
 import { useI18n } from "../../i18n/LanguageContext";
 
@@ -74,12 +74,27 @@ export default function AccountPage() {
                 Admin
               </span>
             )}
+            {profile?.plan === "PRO" && (
+              <span className="ml-1 inline-block mt-1 px-2 py-0.5 rounded-full bg-amber-50 text-[10px] font-semibold text-amber-700">
+                Pro
+              </span>
+            )}
           </div>
         </div>
       </div>
 
       {/* Menu */}
       <div className="px-4 pt-4 space-y-2">
+        {(profile?.plan === "PRO" || profile?.role === "ADMIN") && (
+          <Link to="/pro" className="flex items-center gap-3 rounded-xl border border-amber-100 bg-amber-50/60 px-4 py-3.5 shadow-sm">
+            <HiOutlineBuildingStorefront className="h-5 w-5 text-amber-700" />
+            <div>
+              <span className="block text-sm font-semibold text-gray-900">Kelola Etalase Pro</span>
+              <span className="block text-[11px] text-gray-500">Profil bisnis, produk, dan foto</span>
+            </div>
+            <HiChevronRight className="h-4 w-4 text-gray-400 ml-auto" />
+          </Link>
+        )}
         {profile?.role === "ADMIN" && (
           <Link to="/admin" className="flex items-center gap-3 bg-white rounded-xl px-4 py-3.5 shadow-sm">
             <HiOutlineCog6Tooth className="h-5 w-5 text-gray-500" />

@@ -286,4 +286,26 @@ router.get("/users", async (req, res, next) => {
   }
 });
 
+const planSchema = z.object({ plan: z.enum(["FREE", "PRO"]) });
+
+// PATCH /api/admin/users/:id/plan — grants or revokes Pro access.
+router.patch("/users/:id/plan", async (req, res, next) => {
+  try {
+    const { plan } = planSchema.parse(req.body);
+    const id = req.params.id as string;
+
+    const user = await prisma.$transaction(async (tx) => {
+      const updated = await tx.profile.update({ where: { id }, data: { plan } });
+      if (plan === "FREE") {
+        await tx.business.updateMany({ where: { ownerId: id }, data: { status: "HIDDEN" } });
+      }
+      return updated;
+    });
+
+    res.json({ success: true, data: user });
+  } catch (err) {
+    next(err);
+  }
+});
+
 export default router;

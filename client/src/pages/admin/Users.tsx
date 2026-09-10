@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "../../lib/axios";
 import { Badge } from "../../components/ui/Badge";
 import type { Profile, PaginatedResponse } from "../../types";
@@ -8,10 +8,17 @@ import { useI18n } from "../../i18n/LanguageContext";
 export default function AdminUsers() {
   const { t, formatDate } = useI18n();
   const [page, setPage] = useState(1);
+  const queryClient = useQueryClient();
 
   const { data, isLoading } = useQuery<PaginatedResponse<Profile>>({
     queryKey: ["admin", "users", page],
     queryFn: async () => (await apiClient.get(`/admin/users?page=${page}`)).data,
+  });
+
+  const changePlan = useMutation({
+    mutationFn: async ({ id, plan }: { id: string; plan: Profile["plan"] }) =>
+      (await apiClient.patch(`/admin/users/${id}/plan`, { plan })).data,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin", "users"] }),
   });
 
   return (
@@ -35,6 +42,7 @@ export default function AdminUsers() {
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t("admin.colName")}</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t("admin.colEmail")}</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t("admin.colRole")}</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Paket</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t("admin.colContributions")}</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t("admin.colRegistered")}</th>
                 </tr>
@@ -46,6 +54,18 @@ export default function AdminUsers() {
                     <td className="px-4 py-3 text-sm text-gray-500 whitespace-nowrap">{user.email}</td>
                     <td className="px-4 py-3">
                       <Badge variant={user.role === "ADMIN" ? "success" : "default"}>{user.role}</Badge>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-2 whitespace-nowrap">
+                        <Badge variant={user.plan === "PRO" ? "success" : "default"}>{user.plan}</Badge>
+                        <button
+                          onClick={() => changePlan.mutate({ id: user.id, plan: user.plan === "PRO" ? "FREE" : "PRO" })}
+                          disabled={changePlan.isPending}
+                          className="rounded-lg border border-gray-200 px-2 py-1 text-xs font-semibold text-gray-600 hover:border-primary-300 hover:text-primary-700 disabled:opacity-50"
+                        >
+                          {user.plan === "PRO" ? "Cabut Pro" : "Jadikan Pro"}
+                        </button>
+                      </div>
                     </td>
                     <td className="px-4 py-3">
                       <Badge variant={user.hasContributed ? "success" : "warning"}>

@@ -11,11 +11,28 @@ export interface StorefrontItem {
   image: string;
   imageStyle?: { backgroundSize: string; backgroundPosition: string };
   category: string;
-  badge?: "Best Seller" | "Recommended" | "Baru" | "Promo" | "Limited";
+  badge?: string;
   available: boolean;
   unit: string;
   details: Array<{ label: string; value: string }>;
   variants: string[];
+}
+
+export interface StorefrontBusiness {
+  name: string;
+  slug: string;
+  description: string;
+  whatsapp: string;
+  whatsappDisplay: string;
+  whatsappSecondary: string;
+  whatsappSecondaryDisplay: string;
+  instagram: string;
+  address: string;
+  mapsUrl: string;
+  openingHours: string;
+  cover: string;
+  poster: string;
+  logo?: string;
 }
 
 export interface StorefrontCollection {
@@ -27,7 +44,7 @@ export interface StorefrontCollection {
   accent: string;
 }
 
-export const business = {
+export const business: StorefrontBusiness = {
   name: "Toko Evi",
   slug: "toko-evi",
   description:

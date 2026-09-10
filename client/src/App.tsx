@@ -23,6 +23,7 @@ import AdminUsers from "./pages/admin/Users";
 import BusinessShowcasePage from "./pages/public/BusinessShowcasePage";
 import ProductDetailPage from "./pages/public/ProductDetailPage";
 import { InquiryProvider } from "./features/storefront/InquiryContext";
+import ProDashboardPage from "./pages/pro/ProDashboardPage";
 
 export default function App() {
   return (
@@ -45,6 +46,7 @@ export default function App() {
                     <Route path="/search" element={<SearchPage />} />
                     <Route path="/saved" element={<SavedPage />} />
                     <Route path="/account" element={<AccountPage />} />
+                    <Route path="/pro" element={<ProDashboardPage />} />
                     <Route path="/kontak/:id" element={<ContactDetailPage />} />
                     <Route path="/submit" element={<SubmitPage />} />
                     <Route path="/login" element={<LoginPage />} />

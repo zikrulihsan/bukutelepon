@@ -2,6 +2,7 @@ import { supabaseAdmin } from "./supabaseAdmin";
 import { logger } from "./logger";
 
 export const CONTACT_IMAGE_BUCKET = "contact-images";
+export const CATALOG_IMAGE_BUCKET = "catalog-images";
 
 const PUBLIC_PREFIX = `/storage/v1/object/public/${CONTACT_IMAGE_BUCKET}/`;
 
@@ -44,5 +45,42 @@ export async function deleteContactImage(url: string | null | undefined): Promis
     }
   } catch (err) {
     logger.warn(`Failed to delete orphaned image ${path}: ${(err as Error).message}`);
+  }
+}
+
+function storageObjectPath(url: string | null | undefined, bucket: string): string | null {
+  if (!url) return null;
+
+  let parsed: URL;
+  try {
+    parsed = new URL(url);
+  } catch {
+    return null;
+  }
+
+  const projectUrl = process.env.SUPABASE_URL;
+  if (projectUrl && parsed.origin !== new URL(projectUrl).origin) return null;
+
+  const prefix = `/storage/v1/object/public/${bucket}/`;
+  if (!parsed.pathname.startsWith(prefix)) return null;
+
+  const path = decodeURIComponent(parsed.pathname.slice(prefix.length));
+  return path.length > 0 ? path : null;
+}
+
+/** Best-effort cleanup for replaced or deleted Pro catalog images. */
+export async function deleteCatalogImage(
+  url: string | null | undefined,
+  expectedOwnerId?: string
+): Promise<void> {
+  const path = storageObjectPath(url, CATALOG_IMAGE_BUCKET);
+  if (!path) return;
+  if (expectedOwnerId && path.split("/")[0] !== expectedOwnerId) return;
+
+  try {
+    const { error } = await supabaseAdmin.storage.from(CATALOG_IMAGE_BUCKET).remove([path]);
+    if (error) logger.warn(`Failed to delete orphaned catalog image ${path}: ${error.message}`);
+  } catch (err) {
+    logger.warn(`Failed to delete orphaned catalog image ${path}: ${(err as Error).message}`);
   }
 }

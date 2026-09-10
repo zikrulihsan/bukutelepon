@@ -16,14 +16,10 @@ import { InquiryDrawer } from "../../features/storefront/InquiryDrawer";
 import { trackStorefrontEvent, useInquiry } from "../../features/storefront/InquiryContext";
 import { StorefrontImage } from "../../features/storefront/StorefrontImage";
 import {
-  business,
   formatPrice,
-  storefrontCollections,
-  storefrontItems,
   type StorefrontItem,
 } from "../../features/storefront/storefrontData";
-
-const categories = ["Semua", "Madu", "Camilan", "Minuman"];
+import { usePublicStorefront } from "../../features/storefront/usePublicStorefront";
 
 function ProductCard({ item, onOpen }: { item: StorefrontItem; onOpen: () => void }) {
   const { quantities, addItem, setQuantity } = useInquiry();
@@ -102,7 +98,11 @@ export default function BusinessShowcasePage() {
   const [collectionId, setCollectionId] = useState<string | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [shared, setShared] = useState(false);
-  const { totalCount, totalPrice, hasUnpriced } = useInquiry();
+  const { business, items: storefrontItems, collections: storefrontCollections, isLoading, notFound, requestedSlug } = usePublicStorefront();
+  const { totalCount, totalPrice, hasUnpriced, configureCatalog } = useInquiry();
+  const categories = useMemo(() => ["Semua", ...new Set(storefrontItems.map((item) => item.category))], [storefrontItems]);
+
+  useEffect(() => configureCatalog(storefrontItems, business), [business, configureCatalog, storefrontItems]);
 
   useEffect(() => {
     trackStorefrontEvent("profile_view");
@@ -117,11 +117,11 @@ export default function BusinessShowcasePage() {
       const matchesSearch = !query || `${item.name} ${item.shortDescription} ${item.category}`.toLocaleLowerCase("id").includes(query);
       return matchesCategory && matchesCollection && matchesSearch;
     });
-  }, [category, collectionId, search]);
+  }, [category, collectionId, search, storefrontCollections, storefrontItems]);
 
   function openItem(item: StorefrontItem) {
     trackStorefrontEvent("product_view", item.id);
-    navigate(`/catalog/${item.slug}`);
+    navigate(`/catalog/${item.slug}?store=${encodeURIComponent(business.slug)}`);
   }
 
   function chooseCollection(id: string) {
@@ -146,10 +146,18 @@ export default function BusinessShowcasePage() {
 
   const directWhatsapp = `https://wa.me/${business.whatsapp}?text=${encodeURIComponent(`Halo, saya melihat etalase ${business.name} di CariKontak.`)}`;
 
+  if (isLoading && requestedSlug !== "toko-evi") {
+    return <div className="min-h-screen animate-pulse bg-[#F4F0E7]" />;
+  }
+
+  if (notFound) {
+    return <div className="grid min-h-screen place-items-center bg-[#F4F0E7] px-6 text-center"><div><h1 className="font-serif text-3xl font-black text-[#1D3C2F]">Etalase tidak ditemukan</h1><p className="mt-2 text-sm text-[#6E7A72]">Etalase ini belum diterbitkan atau alamatnya berubah.</p><button onClick={() => navigate("/catalog")} className="mt-5 rounded-full bg-[#245843] px-5 py-3 text-sm font-bold text-white">Lihat katalog utama</button></div></div>;
+  }
+
   return (
     <div className="min-h-screen bg-[#F4F0E7] text-[#19362A] selection:bg-[#DDE9DF]">
       <header className="relative mx-auto h-[270px] max-w-[1280px] overflow-hidden bg-[#203C2E] sm:h-[340px] lg:mt-5 lg:rounded-[32px]">
-        <img src={business.cover} alt="Koleksi oleh-oleh khas Sumbawa" className="h-full w-full object-cover object-center" />
+        <img src={business.cover} alt={`Etalase ${business.name}`} className="h-full w-full object-cover object-center" />
         <div className="absolute inset-0 bg-gradient-to-b from-[#10251A]/65 via-transparent to-[#10251A]/65" />
         <div className="absolute inset-x-0 top-0 mx-auto flex max-w-6xl items-center justify-between px-4 py-4 sm:px-7 sm:py-6">
           <button onClick={() => navigate("/")} className="flex items-center gap-2 rounded-full border border-white/25 bg-[#142A20]/55 px-3 py-2 text-white shadow-sm backdrop-blur-md transition hover:bg-[#142A20]/75">
@@ -166,11 +174,8 @@ export default function BusinessShowcasePage() {
       <main className="relative mx-auto -mt-16 max-w-6xl px-3 pb-36 sm:-mt-20 sm:px-6 lg:px-8">
         <section className="rounded-[28px] border border-white/70 bg-[#FFFEFA] px-5 pb-6 pt-5 shadow-[0_20px_60px_rgba(41,58,47,0.12)] sm:px-8 sm:pb-8">
           <div className="flex items-start gap-4 sm:gap-5">
-            <div className="grid h-[72px] w-[72px] flex-none place-items-center rounded-[22px] border-4 border-white bg-[#245843] shadow-[0_8px_25px_rgba(36,88,67,0.24)] sm:h-24 sm:w-24 sm:rounded-[28px]">
-              <div className="text-center text-white">
-                <span className="block font-serif text-[22px] font-black leading-none sm:text-3xl">EVI</span>
-                <span className="mt-1 block text-[7px] font-bold uppercase tracking-[0.2em] text-[#E7C982] sm:text-[8px]">Sumbawa</span>
-              </div>
+            <div className="grid h-[72px] w-[72px] flex-none place-items-center overflow-hidden rounded-[22px] border-4 border-white bg-[#245843] shadow-[0_8px_25px_rgba(36,88,67,0.24)] sm:h-24 sm:w-24 sm:rounded-[28px]">
+              {business.logo ? <img src={business.logo} alt={`Logo ${business.name}`} className="h-full w-full object-cover" /> : <div className="text-center text-white"><span className="block font-serif text-[22px] font-black leading-none sm:text-3xl">{business.name.trim().split(/\s+/).at(-1)?.slice(0, 3).toUpperCase()}</span><span className="mt-1 block text-[7px] font-bold uppercase tracking-[0.2em] text-[#E7C982] sm:text-[8px]">Pro</span></div>}
             </div>
             <div className="min-w-0 flex-1 pt-1">
               <div className="flex items-center gap-1.5">
@@ -179,7 +184,7 @@ export default function BusinessShowcasePage() {
               </div>
               <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] font-semibold text-[#68756D] sm:text-xs">
                 <span className="flex items-center gap-1 text-[#7A6339]"><span className="h-1.5 w-1.5 rounded-full bg-[#D5A441]" /> Jam buka via WhatsApp</span>
-                <span className="hidden sm:inline">Oleh-oleh khas Sumbawa</span>
+                <span className="hidden sm:inline">Etalase bisnis terverifikasi</span>
               </div>
             </div>
           </div>
@@ -196,9 +201,7 @@ export default function BusinessShowcasePage() {
             >
               <FaWhatsapp className="h-[19px] w-[19px]" /> WhatsApp
             </a>
-            <a href={`https://instagram.com/${business.instagram}`} target="_blank" rel="noreferrer" className="grid h-12 w-12 place-items-center rounded-full border border-[#DED9CD] bg-[#FAF7F1] text-[#875046] transition hover:bg-[#F1EAE1]" aria-label="Instagram">
-              <FaInstagram className="h-5 w-5" />
-            </a>
+            {business.instagram && <a href={`https://instagram.com/${business.instagram}`} target="_blank" rel="noreferrer" className="grid h-12 w-12 place-items-center rounded-full border border-[#DED9CD] bg-[#FAF7F1] text-[#875046] transition hover:bg-[#F1EAE1]" aria-label="Instagram"><FaInstagram className="h-5 w-5" /></a>}
             <a href={business.mapsUrl} target="_blank" rel="noreferrer" className="grid h-12 w-12 place-items-center rounded-full border border-[#DED9CD] bg-[#FAF7F1] text-[#5D705F] transition hover:bg-[#EDF3ED]" aria-label="Lihat peta">
               <HiMapPin className="h-5 w-5" />
             </a>
@@ -206,8 +209,7 @@ export default function BusinessShowcasePage() {
 
           <p className="mt-3 text-[11px] text-[#78837C] sm:ml-[116px]">
             WA utama: <a href={`https://wa.me/${business.whatsapp}`} target="_blank" rel="noreferrer" className="font-extrabold text-[#246248] hover:underline">{business.whatsappDisplay}</a>
-            <span className="mx-1.5 text-[#C4BDB1]">•</span>
-            Alternatif: <a href={`https://wa.me/${business.whatsappSecondary}`} target="_blank" rel="noreferrer" className="font-extrabold text-[#246248] hover:underline">{business.whatsappSecondaryDisplay}</a>
+            {business.whatsappSecondary && <><span className="mx-1.5 text-[#C4BDB1]">•</span>Alternatif: <a href={`https://wa.me/${business.whatsappSecondary}`} target="_blank" rel="noreferrer" className="font-extrabold text-[#246248] hover:underline">{business.whatsappSecondaryDisplay}</a></>}
           </p>
 
           <div className="mt-5 grid gap-2 border-t border-[#EEE9DE] pt-4 text-[11px] font-semibold text-[#66736B] sm:ml-[116px] sm:grid-cols-2 sm:text-xs">
@@ -218,15 +220,13 @@ export default function BusinessShowcasePage() {
 
         <section className="mt-5 overflow-hidden rounded-[26px] border border-[#E5DED1] bg-[#FFFEFA] shadow-[0_10px_30px_rgba(38,55,45,0.07)] sm:grid sm:grid-cols-[0.9fr_1.1fr]">
           <div className="h-48 overflow-hidden bg-[#F6E9D4] sm:h-64">
-            <img src={business.poster} alt="Poster resmi Toko Evi Oleh-Oleh Khas Sumbawa" className="h-full w-full object-cover object-top" />
+            <img src={business.poster} alt={`Foto resmi ${business.name}`} className="h-full w-full object-cover object-top" />
           </div>
           <div className="flex flex-col justify-center p-5 sm:p-8">
-            <p className="text-[10px] font-extrabold uppercase tracking-[0.2em] text-[#A36B3F]">Toko asli di Sumbawa Besar</p>
-            <h2 className="mt-2 font-serif text-2xl font-black leading-tight text-[#193B2D]">Pulang dari Sumbawa, jangan lupa oleh-olehnya.</h2>
-            <p className="mt-3 text-xs leading-5 text-[#6E7A72]">Lihat produk terbaru dan kabar Toko Evi melalui akun Instagram resminya.</p>
-            <a href={`https://instagram.com/${business.instagram}`} target="_blank" rel="noreferrer" className="mt-5 inline-flex w-fit items-center gap-2 rounded-full border border-[#D7CFC1] px-4 py-2.5 text-xs font-extrabold text-[#7C4A42] transition hover:bg-[#F6EEE8]">
-              <FaInstagram className="h-4 w-4" /> @{business.instagram}
-            </a>
+            <p className="text-[10px] font-extrabold uppercase tracking-[0.2em] text-[#A36B3F]">Etalase resmi pemilik</p>
+            <h2 className="mt-2 font-serif text-2xl font-black leading-tight text-[#193B2D]">Kenali pilihan dari {business.name}.</h2>
+            <p className="mt-3 text-xs leading-5 text-[#6E7A72]">Temukan produk terbaru dan hubungi penjual langsung melalui kanal resminya.</p>
+            {business.instagram && <a href={`https://instagram.com/${business.instagram}`} target="_blank" rel="noreferrer" className="mt-5 inline-flex w-fit items-center gap-2 rounded-full border border-[#D7CFC1] px-4 py-2.5 text-xs font-extrabold text-[#7C4A42] transition hover:bg-[#F6EEE8]"><FaInstagram className="h-4 w-4" /> @{business.instagram}</a>}
           </div>
         </section>
 

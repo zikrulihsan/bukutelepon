@@ -1,5 +1,5 @@
-import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
-import { business, storefrontItems } from "./storefrontData";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { business, storefrontItems, type StorefrontBusiness, type StorefrontItem } from "./storefrontData";
 
 type InquiryMap = Record<string, number>;
 
@@ -8,9 +8,12 @@ interface InquiryContextValue {
   totalCount: number;
   totalPrice: number;
   hasUnpriced: boolean;
+  catalogItems: StorefrontItem[];
+  catalogBusiness: StorefrontBusiness;
   addItem: (itemId: string, amount?: number) => void;
   setQuantity: (itemId: string, quantity: number) => void;
   clear: () => void;
+  configureCatalog: (items: StorefrontItem[], business: StorefrontBusiness) => void;
   whatsappUrl: string;
 }
 
@@ -27,13 +30,20 @@ function readInitialState(): InquiryMap {
 
 export function InquiryProvider({ children }: { children: ReactNode }) {
   const [quantities, setQuantities] = useState<InquiryMap>(readInitialState);
+  const [catalogItems, setCatalogItems] = useState(storefrontItems);
+  const [catalogBusiness, setCatalogBusiness] = useState(business);
+
+  const configureCatalog = useCallback((items: StorefrontItem[], nextBusiness: StorefrontBusiness) => {
+    setCatalogItems(items);
+    setCatalogBusiness(nextBusiness);
+  }, []);
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(quantities));
   }, [quantities]);
 
   const value = useMemo<InquiryContextValue>(() => {
-    const selectedItems = storefrontItems.filter((item) => (quantities[item.id] ?? 0) > 0);
+    const selectedItems = catalogItems.filter((item) => (quantities[item.id] ?? 0) > 0);
     const totalCount = selectedItems.reduce((sum, item) => sum + quantities[item.id], 0);
     const totalPrice = selectedItems.reduce((sum, item) => sum + item.price * quantities[item.id], 0);
     const hasUnpriced = selectedItems.some((item) => item.priceType === "contact");
@@ -51,6 +61,8 @@ export function InquiryProvider({ children }: { children: ReactNode }) {
       totalCount,
       totalPrice,
       hasUnpriced,
+      catalogItems,
+      catalogBusiness,
       addItem: (itemId, amount = 1) =>
         setQuantities((current) => ({ ...current, [itemId]: (current[itemId] ?? 0) + amount })),
       setQuantity: (itemId, quantity) =>
@@ -61,9 +73,10 @@ export function InquiryProvider({ children }: { children: ReactNode }) {
           return next;
         }),
       clear: () => setQuantities({}),
-      whatsappUrl: `https://wa.me/${business.whatsapp}?text=${encodeURIComponent(message)}`,
+      configureCatalog,
+      whatsappUrl: `https://wa.me/${catalogBusiness.whatsapp}?text=${encodeURIComponent(message)}`,
     };
-  }, [quantities]);
+  }, [catalogBusiness, catalogItems, configureCatalog, quantities]);
 
   return <InquiryContext.Provider value={value}>{children}</InquiryContext.Provider>;
 }

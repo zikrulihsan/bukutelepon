@@ -13,28 +13,40 @@ import { FaWhatsapp } from "react-icons/fa";
 import { InquiryDrawer } from "../../features/storefront/InquiryDrawer";
 import { trackStorefrontEvent, useInquiry } from "../../features/storefront/InquiryContext";
 import { StorefrontImage } from "../../features/storefront/StorefrontImage";
-import { business, formatPrice, getItem, storefrontItems } from "../../features/storefront/storefrontData";
+import { formatPrice } from "../../features/storefront/storefrontData";
+import { usePublicStorefront } from "../../features/storefront/usePublicStorefront";
 
 export default function ProductDetailPage() {
   const { itemSlug } = useParams();
   const navigate = useNavigate();
-  const item = getItem(itemSlug);
+  const { business, items: storefrontItems, isLoading, notFound, requestedSlug } = usePublicStorefront();
+  const item = storefrontItems.find((entry) => entry.slug === itemSlug);
   const [quantity, setQuantity] = useState(1);
   const [variant, setVariant] = useState(item?.variants[0] ?? "");
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [added, setAdded] = useState(false);
-  const { quantities, addItem, totalCount } = useInquiry();
+  const { quantities, addItem, totalCount, configureCatalog } = useInquiry();
+
+  useEffect(() => configureCatalog(storefrontItems, business), [business, configureCatalog, storefrontItems]);
+
+  useEffect(() => {
+    setVariant(item?.variants[0] ?? "");
+  }, [item]);
 
   useEffect(() => {
     if (item) trackStorefrontEvent("product_view", item.id);
   }, [item]);
 
-  if (!item) {
+  if ((isLoading && requestedSlug !== "toko-evi") || (isLoading && !item)) {
+    return <div className="min-h-screen animate-pulse bg-[#F4F0E7]" />;
+  }
+
+  if (notFound || !item) {
     return (
       <div className="grid min-h-screen place-items-center bg-[#F4F0E7] px-6 text-center">
         <div>
           <p className="font-serif text-3xl font-black text-[#1D3C2F]">Produk tidak ditemukan</p>
-          <button onClick={() => navigate("/catalog")} className="mt-4 rounded-full bg-[#245843] px-5 py-3 text-sm font-bold text-white">Kembali ke etalase</button>
+          <button onClick={() => navigate(`/catalog?store=${encodeURIComponent(business.slug)}`)} className="mt-4 rounded-full bg-[#245843] px-5 py-3 text-sm font-bold text-white">Kembali ke etalase</button>
         </div>
       </div>
     );
@@ -92,7 +104,7 @@ export default function ProductDetailPage() {
           </div>
 
           <section className="px-5 pb-8 pt-7 sm:px-8 lg:flex lg:flex-col lg:justify-center lg:px-12 lg:py-12">
-            <button onClick={() => navigate("/catalog")} className="mb-5 hidden items-center gap-2 text-xs font-bold text-[#78847D] transition hover:text-[#245843] lg:flex">
+            <button onClick={() => navigate(`/catalog?store=${encodeURIComponent(business.slug)}`)} className="mb-5 hidden items-center gap-2 text-xs font-bold text-[#78847D] transition hover:text-[#245843] lg:flex">
               <HiChevronLeft className="h-4 w-4" /> Kembali ke etalase
             </button>
             <div className="flex items-center gap-2">
@@ -155,11 +167,11 @@ export default function ProductDetailPage() {
                 <p className="text-[10px] font-extrabold uppercase tracking-[0.19em] text-[#A36B3F]">Mungkin cocok juga</p>
                 <h2 className="mt-1 font-serif text-2xl font-black text-[#193B2D]">Pilihan lainnya</h2>
               </div>
-              <button onClick={() => navigate("/catalog")} className="flex items-center gap-1 text-xs font-extrabold text-[#476B5A]">Lihat etalase <HiChevronRight className="h-4 w-4" /></button>
+              <button onClick={() => navigate(`/catalog?store=${encodeURIComponent(business.slug)}`)} className="flex items-center gap-1 text-xs font-extrabold text-[#476B5A]">Lihat etalase <HiChevronRight className="h-4 w-4" /></button>
             </div>
             <div className="grid grid-cols-3 gap-3 sm:gap-5">
               {relatedItems.map((entry) => (
-                <button key={entry.id} onClick={() => navigate(`/catalog/${entry.slug}`)} className="overflow-hidden rounded-[18px] border border-[#E3DDCF] bg-white text-left shadow-sm transition hover:-translate-y-1 hover:shadow-lg">
+                <button key={entry.id} onClick={() => navigate(`/catalog/${entry.slug}?store=${encodeURIComponent(business.slug)}`)} className="overflow-hidden rounded-[18px] border border-[#E3DDCF] bg-white text-left shadow-sm transition hover:-translate-y-1 hover:shadow-lg">
                   <StorefrontImage item={entry} loading="lazy" className="aspect-square w-full object-cover" />
                   <div className="p-2.5 sm:p-4">
                     <p className="line-clamp-2 text-[10px] font-extrabold leading-snug text-[#254235] sm:text-sm">{entry.name}</p>

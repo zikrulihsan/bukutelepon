@@ -3,9 +3,55 @@ export interface Profile {
   email: string;
   name: string;
   role: "USER" | "ADMIN";
+  plan: "FREE" | "PRO";
   hasContributed: boolean;
   createdAt: string;
   updatedAt: string;
+}
+
+export type BusinessStatus = "DRAFT" | "ACTIVE" | "HIDDEN";
+export type StorefrontItemStatus = "ACTIVE" | "HIDDEN" | "SOLD_OUT";
+export type StorefrontPriceType = "FIXED" | "STARTING_FROM" | "CONTACT" | "FREE";
+export type StorefrontItemType = "PRODUCT" | "SERVICE" | "PACKAGE" | "PROMO";
+
+export interface ManagedStorefrontItem {
+  id: string;
+  businessId: string;
+  type: StorefrontItemType;
+  name: string;
+  slug: string;
+  shortDescription: string;
+  description: string;
+  category: string;
+  price: number;
+  priceType: StorefrontPriceType;
+  unit: string | null;
+  imageUrl: string | null;
+  badge: string | null;
+  status: StorefrontItemStatus;
+  sortOrder: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ManagedBusiness {
+  id: string;
+  ownerId: string;
+  name: string;
+  slug: string;
+  description: string;
+  whatsapp: string;
+  alternateWhatsapp: string | null;
+  instagram: string | null;
+  address: string | null;
+  mapsUrl: string | null;
+  openingHours: string | null;
+  logoUrl: string | null;
+  coverUrl: string | null;
+  status: BusinessStatus;
+  createdAt: string;
+  updatedAt: string;
+  items: ManagedStorefrontItem[];
 }
 
 export interface City {

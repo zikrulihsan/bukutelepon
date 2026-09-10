@@ -1,7 +1,7 @@
 import { HiMinus, HiPlus, HiShoppingBag, HiTrash, HiXMark } from "react-icons/hi2";
 import { FaWhatsapp } from "react-icons/fa";
 import { useInquiry, trackStorefrontEvent } from "./InquiryContext";
-import { formatPrice, storefrontItems } from "./storefrontData";
+import { formatPrice } from "./storefrontData";
 import { StorefrontImage } from "./StorefrontImage";
 
 interface InquiryDrawerProps {
@@ -10,8 +10,8 @@ interface InquiryDrawerProps {
 }
 
 export function InquiryDrawer({ open, onClose }: InquiryDrawerProps) {
-  const { quantities, totalCount, totalPrice, hasUnpriced, setQuantity, clear, whatsappUrl } = useInquiry();
-  const selectedItems = storefrontItems.filter((item) => (quantities[item.id] ?? 0) > 0);
+  const { quantities, totalCount, totalPrice, hasUnpriced, setQuantity, clear, whatsappUrl, catalogItems } = useInquiry();
+  const selectedItems = catalogItems.filter((item) => (quantities[item.id] ?? 0) > 0);
 
   if (!open) return null;
 

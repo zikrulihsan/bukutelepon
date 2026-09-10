@@ -11,6 +11,8 @@ import categoriesRouter from "./modules/categories/categories.router";
 import reviewsRouter from "./modules/reviews/reviews.router";
 import guestRouter from "./modules/guest/guest.router";
 import adminRouter from "./modules/admin/admin.router";
+import proRouter from "./modules/pro/pro.router";
+import storefrontRouter from "./modules/storefront/storefront.router";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -51,6 +53,8 @@ app.use("/api/categories", categoriesRouter);
 app.use("/api/reviews", reviewsRouter);
 app.use("/api/guest", guestRouter);
 app.use("/api/admin", adminRouter);
+app.use("/api/pro", proRouter);
+app.use("/api/storefront", storefrontRouter);
 
 // Global error handler (must be last)
 app.use(errorHandler);

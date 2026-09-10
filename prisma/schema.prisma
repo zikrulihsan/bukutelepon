@@ -13,6 +13,37 @@ enum Role {
   ADMIN
 }
 
+enum AccountPlan {
+  FREE
+  PRO
+}
+
+enum BusinessStatus {
+  DRAFT
+  ACTIVE
+  HIDDEN
+}
+
+enum StorefrontItemType {
+  PRODUCT
+  SERVICE
+  PACKAGE
+  PROMO
+}
+
+enum StorefrontPriceType {
+  FIXED
+  STARTING_FROM
+  CONTACT
+  FREE
+}
+
+enum StorefrontItemStatus {
+  ACTIVE
+  HIDDEN
+  SOLD_OUT
+}
+
 enum TrustLevel {
   UNVERIFIED
   EMAIL_VERIFIED
@@ -33,23 +64,76 @@ enum ReviewStatus {
 }
 
 model Profile {
-  id              String     @id
-  email           String     @unique
-  name            String
-  phone           String?    @unique
-  role            Role       @default(USER)
-  trustLevel      TrustLevel @default(UNVERIFIED)
-  hasContributed  Boolean    @default(false)
-  contributedAt   DateTime?
-  isActive        Boolean    @default(true)
-  createdAt       DateTime   @default(now())
-  updatedAt       DateTime   @updatedAt
+  id             String      @id
+  email          String      @unique
+  name           String
+  phone          String?     @unique
+  role           Role        @default(USER)
+  plan           AccountPlan @default(FREE)
+  trustLevel     TrustLevel  @default(UNVERIFIED)
+  hasContributed Boolean     @default(false)
+  contributedAt  DateTime?
+  isActive       Boolean     @default(true)
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
 
-  contacts        Contact[]  @relation("SubmittedContacts")
-  claimedContacts Contact[]  @relation("ClaimedContacts")
+  contacts        Contact[] @relation("SubmittedContacts")
+  claimedContacts Contact[] @relation("ClaimedContacts")
   reviews         Review[]
+  business        Business?
 
   @@map("profiles")
+}
+
+model Business {
+  id                String         @id @default(uuid())
+  ownerId           String         @unique
+  name              String
+  slug              String         @unique
+  description       String         @db.VarChar(1000)
+  whatsapp          String
+  alternateWhatsapp String?
+  instagram         String?
+  address           String?        @db.VarChar(500)
+  mapsUrl           String?
+  openingHours      String?
+  logoUrl           String?
+  coverUrl          String?
+  status            BusinessStatus @default(DRAFT)
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+
+  owner Profile          @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  items StorefrontItem[]
+
+  @@index([status])
+  @@map("businesses")
+}
+
+model StorefrontItem {
+  id               String               @id @default(uuid())
+  businessId       String
+  type             StorefrontItemType   @default(PRODUCT)
+  name             String
+  slug             String
+  shortDescription String               @db.VarChar(240)
+  description      String               @db.VarChar(2000)
+  category         String
+  price            Int                  @default(0)
+  priceType        StorefrontPriceType  @default(CONTACT)
+  unit             String?
+  imageUrl         String?
+  badge            String?
+  status           StorefrontItemStatus @default(ACTIVE)
+  sortOrder        Int                  @default(0)
+  createdAt        DateTime             @default(now())
+  updatedAt        DateTime             @updatedAt
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@unique([businessId, slug])
+  @@index([businessId, status, sortOrder])
+  @@map("storefront_items")
 }
 
 model GuestSession {
@@ -64,25 +148,25 @@ model GuestSession {
 }
 
 model City {
-  id        String    @id @default(uuid())
+  id        String   @id @default(uuid())
   name      String
   province  String
-  slug      String    @unique
-  createdAt DateTime  @default(now())
+  slug      String   @unique
+  createdAt DateTime @default(now())
 
-  contacts  Contact[]
+  contacts Contact[]
 
   @@map("cities")
 }
 
 model Category {
-  id        String    @id @default(uuid())
+  id        String   @id @default(uuid())
   name      String
-  slug      String    @unique
+  slug      String   @unique
   icon      String?
-  createdAt DateTime  @default(now())
+  createdAt DateTime @default(now())
 
-  contacts  Contact[]
+  contacts Contact[]
 
   @@map("categories")
 }
