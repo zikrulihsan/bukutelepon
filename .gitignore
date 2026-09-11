@@ -1,5 +1,6 @@
 node_modules/
 dist/
+.netlify/
 
 # Environment files and credentials (at the repository root or in an app folder)
 .env

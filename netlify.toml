@@ -1,5 +1,5 @@
 [build]
-  command = "npm ci && npm --prefix server ci && npm --prefix client ci && npx prisma generate && npm --prefix server run build:netlify && npm --prefix client run build"
+  command = "npm ci --include=dev && npm --prefix server ci --include=dev && npm --prefix client ci --include=dev && npx prisma generate && npm --prefix server run build:netlify && npm --prefix client run build"
   publish = "client/dist"
   edge_functions = "client/netlify/edge-functions"
 
@@ -9,7 +9,7 @@
 # Production migrations happen once during the production build, before the
 # new function bundle is published. Deploy previews never touch production DB.
 [context.production]
-  command = "npm ci && npm --prefix server ci && npm --prefix client ci && npx prisma generate && npx prisma migrate deploy --schema=prisma/schema.prisma && npm --prefix server run build:netlify && npm --prefix client run build"
+  command = "npm ci --include=dev && npm --prefix server ci --include=dev && npm --prefix client ci --include=dev && npx prisma generate && npx prisma migrate deploy --schema=prisma/schema.prisma && npm --prefix server run build:netlify && npm --prefix client run build"
 
 [functions]
   directory = "server/netlify/functions"
