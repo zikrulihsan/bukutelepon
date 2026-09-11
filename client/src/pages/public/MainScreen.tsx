@@ -127,9 +127,9 @@ export default function MainScreen() {
 
         <div className="relative z-10 flex h-full flex-col px-3.5 pb-3 pt-3">
           <div className="flex items-center justify-between gap-2">
-            <button type="button" onClick={() => setShowCityPicker(true)} className="flex min-w-0 items-center gap-2 rounded-full bg-white/72 py-1 pl-1 pr-2.5 text-left shadow-[0_2px_10px_rgba(9,60,45,.08)] backdrop-blur-sm transition active:scale-[0.98]">
-              <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-primary-700 text-white"><PinIcon className="h-4 w-4" /></span>
-              <span className="truncate text-[13px] font-extrabold leading-none tracking-[-0.04em] text-[#08234B]">{selectedCityName}</span>
+            <button type="button" onClick={() => setShowCityPicker(true)} className="flex min-w-0 items-center gap-2.5 rounded-[14px] border border-white/70 bg-white/68 px-3 py-2 text-left shadow-[0_2px_10px_rgba(9,60,45,.08)] backdrop-blur-sm transition active:scale-[0.98]">
+              <PinIcon className="h-[17px] w-[17px] shrink-0 text-primary-700" />
+              <span className="truncate text-[13px] font-bold leading-none tracking-[-0.04em] text-[#08234B]">{selectedCityName}</span>
               <svg viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5 shrink-0 text-primary-700"><path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.17l3.71-3.94a.75.75 0 111.09 1.03l-4.25 4.5a.75.75 0 01-1.09 0l-4.25-4.5a.75.75 0 01.02-1.05z" clipRule="evenodd" /></svg>
             </button>
             <div className="flex shrink-0 items-center gap-2"><LanguageToggle className="shadow-[0_3px_9px_rgba(4,44,37,0.06)]" /><a href={`https://wa.me/6282338588078?text=${encodeURIComponent(t("home.helpWhatsappText"))}`} target="_blank" rel="noopener noreferrer" className="inline-flex h-8 items-center gap-1.5 rounded-full bg-white px-[13px] text-[12px] font-extrabold text-[#08234B] shadow-[0_3px_9px_rgba(4,44,37,0.10)] transition active:scale-95"><ChatIcon className="h-4 w-4" /><span className="hidden min-[390px]:inline">Bantuan</span></a></div>
