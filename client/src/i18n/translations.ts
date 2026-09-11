@@ -79,6 +79,7 @@ const id = {
   "home.categories": "Kategori",
   "home.recent": "Terbaru",
   "home.seeAll": "Lihat semua",
+  "home.view": "Lihat",
   "home.noContactsInCity": "Belum ada kontak di {city}",
 
   // ── Emergency numbers ──
@@ -388,6 +389,7 @@ const en: Record<TranslationKey, string> = {
   "home.categories": "Categories",
   "home.recent": "Recent",
   "home.seeAll": "See all",
+  "home.view": "View",
   "home.noContactsInCity": "No contacts in {city} yet",
 
   // ── Emergency numbers ──

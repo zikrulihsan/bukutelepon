@@ -1,14 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { FaWhatsapp } from "react-icons/fa";
-import {
-  HiBookmark,
-  HiOutlineBookmark,
-  HiOutlineBuildingOffice2,
-  HiOutlineSquares2X2,
-  HiOutlineUserGroup,
-} from "react-icons/hi2";
+import { HiBookmark, HiOutlineBookmark } from "react-icons/hi2";
 import { apiClient } from "../../lib/axios";
 import { useCity } from "../../context/CityContext";
 import { useCategories } from "../../context/CategoriesContext";
@@ -16,23 +9,23 @@ import { useContacts } from "../../hooks/useContacts";
 import { CityPickerOverlay } from "../../components/shared/CityPickerOverlay";
 import { CategoryIcon } from "../../components/shared/CategoryIcon";
 import { CategoryPhoto } from "../../components/shared/CategoryPhoto";
-import { ContactCard } from "../../components/shared/ContactCard";
 import { LanguageToggle } from "../../components/shared/LanguageToggle";
-import { formatWhatsAppUrl } from "../../lib/phone";
 import { isSaved, toggleSaved } from "../../lib/saved";
 import { useI18n } from "../../i18n/LanguageContext";
 import type { City, Contact } from "../../types";
 
 const CATEGORY_FALLBACK = [
   { slug: "jasa", name: "Jasa" },
-  { slug: "kuliner", name: "Kuliner" },
   { slug: "kesehatan", name: "Kesehatan" },
-  { slug: "transportasi", name: "Otomotif" },
-  { slug: "laundry", name: "Laundry" },
-  { slug: "penginapan", name: "Penginapan" },
-  { slug: "oleh-oleh", name: "Oleh-Oleh" },
-  { slug: "lainnya", name: "Lainnya" },
+  { slug: "kuliner", name: "Kuliner" },
+  { slug: "pemerintah", name: "Pemerintah" },
+  { slug: "pendidikan", name: "Pendidikan" },
+  { slug: "wisata", name: "Wisata" },
+  { slug: "transportasi", name: "Transportasi" },
+  { slug: "darurat", name: "Darurat" },
 ];
+
+const HOME_CATEGORY_ORDER = CATEGORY_FALLBACK.map((category) => category.slug);
 
 function PinIcon({ className = "" }: { className?: string }) {
   return <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden="true"><path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" /></svg>;
@@ -85,6 +78,15 @@ function ContactImage({ contact, className = "" }: { contact: Contact; className
     : <CategoryPhoto slug={contact.category?.slug} className={`${className} bg-gradient-to-br`} iconClassName="h-6 w-6" />;
 }
 
+function ChoiceCard({ contact, categoryLabel, cityName, viewLabel, onOpen }: { contact: Contact; categoryLabel: string; cityName: string; viewLabel: string; onOpen: () => void }) {
+  return <article onClick={onOpen} className="relative flex h-[238px] w-[174px] shrink-0 snap-start cursor-pointer flex-col overflow-hidden rounded-2xl bg-white p-2 shadow-[0_4px_12px_rgba(16,46,70,0.09)] transition active:scale-[0.98]">
+    <div className="relative h-[116px] shrink-0 overflow-hidden rounded-xl bg-[#E8F0E8]"><ContactImage contact={contact} className="h-full w-full" /><BookmarkButton contactId={contact.id} compact /></div>
+    <h3 className="mt-2 line-clamp-2 min-h-10 text-[15px] font-extrabold leading-5 tracking-[-0.035em] text-[#08234B]">{contact.name}</h3>
+    <p className="mt-1 flex items-center gap-1 truncate text-[11px] font-semibold leading-4 text-[#7988A2]"><PinIcon className="h-3.5 w-3.5 shrink-0 text-primary-700" />{categoryLabel} <span>·</span> {contact.city?.name ?? cityName}</p>
+    <span className="mt-auto inline-flex items-center gap-1 text-[13px] font-extrabold text-primary-700">{viewLabel}<ArrowIcon className="h-4 w-4" /></span>
+  </article>;
+}
+
 function SectionHeading({ title, onMore }: { title: string; onMore?: () => void }) {
   return <div className="mb-3 flex min-h-7 items-center justify-between gap-3">
     <h2 className="text-[21px] font-extrabold leading-7 tracking-[-0.045em] text-[#08234B]">{title}</h2>
@@ -105,9 +107,16 @@ export default function MainScreen() {
   useEffect(() => { if (citiesData?.data) setCities(citiesData.data); }, [citiesData, setCities]);
   const { data: contactsData, isLoading: contactsLoading } = useContacts({ city: citySlug || undefined, limit: 10 });
   const contacts = contactsData?.data ?? [];
-  const displayCategories = categories.length ? categories.slice(0, 8).map((category) => ({ slug: category.slug, name: categoryName(category) })) : CATEGORY_FALLBACK;
-  const totalContacts = contactsData?.meta?.total ?? contacts.length;
-  const totalCategories = categories.length || displayCategories.length;
+  const displayCategories = categories.length
+    ? [...categories]
+      .sort((a, b) => {
+        const aIndex = HOME_CATEGORY_ORDER.indexOf(a.slug);
+        const bIndex = HOME_CATEGORY_ORDER.indexOf(b.slug);
+        return (aIndex < 0 ? 99 : aIndex) - (bIndex < 0 ? 99 : bIndex);
+      })
+      .slice(0, 8)
+      .map((category) => ({ slug: category.slug, name: categoryName(category) }))
+    : CATEGORY_FALLBACK;
   const selectedCityName = city?.name ?? "Sumbawa Besar";
   const cityPickerVisible = showCityPicker || (!citySlug && (citiesData?.data?.length ?? cities.length) > 0);
   const goToSearch = (keyword = query) => { const value = keyword.trim(); navigate(value ? `/search?q=${encodeURIComponent(value)}` : "/search"); };
@@ -116,7 +125,7 @@ export default function MainScreen() {
   return <div className="min-h-screen bg-[radial-gradient(circle_at_30%_8%,rgba(226,241,231,.62),transparent_26%),#F8FAF7] pb-[82px] text-[#08234B]">
     {cityPickerVisible && <CityPickerOverlay cities={citiesData?.data ?? cities} onSelect={chooseCity} onClose={citySlug ? () => setShowCityPicker(false) : undefined} />}
     <div className="mx-auto max-w-md overflow-x-hidden bg-[#F8FAF7] sm:shadow-[0_0_24px_rgba(15,47,45,0.06)]">
-      <section className="relative h-[356px] overflow-hidden bg-[#E6F2E9]">
+      <section className="relative h-[316px] overflow-hidden bg-[#E6F2E9]">
         <img
           src="/hero-sumbawa-v2.jpg"
           alt=""
@@ -141,43 +150,33 @@ export default function MainScreen() {
             <p className="mt-2 max-w-[300px] text-[14px] font-medium leading-5 tracking-[-0.025em] text-[#53667F]">{t("home.heroSubtitle")}</p>
           </div>
 
-          <form onSubmit={(event) => { event.preventDefault(); goToSearch(); }} className="mt-5 flex h-14 items-center rounded-[18px] bg-white p-1 shadow-[0_5px_14px_rgba(21,66,53,0.13)]">
+          <form onSubmit={(event) => { event.preventDefault(); goToSearch(); }} className="mt-auto flex h-14 items-center rounded-[18px] bg-white p-1 shadow-[0_5px_14px_rgba(21,66,53,0.13)]">
             <SearchIcon className="ml-3 h-6 w-6 shrink-0 text-[#8998B1]" />
             <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder={t("home.heroSearchPlaceholder")} className="min-w-0 flex-1 bg-transparent px-3 text-[16px] font-medium tracking-[-0.035em] text-[#08234B] outline-none placeholder:text-[#8D99AE]" />
             <button aria-label="Cari" type="submit" className="grid h-12 w-14 shrink-0 place-items-center rounded-[15px] bg-primary-700 text-white shadow-[0_3px_8px_rgba(0,111,74,0.24)] transition hover:bg-primary-600 active:scale-95"><ArrowIcon className="h-6 w-6" /></button>
           </form>
 
-          <div className="mt-3 flex h-6 items-center divide-x divide-primary-700/15 text-[11px] font-bold leading-none tracking-[-0.03em] text-[#315F55]">
-            <span className="flex flex-1 items-center gap-1.5 pr-2"><HiOutlineBuildingOffice2 className="h-[18px] w-[18px] shrink-0 text-primary-700" />{totalContacts} {t("home.statContacts")}</span>
-            <span className="flex flex-1 items-center gap-1.5 px-2"><HiOutlineSquares2X2 className="h-[18px] w-[18px] shrink-0 text-primary-700" />{totalCategories} {t("home.statCategories")}</span>
-            <span className="flex flex-1 items-center gap-1.5 pl-2"><HiOutlineUserGroup className="h-[18px] w-[18px] shrink-0 text-primary-700" />{t("home.heroReady")}</span>
-          </div>
         </div>
       </section>
 
       <div className="px-4">
 
-      <section className="mt-4">
-        <button type="button" onClick={() => setShowEmergency((value) => !value)} className="flex h-[76px] w-full items-center justify-between rounded-2xl bg-[linear-gradient(105deg,#fff6f6,#fff1f5)] px-3.5 text-left shadow-[0_4px_10px_rgba(126,52,67,0.08)] transition active:scale-[0.99]"><span className="flex items-center gap-3.5"><span className="grid h-12 w-12 place-items-center rounded-[14px] bg-[#FFE0E0]"><SirenIcon className="h-8 w-8" /></span><span><span className="block text-[16px] font-extrabold leading-5 tracking-[-0.04em] text-[#08234B]">{t("home.emergencyTitle")}</span><span className="mt-0.5 block text-[13px] font-medium leading-4 text-[#8190AA]">{t("home.emergencySubtitle")}</span></span></span><svg viewBox="0 0 20 20" fill="currentColor" className={`h-5 w-5 text-[#95A0B8] transition-transform ${showEmergency ? "rotate-90" : ""}`}><path fillRule="evenodd" d="M7.23 4.21a.75.75 0 011.06.02L12.5 8.7a1.75 1.75 0 010 2.6l-4.21 4.47a.75.75 0 11-1.09-1.03l4.21-4.47a.25.25 0 000-.34L7.2 5.26a.75.75 0 01.03-1.05z" clipRule="evenodd" /></svg></button>
+      <section className="mt-6">
+        <SectionHeading title="Kategori Populer" onMore={() => navigate("/search")} />
+        <div className="grid grid-cols-4 gap-2.5">{categoriesLoading ? Array.from({ length: 8 }).map((_, index) => <div key={index} className="h-[84px] rounded-2xl shimmer" />) : displayCategories.map((category) => <button key={category.slug} type="button" onClick={() => navigate(`/search?category=${encodeURIComponent(category.slug)}`)} className="flex h-[84px] min-w-0 flex-col items-center justify-center gap-2 rounded-2xl bg-white px-1.5 shadow-[0_4px_10px_rgba(11,49,45,0.07)] transition hover:-translate-y-0.5 active:scale-95"><CategoryIcon slug={category.slug} className="h-8 w-8 text-[#08234B]" /><span className="w-full truncate text-[12px] font-bold tracking-[-0.035em] text-[#08234B]">{category.name}</span></button>)}</div>
+      </section>
+
+      <section className="mt-5">
+        <button type="button" onClick={() => setShowEmergency((value) => !value)} className="flex h-16 w-full items-center justify-between rounded-2xl bg-[linear-gradient(105deg,#fff7f7,#fff2f5)] px-3 text-left shadow-[0_3px_9px_rgba(126,52,67,0.07)] transition active:scale-[0.99]"><span className="flex items-center gap-3"><span className="grid h-10 w-10 place-items-center rounded-xl bg-[#FFE0E0]"><SirenIcon className="h-7 w-7" /></span><span><span className="block text-[15px] font-extrabold leading-5 tracking-[-0.035em] text-[#08234B]">{t("home.emergencyTitle")}</span><span className="block text-[12px] font-medium leading-4 text-[#8190AA]">{t("home.emergencySubtitle")}</span></span></span><svg viewBox="0 0 20 20" fill="currentColor" className={`h-5 w-5 text-[#95A0B8] transition-transform ${showEmergency ? "rotate-90" : ""}`}><path fillRule="evenodd" d="M7.23 4.21a.75.75 0 011.06.02L12.5 8.7a1.75 1.75 0 010 2.6l-4.21 4.47a.75.75 0 11-1.09-1.03l4.21-4.47a.25.25 0 000-.34L7.2 5.26a.75.75 0 01.03-1.05z" clipRule="evenodd" /></svg></button>
         {showEmergency && <div className="mt-2 grid grid-cols-3 gap-2 rounded-xl bg-white p-2 shadow-[0_3px_9px_rgba(15,47,45,0.07)]">{[{ label: "Polisi", phone: "110" }, { label: "Ambulans", phone: "119" }, { label: "Damkar", phone: "113" }].map((item) => <a key={item.label} href={`tel:${item.phone}`} className="rounded-[10px] bg-[#F7F9F5] px-2 py-2.5 text-center text-[12px] font-bold text-[#08234B]"><span className="mb-0.5 block text-[14px] text-primary-700">{item.phone}</span>{item.label}</a>)}</div>}
       </section>
 
       <section className="mt-7">
         <SectionHeading title="Pilihan di Sumbawa" onMore={() => navigate("/search")} />
-        {contactsLoading ? <div className="flex gap-3 overflow-hidden"><div className="h-[348px] w-[292px] shrink-0 rounded-2xl shimmer" /><div className="h-[348px] w-[292px] shrink-0 rounded-2xl shimmer" /></div> : contacts.length ? <><div className="-mx-4 flex snap-x gap-3 overflow-x-auto px-4 pb-2 scrollbar-hide">{contacts.slice(0, 6).map((contact) => <article key={contact.id} onClick={() => navigate(`/kontak/${contact.id}`)} className="relative flex min-h-[348px] w-[292px] shrink-0 snap-start flex-col overflow-hidden rounded-2xl bg-white p-2.5 shadow-[0_4px_12px_rgba(16,46,70,0.10)] transition active:scale-[0.98]"><div className="relative h-[164px] overflow-hidden rounded-xl bg-[#E8F0E8]"><ContactImage contact={contact} className="h-full w-full" /><BookmarkButton contactId={contact.id} /></div><h3 className="mt-2 truncate text-[17px] font-extrabold leading-[22px] tracking-[-0.04em] text-[#08234B]">{contact.name}</h3><p className="mt-1 flex items-center gap-1 truncate text-[12px] font-semibold leading-4 text-[#7988A2]"><PinIcon className="h-3.5 w-3.5 shrink-0 text-primary-700" />{categoryName(contact.category)} <span>·</span> {contact.city?.name ?? selectedCityName}</p><p className="mt-2 line-clamp-3 min-h-[57px] text-[13px] leading-[19px] text-[#66758F]">{contact.description ?? "Temukan informasi, alamat, dan kontak usaha di sekitar Anda."}</p><div className="mt-auto flex gap-2 pt-3"><a href={formatWhatsAppUrl(contact.phone)} target="_blank" rel="noopener noreferrer" onClick={(event) => event.stopPropagation()} className="flex h-11 flex-1 items-center justify-center gap-1.5 rounded-xl bg-primary-700 px-2 text-[13px] font-bold text-white transition hover:bg-primary-600 active:scale-95"><FaWhatsapp className="h-[18px] w-[18px]" />WhatsApp</a><button type="button" onClick={(event) => { event.stopPropagation(); navigate(`/kontak/${contact.id}`); }} className="h-11 rounded-xl border border-[#DDE4ED] px-3 text-[13px] font-bold text-[#08234B] transition active:scale-95">Lihat Detail</button></div></article>)}</div><div className="mt-2 flex justify-center gap-1.5"><span className="h-1.5 w-8 rounded-full bg-primary-700" /><span className="h-1.5 w-8 rounded-full bg-[#D5D9DB]" /><span className="h-1.5 w-8 rounded-full bg-[#D5D9DB]" /></div></> : <div className="grid h-[200px] place-items-center rounded-2xl bg-white p-5 text-center text-[14px] text-[#71809B]">Belum ada pilihan untuk kota ini.</div>}
+        {contactsLoading ? <div className="-mx-4 flex gap-2.5 overflow-hidden px-4"><div className="h-[238px] w-[174px] shrink-0 rounded-2xl shimmer" /><div className="h-[238px] w-[174px] shrink-0 rounded-2xl shimmer" /><div className="h-[238px] w-[174px] shrink-0 rounded-2xl shimmer" /></div> : contacts.length ? <div className="-mx-4 flex snap-x gap-2.5 overflow-x-auto px-4 pb-2 scrollbar-hide">{contacts.slice(0, 6).map((contact) => <ChoiceCard key={contact.id} contact={contact} categoryLabel={categoryName(contact.category)} cityName={selectedCityName} viewLabel={t("home.view")} onOpen={() => navigate(`/kontak/${contact.id}`)} />)}</div> : <div className="grid h-[144px] place-items-center rounded-2xl bg-white p-5 text-center text-[14px] text-[#71809B]">Belum ada pilihan untuk kota ini.</div>}
       </section>
 
-      <section className="mt-8">
-        <SectionHeading title="Kategori Populer" onMore={() => navigate("/search")} />
-        <div className="grid grid-cols-4 gap-2.5">{categoriesLoading ? Array.from({ length: 8 }).map((_, index) => <div key={index} className="h-[84px] rounded-2xl shimmer" />) : displayCategories.map((category) => <button key={category.slug} type="button" onClick={() => navigate(`/search?category=${encodeURIComponent(category.slug)}`)} className="flex h-[84px] min-w-0 flex-col items-center justify-center gap-2 rounded-2xl bg-white px-1.5 shadow-[0_4px_10px_rgba(11,49,45,0.07)] transition hover:-translate-y-0.5 active:scale-95"><CategoryIcon slug={category.slug} className="h-8 w-8 text-[#08234B]" /><span className="w-full truncate text-[12px] font-bold tracking-[-0.035em] text-[#08234B]">{category.name}</span></button>)}</div>
-      </section>
-
-      <section className="relative mt-4 h-[152px] overflow-hidden rounded-2xl bg-[radial-gradient(circle_at_92%_12%,#15795c,transparent_32%),linear-gradient(120deg,#003f32,#007352)] px-4 py-4 text-white shadow-[0_6px_13px_rgba(0,91,69,0.20)]"><div className="relative z-10 max-w-[250px]"><h2 className="text-[20px] font-extrabold leading-6 tracking-[-0.045em]">Punya usaha di Sumbawa?</h2><p className="mt-1 max-w-[235px] text-[13px] leading-[18px] text-white/90">Jangan cuma bagikan nomor WhatsApp. Buat halaman usaha dengan katalog, lokasi, dan lainnya.</p><button type="button" onClick={() => navigate("/submit")} className="mt-3 h-10 min-w-[150px] rounded-xl bg-white px-4 text-[13px] font-extrabold text-primary-700 transition active:scale-95">Daftarkan Usaha</button></div><StoreIllustration /></section>
-
-      <section className="mb-4 mt-8">
-        <SectionHeading title="Terbaru di CariKontak" onMore={() => navigate("/search")} />
-        <div className="space-y-3">{contacts.slice(0, 3).map((contact) => <ContactCard key={contact.id} contact={contact} />)}</div>
-      </section>
+      <section className="relative mb-5 mt-8 h-[152px] overflow-hidden rounded-2xl bg-[radial-gradient(circle_at_92%_12%,#15795c,transparent_32%),linear-gradient(120deg,#003f32,#007352)] px-4 py-4 text-white shadow-[0_6px_13px_rgba(0,91,69,0.20)]"><div className="relative z-10 max-w-[250px]"><h2 className="text-[20px] font-extrabold leading-6 tracking-[-0.045em]">Punya usaha di Sumbawa?</h2><p className="mt-1 max-w-[235px] text-[13px] leading-[18px] text-white/90">Jangan cuma bagikan nomor WhatsApp. Buat halaman usaha dengan katalog, lokasi, dan lainnya.</p><button type="button" onClick={() => navigate("/submit")} className="mt-3 h-10 min-w-[150px] rounded-xl bg-white px-4 text-[13px] font-extrabold text-primary-700 transition active:scale-95">Daftarkan Usaha</button></div><StoreIllustration /></section>
       </div>
     </div>
   </div>;
