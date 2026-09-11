@@ -115,7 +115,7 @@ export default function MainScreen() {
   return <div className="min-h-screen bg-[radial-gradient(circle_at_30%_8%,rgba(226,241,231,.62),transparent_26%),#F8FAF7] pb-[72px] text-[#08234B]">
     {cityPickerVisible && <CityPickerOverlay cities={citiesData?.data ?? cities} onSelect={chooseCity} onClose={citySlug ? () => setShowCityPicker(false) : undefined} />}
     <div className="mx-auto max-w-[425px] overflow-hidden px-5 pt-3 sm:shadow-[0_0_24px_rgba(15,47,45,0.06)]">
-      <section className="relative h-[252px] overflow-hidden rounded-[22px] bg-[#E6F2E9] shadow-[0_8px_20px_rgba(13,74,57,0.10)]">
+      <section className="relative h-[280px] overflow-hidden rounded-[22px] bg-[#E6F2E9] shadow-[0_8px_20px_rgba(13,74,57,0.10)]">
         <img
           src="/hero-sumbawa-v2.jpg"
           alt=""
@@ -169,7 +169,7 @@ export default function MainScreen() {
         <div className="grid grid-cols-4 gap-2">{categoriesLoading ? Array.from({ length: 8 }).map((_, index) => <div key={index} className="h-[60px] rounded-[11px] shimmer" />) : displayCategories.map((category) => <button key={category.slug} type="button" onClick={() => navigate(`/search?category=${encodeURIComponent(category.slug)}`)} className="flex h-[60px] flex-col items-center justify-center gap-1 rounded-[11px] bg-white px-1 shadow-[0_4px_8px_rgba(11,49,45,0.06)] transition hover:-translate-y-0.5 active:scale-95"><CategoryIcon slug={category.slug} className="h-6 w-6 text-[#08234B]" /><span className="max-w-full truncate text-[11px] font-bold tracking-[-0.04em] text-[#08234B]">{category.name}</span></button>)}</div>
       </section>
 
-      <section className="relative mt-2.5 h-[100px] overflow-hidden rounded-[11px] bg-[radial-gradient(circle_at_92%_12%,#15795c,transparent_32%),linear-gradient(120deg,#003f32,#007352)] px-4 py-3 text-white shadow-[0_6px_13px_rgba(0,91,69,0.20)]"><div className="relative z-10 max-w-[235px]"><h2 className="text-[17px] font-extrabold leading-5 tracking-[-0.055em]">Punya usaha di Sumbawa?</h2><p className="mt-0.5 max-w-[220px] text-[10.5px] leading-[14px] text-white/90">Jangan cuma bagikan nomor WhatsApp. Buat halaman usaha dengan katalog, lokasi, dan lainnya.</p><button type="button" onClick={() => navigate("/submit")} className="mt-1.5 min-w-[112px] rounded-lg bg-white px-3 py-[5px] text-[10px] font-extrabold text-primary-700 transition active:scale-95">Daftarkan Usaha</button></div><StoreIllustration /></section>
+      <section className="relative mt-2.5 h-[128px] overflow-hidden rounded-[11px] bg-[radial-gradient(circle_at_92%_12%,#15795c,transparent_32%),linear-gradient(120deg,#003f32,#007352)] px-4 py-3 text-white shadow-[0_6px_13px_rgba(0,91,69,0.20)]"><div className="relative z-10 max-w-[235px]"><h2 className="text-[17px] font-extrabold leading-5 tracking-[-0.055em]">Punya usaha di Sumbawa?</h2><p className="mt-0.5 max-w-[220px] text-[10.5px] leading-[14px] text-white/90">Jangan cuma bagikan nomor WhatsApp. Buat halaman usaha dengan katalog, lokasi, dan lainnya.</p><button type="button" onClick={() => navigate("/submit")} className="mt-1.5 min-w-[112px] rounded-lg bg-white px-3 py-[5px] text-[10px] font-extrabold text-primary-700 transition active:scale-95">Daftarkan Usaha</button></div><StoreIllustration /></section>
 
       <section className="mb-1.5 mt-2.5">
         <SectionHeading title="Terbaru di CariKontak" onMore={() => navigate("/search")} />
