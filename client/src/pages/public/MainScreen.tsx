@@ -133,25 +133,23 @@ export default function MainScreen() {
               <svg viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5 shrink-0 text-primary-700"><path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.17l3.71-3.94a.75.75 0 111.09 1.03l-4.25 4.5a.75.75 0 01-1.09 0l-4.25-4.5a.75.75 0 01.02-1.05z" clipRule="evenodd" /></svg>
             </button>
             <div className="flex shrink-0 items-center gap-2"><LanguageToggle className="shadow-[0_3px_9px_rgba(4,44,37,0.06)]" /><a href={`https://wa.me/6282338588078?text=${encodeURIComponent(t("home.helpWhatsappText"))}`} target="_blank" rel="noopener noreferrer" className="inline-flex h-8 items-center gap-1.5 rounded-full bg-white px-[13px] text-[12px] font-extrabold text-[#08234B] shadow-[0_3px_9px_rgba(4,44,37,0.10)] transition active:scale-95"><ChatIcon className="h-4 w-4" /><span className="hidden min-[390px]:inline">Bantuan</span></a></div>
-
-            <button type="button" aria-label="Pakai lokasi saya" title="Pakai lokasi saya" onClick={() => navigator.geolocation?.getCurrentPosition(() => setShowCityPicker(true), () => setShowCityPicker(true))} className="grid h-8 w-8 shrink-0 place-items-center rounded-full border border-white/80 bg-white/80 text-primary-700 shadow-[0_2px_10px_rgba(9,60,45,.10)] backdrop-blur-sm transition active:scale-95"><span className="grid h-5 w-5 place-items-center rounded-full border-[1.5px] border-current"><span className="h-1.5 w-1.5 rounded-full bg-current" /></span></button>
           </div>
 
           <div className="mt-2.5 max-w-[265px]">
-            <h1 className="text-[27px] font-extrabold leading-[28px] tracking-[-0.065em] text-[#071F43]">Cari kebutuhanmu<br /><span className="text-primary-700">di Sumbawa</span></h1>
-            <p className="mt-1 max-w-[245px] text-[11px] font-medium leading-[14px] tracking-[-0.025em] text-[#5F6F86]">Temukan kontak usaha, layanan, dan tempat penting di sekitarmu, lalu langsung hubungi.</p>
+            <h1 className="text-[27px] font-extrabold leading-[28px] tracking-[-0.065em] text-[#071F43]">{t("home.heroTitleFirst")}<br /><span className="text-primary-700">{t("home.heroTitleAccent")}</span></h1>
+            <p className="mt-1 max-w-[245px] text-[11px] font-medium leading-[14px] tracking-[-0.025em] text-[#5F6F86]">{t("home.heroSubtitle")}</p>
           </div>
 
           <form onSubmit={(event) => { event.preventDefault(); goToSearch(); }} className="mt-auto flex h-12 items-center rounded-[15px] bg-white p-1 shadow-[0_5px_14px_rgba(21,66,53,0.13)]">
             <SearchIcon className="ml-2 h-[22px] w-[22px] shrink-0 text-[#8998B1]" />
-            <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Cari rental mobil, rumah sakit, oleh-oleh..." className="min-w-0 flex-1 bg-transparent px-2 text-[12px] font-medium tracking-[-0.035em] text-[#08234B] outline-none placeholder:text-[#8D99AE]" />
+            <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder={t("home.heroSearchPlaceholder")} className="min-w-0 flex-1 bg-transparent px-2 text-[12px] font-medium tracking-[-0.035em] text-[#08234B] outline-none placeholder:text-[#8D99AE]" />
             <button aria-label="Cari" type="submit" className="grid h-10 w-12 shrink-0 place-items-center rounded-[12px] bg-primary-700 text-white shadow-[0_3px_8px_rgba(0,111,74,0.24)] transition hover:bg-primary-600 active:scale-95"><ArrowIcon className="h-[22px] w-[22px]" /></button>
           </form>
 
           <div className="mt-2 flex h-5 items-center divide-x divide-primary-700/15 text-[9.5px] font-bold leading-none tracking-[-0.03em] text-[#315F55]">
-            <span className="flex flex-1 items-center gap-1.5 pr-2"><HiOutlineBuildingOffice2 className="h-4 w-4 shrink-0 text-primary-700" />{totalContacts} kontak</span>
-            <span className="flex flex-1 items-center gap-1.5 px-2"><HiOutlineSquares2X2 className="h-4 w-4 shrink-0 text-primary-700" />{totalCategories} kategori</span>
-            <span className="flex flex-1 items-center gap-1.5 pl-2"><HiOutlineUserGroup className="h-4 w-4 shrink-0 text-primary-700" />Siap dihubungi</span>
+            <span className="flex flex-1 items-center gap-1.5 pr-2"><HiOutlineBuildingOffice2 className="h-4 w-4 shrink-0 text-primary-700" />{totalContacts} {t("home.statContacts")}</span>
+            <span className="flex flex-1 items-center gap-1.5 px-2"><HiOutlineSquares2X2 className="h-4 w-4 shrink-0 text-primary-700" />{totalCategories} {t("home.statCategories")}</span>
+            <span className="flex flex-1 items-center gap-1.5 pl-2"><HiOutlineUserGroup className="h-4 w-4 shrink-0 text-primary-700" />{t("home.heroReady")}</span>
           </div>
         </div>
       </section>
