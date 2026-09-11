@@ -25,10 +25,10 @@ export function BottomNav() {
   if (keyboardOpen) return null;
 
   const active = (path: string) => location.pathname === path;
-  const iconClass = "h-[18px] w-[18px]";
-  const itemClass = "flex flex-col items-center justify-start gap-0.5 pt-2 transition-transform active:scale-95";
+  const iconClass = "h-6 w-6";
+  const itemClass = "flex flex-col items-center justify-start gap-0.5 pt-1.5 transition-transform active:scale-95";
   const labelClass = (isActive: boolean) =>
-    `text-[8px] leading-[10px] ${isActive ? "font-bold text-primary-700" : "font-medium text-gray-500"}`;
+    `text-[11px] leading-4 ${isActive ? "font-bold text-primary-700" : "font-medium text-gray-500"}`;
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-40">
