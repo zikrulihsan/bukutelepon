@@ -21,9 +21,9 @@ export function BottomNav() {
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-40">
-      <div className="max-w-md mx-auto">
-        <div className="bg-white border-t border-gray-100 shadow-[0_-2px_10px_rgba(0,0,0,0.04)]">
-          <div className="grid grid-cols-5 pb-[env(safe-area-inset-bottom)] pt-1">
+      <div className="mx-auto max-w-[850px]">
+        <div className="rounded-t-[28px] border-t border-gray-100 bg-white shadow-[0_-8px_30px_rgba(8,35,75,0.09)]">
+          <div className="grid grid-cols-5 pb-[env(safe-area-inset-bottom)] pt-1 min-[700px]:min-h-[134px] min-[700px]:pt-3">
             {/* Home */}
             <button onClick={() => {
               if (location.pathname === "/") {
@@ -31,57 +31,57 @@ export function BottomNav() {
               } else {
                 navigate("/");
               }
-            }} className="flex flex-col items-center pt-2.5 pb-2 gap-1 active:scale-95 transition-transform">
+            }} className="flex flex-col items-center gap-1 pt-2.5 pb-2 transition-transform active:scale-95 min-[700px]:gap-2 min-[700px]:pt-2">
               {active("/") ? (
-                <HiHome className="h-6 w-6 text-primary-700" />
+                <HiHome className="h-6 w-6 text-primary-700 min-[700px]:h-9 min-[700px]:w-9" />
               ) : (
-                <HiOutlineHome className="h-6 w-6 text-gray-400" />
+                <HiOutlineHome className="h-6 w-6 text-gray-400 min-[700px]:h-9 min-[700px]:w-9" />
               )}
-              <span className={`text-[10px] leading-tight ${active("/") ? "font-bold text-primary-700" : "font-medium text-gray-500"}`}>
+              <span className={`text-[10px] leading-tight min-[700px]:text-[16px] ${active("/") ? "font-bold text-primary-700" : "font-medium text-gray-500"}`}>
                 {t("nav.home")}
               </span>
             </button>
 
             {/* Search */}
-            <button onClick={() => navigate("/search")} className="flex flex-col items-center pt-2.5 pb-2 gap-1 active:scale-95 transition-transform">
-              <HiMagnifyingGlass className={`h-6 w-6 ${active("/search") ? "text-primary-700 stroke-[0.5]" : "text-gray-400"}`} />
-              <span className={`text-[10px] leading-tight ${active("/search") ? "font-bold text-primary-700" : "font-medium text-gray-500"}`}>
+            <button onClick={() => navigate("/search")} className="flex flex-col items-center gap-1 pt-2.5 pb-2 transition-transform active:scale-95 min-[700px]:gap-2 min-[700px]:pt-2">
+              <HiMagnifyingGlass className={`h-6 w-6 min-[700px]:h-9 min-[700px]:w-9 ${active("/search") ? "text-primary-700 stroke-[0.5]" : "text-gray-400"}`} />
+              <span className={`text-[10px] leading-tight min-[700px]:text-[16px] ${active("/search") ? "font-bold text-primary-700" : "font-medium text-gray-500"}`}>
                 {t("nav.search")}
               </span>
             </button>
 
             {/* Saved */}
-            <button onClick={() => navigate("/saved")} className="flex flex-col items-center pt-2.5 pb-2 gap-1 active:scale-95 transition-transform">
+            <button onClick={() => navigate("/saved")} className="flex flex-col items-center gap-1 pt-2.5 pb-2 transition-transform active:scale-95 min-[700px]:gap-2 min-[700px]:pt-2">
               {active("/saved") ? (
-                <HiBookmark className="h-6 w-6 text-primary-700" />
+                <HiBookmark className="h-6 w-6 text-primary-700 min-[700px]:h-9 min-[700px]:w-9" />
               ) : (
-                <HiOutlineBookmark className="h-6 w-6 text-gray-400" />
+                <HiOutlineBookmark className="h-6 w-6 text-gray-400 min-[700px]:h-9 min-[700px]:w-9" />
               )}
-              <span className={`text-[10px] leading-tight ${active("/saved") ? "font-bold text-primary-700" : "font-medium text-gray-500"}`}>
+              <span className={`text-[10px] leading-tight min-[700px]:text-[16px] ${active("/saved") ? "font-bold text-primary-700" : "font-medium text-gray-500"}`}>
                 {t("nav.saved")}
               </span>
             </button>
 
             {/* Contribute */}
-            <button onClick={() => navigate("/submit")} className="flex flex-col items-center pt-2.5 pb-2 gap-1 active:scale-95 transition-transform">
+            <button onClick={() => navigate("/submit")} className="flex flex-col items-center gap-1 pt-2.5 pb-2 transition-transform active:scale-95 min-[700px]:gap-2 min-[700px]:pt-2">
               {active("/submit") ? (
-                <HiPlusCircle className="h-6 w-6 text-primary-700" />
+                <HiPlusCircle className="h-6 w-6 text-primary-700 min-[700px]:h-9 min-[700px]:w-9" />
               ) : (
-                <HiOutlinePlusCircle className="h-6 w-6 text-gray-400" />
+                <HiOutlinePlusCircle className="h-6 w-6 text-gray-400 min-[700px]:h-9 min-[700px]:w-9" />
               )}
-              <span className={`text-[10px] leading-tight ${active("/submit") ? "font-bold text-primary-700" : "font-medium text-gray-500"}`}>
+              <span className={`text-[10px] leading-tight min-[700px]:text-[16px] ${active("/submit") ? "font-bold text-primary-700" : "font-medium text-gray-500"}`}>
                 {t("nav.contribute")}
               </span>
             </button>
 
             {/* Account */}
-            <button onClick={() => navigate("/account")} className="flex flex-col items-center pt-2.5 pb-2 gap-1 active:scale-95 transition-transform">
+            <button onClick={() => navigate("/account")} className="flex flex-col items-center gap-1 pt-2.5 pb-2 transition-transform active:scale-95 min-[700px]:gap-2 min-[700px]:pt-2">
               {active("/account") ? (
-                <HiUser className="h-6 w-6 text-primary-700" />
+                <HiUser className="h-6 w-6 text-primary-700 min-[700px]:h-9 min-[700px]:w-9" />
               ) : (
-                <HiOutlineUser className="h-6 w-6 text-gray-400" />
+                <HiOutlineUser className="h-6 w-6 text-gray-400 min-[700px]:h-9 min-[700px]:w-9" />
               )}
-              <span className={`text-[10px] leading-tight ${active("/account") ? "font-bold text-primary-700" : "font-medium text-gray-500"}`}>
+              <span className={`text-[10px] leading-tight min-[700px]:text-[16px] ${active("/account") ? "font-bold text-primary-700" : "font-medium text-gray-500"}`}>
                 {t("nav.account")}
               </span>
             </button>

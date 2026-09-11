@@ -1,712 +1,129 @@
-import { useState, useEffect, useRef, useMemo, type ReactNode } from "react";
-import { useSearchParams, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
+import { FaWhatsapp } from "react-icons/fa";
+import { HiBookmark, HiOutlineBookmark } from "react-icons/hi2";
 import { apiClient } from "../../lib/axios";
 import { useCity } from "../../context/CityContext";
 import { useCategories } from "../../context/CategoriesContext";
-import { useContacts, useInfiniteContacts } from "../../hooks/useContacts";
-import { useContactsData } from "../../context/ContactsContext";
-import { ContactCard } from "../../components/shared/ContactCard";
+import { useContacts } from "../../hooks/useContacts";
 import { CityPickerOverlay } from "../../components/shared/CityPickerOverlay";
 import { CategoryIcon } from "../../components/shared/CategoryIcon";
-import { OnboardingTutorial, hasCompletedOnboarding } from "../../components/shared/OnboardingTutorial";
+import { CategoryPhoto } from "../../components/shared/CategoryPhoto";
 import { LanguageToggle } from "../../components/shared/LanguageToggle";
-import {
-  RecentContactsShimmer,
-  ContactListShimmer,
-} from "../../components/shared/Shimmer";
+import { formatWhatsAppUrl } from "../../lib/phone";
+import { isSaved, toggleSaved } from "../../lib/saved";
 import { useI18n } from "../../i18n/LanguageContext";
-import type { TranslationKey } from "../../i18n/translations";
-import type { Category, City } from "../../types";
+import type { City, Contact } from "../../types";
 
-type EmergencyContact = {
-  labelKey: TranslationKey;
-  icon: ReactNode;
-  /** Dialled directly via `tel:`. Omit when the entry links to a search instead. */
-  phone?: string;
-  /** Opens the search page with this keyword. Omit when the entry is a phone number. */
-  search?: string;
-};
-
-const EMERGENCY_CONTACTS: EmergencyContact[] = [
-  {
-    labelKey: "emergency.emergency", phone: "112", icon: (
-      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
-        <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
-      </svg>
-    )
-  },
-  {
-    labelKey: "emergency.police", phone: "110", icon: (
-      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
-        <path d="M12 2L3 7v5c0 5.25 3.83 10.15 9 11 5.17-.85 9-5.75 9-11V7l-9-5z" />
-      </svg>
-    )
-  },
-  {
-    labelKey: "emergency.ambulance", phone: "119", icon: (
-      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
-        <path d="M10 10H6m2-2v4m-2 6h12a2 2 0 002-2v-5.5a.5.5 0 00-.11-.33l-3-3.78A2 2 0 0015.33 6H4a2 2 0 00-2 2v8a2 2 0 002 2m2 0a2 2 0 104 0m-4 0h4m8 0a2 2 0 104 0" />
-      </svg>
-    )
-  },
-  {
-    labelKey: "emergency.fire", phone: "113", icon: (
-      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
-        <path d="M12 12c2-2.96 0-7-1-8 0 3.038-1.773 4.741-3 6-1.226 1.26-2 3.24-2 5a6 6 0 1012 0c0-1.532-1.056-3.94-2-5-1.786 3-2.791 3-4 2z" />
-      </svg>
-    )
-  },
-  {
-    labelKey: "emergency.sar", phone: "115", icon: (
-      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="12" cy="12" r="10" /><path d="M12 8v4l3 3" />
-      </svg>
-    )
-  },
-  {
-    labelKey: "emergency.electricity", phone: "123", icon: (
-      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
-        <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
-      </svg>
-    )
-  },
-  {
-    labelKey: "emergency.rabies", search: "rabies", icon: (
-      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
-        <path d="M10 5.172C10 3.782 8.423 2.679 6.5 3.5 4.577 4.321 4 6.5 4 8c0 3 1.5 5 3 6.5l5 5 5-5c1.5-1.5 3-3.5 3-6.5 0-1.5-.577-3.679-2.5-4.5-1.923-.821-3.5.282-3.5 1.672" />
-        <path d="M12 8v4m-2-2h4" />
-      </svg>
-    )
-  }
+const POPULAR_SEARCHES = ["rental mobil", "oleh-oleh", "rumah sakit", "puskesmas", "laundry"];
+const CATEGORY_FALLBACK = [
+  { slug: "jasa", name: "Jasa" }, { slug: "kuliner", name: "Kuliner" },
+  { slug: "kesehatan", name: "Kesehatan" }, { slug: "transportasi", name: "Otomotif" },
+  { slug: "laundry", name: "Laundry" }, { slug: "penginapan", name: "Penginapan" },
+  { slug: "oleh-oleh", name: "Oleh-Oleh" }, { slug: "lainnya", name: "Lainnya" },
 ];
 
-const SEARCH_RECOMMENDATIONS = [
-  "Rabies",
-  "Rumah Sakit",
-  "Puskesmas",
-  "Polisi",
-  "Pemadam Kebakaran",
-  "Ambulans",
-  "PLN",
-  "PDAM",
-];
+function PinIcon({ className = "" }: { className?: string }) {
+  return <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden="true"><path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" /></svg>;
+}
+
+function ArrowIcon({ className = "" }: { className?: string }) {
+  return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>;
+}
+
+function SearchIcon({ className = "" }: { className?: string }) {
+  return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={className} aria-hidden="true"><circle cx="11" cy="11" r="6.5" /><path strokeLinecap="round" d="m16 16 4.25 4.25" /></svg>;
+}
+
+function ChatIcon({ className = "" }: { className?: string }) {
+  return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true"><path d="M20.5 11.4a8.3 8.3 0 0 1-8.6 8.1 9.8 9.8 0 0 1-3.6-.7L4 20l1.3-3.7a7.7 7.7 0 0 1-1.8-4.9 8.3 8.3 0 0 1 8.5-8.1 8.3 8.3 0 0 1 8.5 8.1Z"/><path d="M8.3 11.5h.1m3.5 0h.1m3.5 0h.1" strokeWidth="2.7"/></svg>;
+}
+
+function SirenIcon({ className = "" }: { className?: string }) {
+  return <svg viewBox="0 0 64 64" fill="none" className={className} aria-hidden="true"><path d="M21 43V29.5C21 22.6 25.9 17 32 17s11 5.6 11 12.5V43" fill="#FF4A50"/><path d="M17 46.5h30M24 43h16" stroke="#D8242D" strokeWidth="4" strokeLinecap="round"/><path d="M32 9V3M48.3 15.7l4.2-4.2M15.7 15.7l-4.2-4.2M52 31h6M6 31h6" stroke="#FF4A50" strokeWidth="3" strokeLinecap="round"/><path d="M28 24.5c1.1-1.2 2.4-1.8 4-1.8" stroke="#FFADB0" strokeWidth="3" strokeLinecap="round"/></svg>;
+}
+
+function StoreIllustration() {
+  return <div className="pointer-events-none absolute bottom-0 right-0 hidden h-full w-[330px] min-[650px]:block" aria-hidden="true">
+    <svg viewBox="0 0 330 190" className="absolute bottom-[-5px] right-[-8px] h-[185px] w-[322px]">
+      <path d="M177 177h137" stroke="#55E39A" strokeWidth="5" strokeLinecap="round" opacity=".55"/>
+      <path d="M211 177V61c0-20 13-32 33-32h48c18 0 28 11 28 28v120" fill="#E7FFF1" stroke="#8FF0BA" strokeWidth="10"/>
+      <rect x="227" y="47" width="72" height="108" rx="8" fill="white"/>
+      <path d="M217 96h94l-8-29h-77l-9 29Z" fill="#B6F8CF"/>
+      <path d="M217 96c0 10 16 10 16 0 0 10 17 10 17 0 0 10 16 10 16 0 0 10 17 10 17 0 0 10 19 10 19 0" fill="#43D789" stroke="#20A969" strokeWidth="3" strokeLinejoin="round"/>
+      <rect x="238" y="108" width="53" height="46" rx="3" fill="#45D98C"/>
+      <rect x="257" y="123" width="16" height="31" rx="2" fill="#08785B"/>
+      <rect x="244" y="55" width="37" height="5" rx="2.5" fill="#A8EFC7"/>
+      <rect x="233" y="39" width="59" height="5" rx="2.5" fill="#A8EFC7"/>
+      <path d="m311 71 13-8m-11 20 16-1m-19 12 12 7" stroke="#D5F23E" strokeWidth="5" strokeLinecap="round"/>
+    </svg>
+    <div className="absolute right-5 top-3 rounded-[17px] bg-white px-4 py-2 text-center text-[14px] font-extrabold leading-[18px] text-primary-700 shadow-sm">Lebih mudah<br/>ditemukan!</div>
+  </div>;
+}
+
+function BookmarkButton({ contactId, compact = false }: { contactId: string; compact?: boolean }) {
+  const [saved, setSaved] = useState(() => isSaved(contactId));
+  return <button type="button" onClick={(event) => { event.stopPropagation(); setSaved(toggleSaved(contactId)); }} aria-label={saved ? "Hapus dari tersimpan" : "Simpan kontak"} className={`${compact ? "h-10 w-10" : "h-12 w-12"} absolute right-3 top-3 grid place-items-center rounded-full bg-white/95 text-[#71809B] shadow-[0_4px_14px_rgba(9,36,71,0.14)] transition active:scale-90`}>
+    {saved ? <HiBookmark className="h-5 w-5 text-primary-700" /> : <HiOutlineBookmark className="h-5 w-5" />}
+  </button>;
+}
+
+function ContactImage({ contact, className = "" }: { contact: Contact; className?: string }) {
+  return contact.imageUrl
+    ? <img src={contact.imageUrl} alt={contact.name} className={`${className} object-cover`} />
+    : <CategoryPhoto slug={contact.category?.slug} className={`${className} bg-gradient-to-br`} iconClassName="h-12 w-12" />;
+}
+
+function SectionHeading({ title, onMore }: { title: string; onMore?: () => void }) {
+  return <div className="home-section-heading mb-3 flex items-center justify-between px-0.5">
+    <h2 className="text-[25px] font-extrabold tracking-[-0.055em] text-[#08234B] min-[700px]:text-[29px] min-[700px]:leading-tight">{title}</h2>
+    {onMore && <button type="button" onClick={onMore} className="inline-flex items-center gap-1 text-[16px] font-bold text-primary-700 transition active:scale-95 min-[700px]:text-[19px]">Lihat semua <ArrowIcon className="h-4 w-4 min-[700px]:h-5 min-[700px]:w-5" /></button>}
+  </div>;
+}
 
 export default function MainScreen() {
-  const { t, categoryName } = useI18n();
-  const { citySlug, city, setCity, cities, setCities } = useCity();
   const navigate = useNavigate();
-  const [searchParams, setSearchParams] = useSearchParams();
-  const headerRef = useRef<HTMLDivElement>(null);
-  const [loadMoreNode, setLoadMoreNode] = useState<HTMLDivElement | null>(null);
-  const chipScrollRef = useRef<HTMLDivElement>(null);
-
-  const urlCategory = searchParams.get("category") || "";
-
-  const urlVerified = searchParams.get("verified") || "";
-
-  const [activeCategory, setActiveCategory] = useState(urlCategory);
-  const [verifiedFilter, setVerifiedFilter] = useState(urlVerified);
-  const [showFilterMenu, setShowFilterMenu] = useState(false);
-  const filterRef = useRef<HTMLDivElement>(null);
+  const { citySlug, city, cities, setCity, setCities } = useCity();
+  const { categories, isLoading: categoriesLoading } = useCategories();
+  const { categoryName, t } = useI18n();
   const [showCityPicker, setShowCityPicker] = useState(false);
-  const [showAll, setShowAll] = useState(false);
   const [showEmergency, setShowEmergency] = useState(false);
-  const [showCategories, setShowCategories] = useState(true);
-  const [showTutorial, setShowTutorial] = useState(false);
-  const catScrollRef = useRef<HTMLDivElement>(null);
-  const [catScrollProgress, setCatScrollProgress] = useState(0);
+  const [query, setQuery] = useState("");
+  const { data: citiesData } = useQuery<{ success: boolean; data: City[] }>({ queryKey: ["cities"], queryFn: async () => (await apiClient.get("/cities")).data });
 
-  // Close filter menu on outside click
-  useEffect(() => {
-    function handleClick(e: MouseEvent) {
-      if (filterRef.current && !filterRef.current.contains(e.target as Node)) {
-        setShowFilterMenu(false);
-      }
-    }
-    if (showFilterMenu) {
-      document.addEventListener("mousedown", handleClick);
-      return () => document.removeEventListener("mousedown", handleClick);
-    }
-  }, [showFilterMenu]);
+  useEffect(() => { if (citiesData?.data) setCities(citiesData.data); }, [citiesData, setCities]);
+  const { data: contactsData, isLoading: contactsLoading } = useContacts({ city: citySlug || undefined, limit: 10 });
+  const contacts = contactsData?.data ?? [];
+  const displayCategories = categories.length ? categories.slice(0, 8).map((category) => ({ slug: category.slug, name: categoryName(category) })) : CATEGORY_FALLBACK;
+  const selectedCityName = city?.name ?? "Sumbawa Besar";
+  const cityPickerVisible = showCityPicker || (!citySlug && (citiesData?.data?.length ?? cities.length) > 0);
+  const goToSearch = (keyword = query) => { const value = keyword.trim(); navigate(value ? `/search?q=${encodeURIComponent(value)}` : "/search"); };
+  const chooseCity = (nextCity: City) => { setCity(nextCity); setShowCityPicker(false); };
 
-  // ── Sticky search on scroll up ──
-  const [showStickySearch, setShowStickySearch] = useState(false);
-  const lastScrollY = useRef(0);
+  return <div className="min-h-screen bg-[radial-gradient(circle_at_30%_8%,rgba(226,241,231,.62),transparent_26%),#F8FAF7] pb-28 text-[#08234B] min-[700px]:pb-36">
+    {cityPickerVisible && <CityPickerOverlay cities={citiesData?.data ?? cities} onSelect={chooseCity} onClose={citySlug ? () => setShowCityPicker(false) : undefined} />}
+    <div className="home-shell mx-auto max-w-[850px] overflow-hidden px-5 pt-5 min-[700px]:px-[38px] min-[700px]:pt-6">
+      <header className="mb-4 flex items-start justify-between gap-3 min-[700px]:mb-[18px]">
+        <div><button type="button" onClick={() => navigate("/")} className="text-left text-[38px] font-extrabold leading-none tracking-[-0.07em] text-[#08234B] min-[700px]:text-[40px]">CariKontak</button><p className="mt-1 text-[16px] font-medium tracking-[-0.04em] text-[#697894] min-[700px]:text-[18px] min-[700px]:leading-tight">Temukan kebutuhanmu di Sumbawa</p></div>
+        <div className="flex shrink-0 items-center gap-2 pt-0.5 min-[700px]:gap-5"><LanguageToggle className="shadow-[0_5px_18px_rgba(4,44,37,0.06)] min-[700px]:min-h-[52px] min-[700px]:px-1" /><a href={`https://wa.me/6282338588078?text=${encodeURIComponent(t("home.helpWhatsappText"))}`} target="_blank" rel="noopener noreferrer" className="inline-flex h-12 items-center gap-2 rounded-full bg-white px-4 text-[15px] font-extrabold text-[#08234B] shadow-[0_6px_18px_rgba(4,44,37,0.10)] transition active:scale-95 min-[700px]:h-[58px] min-[700px]:gap-3 min-[700px]:px-7 min-[700px]:text-[21px]"><ChatIcon className="h-6 w-6 min-[700px]:h-7 min-[700px]:w-7"/><span className="hidden min-[410px]:inline">Bantuan</span></a></div>
+      </header>
 
-  useEffect(() => {
-    function onScroll() {
-      const y = window.scrollY;
-      const headerBottom = headerRef.current?.getBoundingClientRect().bottom ?? 0;
-      const scrollingUp = y < lastScrollY.current;
-      const pastHeader = headerBottom < 0;
+      <section className="rounded-[26px] bg-[radial-gradient(circle_at_12%_0%,#f6fbf8,transparent_42%),linear-gradient(135deg,#edf5ef,#e6efe9)] px-4 pb-5 pt-4 shadow-[0_10px_25px_rgba(15,67,54,0.04)] min-[700px]:rounded-[28px] min-[700px]:px-[19px] min-[700px]:pb-[20px] min-[700px]:pt-[18px]">
+        <div className="mb-4 flex items-center justify-between gap-2 min-[700px]:mb-[17px] min-[700px]:px-1"><button type="button" onClick={() => setShowCityPicker(true)} className="flex min-w-0 items-center gap-2 text-left active:scale-[0.98] min-[700px]:gap-3"><span className="grid h-9 w-9 place-items-center rounded-full bg-primary-700 text-white min-[700px]:h-[42px] min-[700px]:w-[42px]"><PinIcon className="h-5 w-5 min-[700px]:h-6 min-[700px]:w-6" /></span><span className="truncate text-[22px] font-extrabold tracking-[-0.05em] text-[#08234B] min-[700px]:text-[25px]">{selectedCityName}</span><svg viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5 shrink-0 text-[#697894] min-[700px]:h-6 min-[700px]:w-6"><path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.17l3.71-3.94a.75.75 0 111.09 1.03l-4.25 4.5a.75.75 0 01-1.09 0l-4.25-4.5a.75.75 0 01.02-1.05z" clipRule="evenodd" /></svg></button><button type="button" onClick={() => navigator.geolocation?.getCurrentPosition(() => setShowCityPicker(true), () => setShowCityPicker(true))} className="flex shrink-0 items-center gap-1.5 text-[14px] font-bold text-primary-700 min-[700px]:gap-3 min-[700px]:text-[19px]"><span className="grid h-7 w-7 place-items-center rounded-full border-2 border-primary-700 min-[700px]:h-9 min-[700px]:w-9"><span className="h-2 w-2 rounded-full bg-primary-700 min-[700px]:h-2.5 min-[700px]:w-2.5" /></span><span className="hidden min-[390px]:inline">Pakai lokasi saya</span></button></div>
+        <form onSubmit={(event) => { event.preventDefault(); goToSearch(); }} className="flex h-[76px] items-center rounded-[22px] bg-white p-2 shadow-[0_8px_18px_rgba(37,74,63,0.08)] min-[700px]:h-[84px] min-[700px]:rounded-[23px]"><SearchIcon className="ml-3 h-8 w-8 shrink-0 text-[#94A1BB] min-[700px]:ml-4 min-[700px]:h-10 min-[700px]:w-10" /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Cari rental mobil, oleh-oleh, servis AC..." className="min-w-0 flex-1 bg-transparent px-3 text-[16px] font-medium tracking-[-0.04em] text-[#08234B] outline-none placeholder:text-[#95A0B8] min-[700px]:px-5 min-[700px]:text-[20px]" /><button aria-label="Cari" type="submit" className="grid h-[60px] w-[60px] shrink-0 place-items-center rounded-[19px] bg-primary-700 text-white shadow-[0_6px_13px_rgba(0,111,74,0.22)] transition hover:bg-primary-600 active:scale-95 min-[700px]:h-[68px] min-[700px]:w-[78px] min-[700px]:rounded-[21px]"><ArrowIcon className="h-8 w-8 min-[700px]:h-10 min-[700px]:w-10" /></button></form>
+        <p className="mb-2 mt-3 text-[14px] font-medium text-[#60708A] min-[700px]:mt-2 min-[700px]:text-[17px]">Pencarian populer</p><div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-0.5 scrollbar-hide min-[700px]:gap-4">{POPULAR_SEARCHES.map((keyword) => <button key={keyword} type="button" onClick={() => goToSearch(keyword)} className="shrink-0 rounded-full bg-white px-4 py-2 text-[14px] font-bold text-[#315785] shadow-[0_4px_10px_rgba(29,73,64,0.06)] transition active:scale-95 min-[700px]:px-5 min-[700px]:text-[17px]">{keyword}</button>)}</div>
+      </section>
 
-      setShowStickySearch(scrollingUp && pastHeader);
-      lastScrollY.current = y;
-    }
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
+      <section className="mt-5 min-[700px]:mt-[18px]"><button type="button" onClick={() => setShowEmergency((value) => !value)} className="flex w-full items-center justify-between rounded-[22px] bg-[linear-gradient(105deg,#fff6f6,#fff1f5)] px-4 py-4 text-left shadow-[0_8px_20px_rgba(126,52,67,0.08)] transition active:scale-[0.99] min-[700px]:h-[112px] min-[700px]:rounded-[23px] min-[700px]:px-[18px]"><span className="flex items-center gap-4 min-[700px]:gap-5"><span className="grid h-[72px] w-[72px] place-items-center rounded-[19px] bg-[#FFE0E0]"><SirenIcon className="h-[50px] w-[50px]"/></span><span><span className="block text-[20px] font-extrabold tracking-[-0.05em] text-[#08234B] min-[700px]:text-[23px]">Panggilan Darurat</span><span className="mt-0.5 block text-[16px] font-medium text-[#8190AA] min-[700px]:text-[19px]">Polisi · Ambulans · Damkar</span></span></span><svg viewBox="0 0 20 20" fill="currentColor" className={`h-6 w-6 text-[#95A0B8] transition-transform min-[700px]:h-7 min-[700px]:w-7 ${showEmergency ? "rotate-90" : ""}`}><path fillRule="evenodd" d="M7.23 4.21a.75.75 0 011.06.02L12.5 8.7a1.75 1.75 0 010 2.6l-4.21 4.47a.75.75 0 11-1.09-1.03l4.21-4.47a.25.25 0 000-.34L7.2 5.26a.75.75 0 01.03-1.05z" clipRule="evenodd" /></svg></button>{showEmergency && <div className="mt-3 grid grid-cols-3 gap-2 rounded-[20px] bg-white p-3 shadow-[0_6px_18px_rgba(15,47,45,0.07)]">{[{ label: "Polisi", phone: "110" }, { label: "Ambulans", phone: "119" }, { label: "Damkar", phone: "113" }].map((item) => <a key={item.label} href={`tel:${item.phone}`} className="rounded-2xl bg-[#F7F9F5] px-2 py-3 text-center text-[13px] font-bold text-[#08234B]"><span className="block text-primary-700">{item.phone}</span>{item.label}</a>)}</div>}</section>
 
-  // ── Data fetching ──
-  const { data: citiesData } = useQuery<{ success: boolean; data: City[] }>({
-    queryKey: ["cities"],
-    queryFn: async () => (await apiClient.get("/cities")).data,
-  });
+      <section className="mt-8 min-[700px]:mt-[35px]"><SectionHeading title="Pilihan di Sumbawa" onMore={() => navigate("/search")} />{contactsLoading ? <div className="flex gap-3 overflow-hidden"><div className="h-[422px] w-[322px] shrink-0 rounded-[22px] shimmer" /><div className="h-[422px] w-[322px] shrink-0 rounded-[22px] shimmer" /></div> : contacts.length ? <><div className="-mx-5 flex snap-x gap-3 overflow-x-auto px-5 pb-3 scrollbar-hide min-[700px]:-mx-[15px] min-[700px]:gap-2.5 min-[700px]:px-[15px]">{contacts.slice(0, 6).map((contact) => <article key={contact.id} onClick={() => navigate(`/kontak/${contact.id}`)} className="relative w-[312px] shrink-0 snap-start overflow-hidden rounded-[22px] bg-white p-3 shadow-[0_8px_20px_rgba(16,46,70,0.09)] transition active:scale-[0.98] min-[700px]:h-[422px] min-[700px]:w-[322px]"><div className="relative h-[180px] overflow-hidden rounded-[15px] bg-[#E8F0E8]"><ContactImage contact={contact} className="h-full w-full" /><BookmarkButton contactId={contact.id} /></div><h3 className="mt-2 truncate text-[20px] font-extrabold tracking-[-0.055em] text-[#08234B] min-[700px]:text-[21px] min-[700px]:leading-tight">{contact.name}</h3><p className="mt-1 flex items-center gap-1.5 truncate text-[14px] font-medium text-[#7988A2] min-[700px]:text-[15px]"><PinIcon className="h-4 w-4 shrink-0 text-primary-700" />{categoryName(contact.category)} <span>·</span> {contact.city?.name ?? selectedCityName}</p><p className="mt-2 h-[50px] overflow-hidden text-[15px] leading-6 text-[#74829C] min-[700px]:h-[66px]">{contact.description ?? "Temukan informasi, alamat, dan kontak usaha di sekitar Anda."}</p><div className="mt-3 flex gap-2"><a href={formatWhatsAppUrl(contact.phone)} target="_blank" rel="noopener noreferrer" onClick={(event) => event.stopPropagation()} className="flex h-12 flex-1 items-center justify-center gap-2 rounded-[14px] bg-primary-700 px-3 text-[15px] font-bold text-white transition hover:bg-primary-600 active:scale-95"><FaWhatsapp className="h-5 w-5" />WhatsApp</a><button type="button" onClick={(event) => { event.stopPropagation(); navigate(`/kontak/${contact.id}`); }} className="h-12 rounded-[14px] border border-[#DDE4ED] px-4 text-[14px] font-bold text-[#08234B] transition active:scale-95">Lihat Detail</button></div></article>)}</div><div className="mt-1 flex justify-center gap-2"><span className="h-2.5 w-12 rounded-full bg-primary-700" /><span className="h-2.5 w-12 rounded-full bg-[#D5D9DB]" /><span className="h-2.5 w-12 rounded-full bg-[#D5D9DB]" /></div></> : <div className="rounded-[22px] bg-white p-8 text-center text-[15px] text-[#71809B] min-[700px]:h-[422px] min-[700px]:pt-48">Belum ada pilihan untuk kota ini.</div>}</section>
 
-  useEffect(() => {
-    if (citiesData?.data) setCities(citiesData.data);
-  }, [citiesData, setCities]);
+      <section className="mt-9 min-[700px]:mt-[35px]"><SectionHeading title="Kategori Populer" onMore={() => navigate("/search")} /><div className="grid grid-cols-4 gap-3 min-[700px]:gap-[13px]">{categoriesLoading ? Array.from({ length: 8 }).map((_, index) => <div key={index} className="h-[114px] rounded-[20px] shimmer" />) : displayCategories.map((category) => <button key={category.slug} type="button" onClick={() => navigate(`/search?category=${encodeURIComponent(category.slug)}`)} className="flex h-[114px] flex-col items-center justify-center gap-2 rounded-[20px] bg-white px-2 shadow-[0_7px_16px_rgba(11,49,45,0.06)] transition hover:-translate-y-0.5 active:scale-95 min-[700px]:h-[109px] min-[700px]:gap-2.5"><CategoryIcon slug={category.slug} className="h-8 w-8 text-[#08234B] min-[700px]:h-10 min-[700px]:w-10" /><span className="max-w-full truncate text-[14px] font-bold tracking-[-0.04em] text-[#08234B] min-[700px]:text-[17px]">{category.name}</span></button>)}</div></section>
 
-  const needsCityPicker = !citySlug && citiesData?.data && citiesData.data.length > 0;
+      <section className="relative mt-8 overflow-hidden rounded-[22px] bg-[radial-gradient(circle_at_92%_12%,#15795c,transparent_32%),linear-gradient(120deg,#003f32,#007352)] px-5 py-5 text-white shadow-[0_12px_25px_rgba(0,91,69,0.20)] min-[700px]:mt-[20px] min-[700px]:h-[184px] min-[700px]:rounded-[20px] min-[700px]:px-[32px] min-[700px]:py-[21px]"><div className="relative z-10 max-w-[260px] min-[700px]:max-w-[455px]"><h2 className="text-[24px] font-extrabold leading-tight tracking-[-0.055em] min-[700px]:text-[31px]">Punya usaha di Sumbawa?</h2><p className="mt-1.5 text-[15px] leading-5 text-white/90 min-[700px]:max-w-[430px] min-[700px]:text-[18px] min-[700px]:leading-6">Jangan cuma bagikan nomor WhatsApp. Buat halaman usaha dengan katalog, lokasi, dan lainnya.</p><button type="button" onClick={() => navigate("/submit")} className="mt-4 rounded-[14px] bg-white px-5 py-3 text-[15px] font-extrabold text-primary-700 transition active:scale-95 min-[700px]:mt-3 min-[700px]:min-w-[207px] min-[700px]:py-2.5 min-[700px]:text-[17px]">Daftarkan Usaha</button></div><div className="absolute bottom-[-18px] right-[-5px] h-36 w-32 rounded-t-[38px] border-[7px] border-[#B5FFB8] bg-white/95 shadow-[inset_0_0_0_6px_#106f55] min-[650px]:hidden"><div className="absolute -top-4 left-4 right-4 rounded-xl bg-[#B5FFB8] px-2 py-1 text-center text-[10px] font-extrabold leading-3 text-primary-700">Lebih mudah ditemukan!</div><div className="mx-auto mt-10 h-12 w-20 rounded-t-xl bg-[#89E6A4]" /></div><StoreIllustration /></section>
 
-  const { categories: categoriesData, isLoading: categoriesLoading } = useCategories();
-
-  const { data: recentData, isLoading: recentLoading } = useContacts({
-    city: citySlug || undefined,
-    limit: 5,
-  });
-
-  // ── Infinite scroll for filtered results ──
-  const isFiltered = !!activeCategory || !!verifiedFilter || showAll;
-
-  const {
-    data: infiniteData,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
-    isLoading,
-  } = useInfiniteContacts({
-    city: citySlug || undefined,
-    category: activeCategory || undefined,
-    verified: verifiedFilter || undefined,
-    enabled: isFiltered,
-  });
-
-  // Intersection observer for infinite scroll. The sentinel lives in state so
-  // the observer attaches when the node mounts: `hasNextPage` turns true before
-  // the filtered list (and its sentinel) is on screen, so an effect keyed only
-  // on it would run while there is nothing to observe and never run again.
-  useEffect(() => {
-    if (!loadMoreNode || !hasNextPage || isFetchingNextPage) return;
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting) fetchNextPage();
-      },
-      { rootMargin: "200px" }
-    );
-    observer.observe(loadMoreNode);
-    return () => observer.disconnect();
-  }, [loadMoreNode, hasNextPage, isFetchingNextPage, fetchNextPage]);
-
-  const allContacts = infiniteData?.pages.flatMap((p) => p.data) ?? [];
-  const total = infiniteData?.pages[0]?.meta.total ?? 0;
-
-  // ── URL sync ──
-  useEffect(() => {
-    const params = new URLSearchParams();
-    if (activeCategory) params.set("category", activeCategory);
-    if (verifiedFilter) params.set("verified", verifiedFilter);
-    setSearchParams(params, { replace: true });
-  }, [activeCategory, verifiedFilter, setSearchParams]);
-
-  useEffect(() => {
-    setActiveCategory(searchParams.get("category") || "");
-  }, []);
-
-  // ── Keyboard shortcut ──
-  useEffect(() => {
-    function handleKeyDown(e: KeyboardEvent) {
-      if (e.key === "/" && document.activeElement?.tagName !== "INPUT" && document.activeElement?.tagName !== "TEXTAREA") {
-        e.preventDefault();
-        navigate("/search");
-      }
-    }
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [navigate]);
-
-  function goToSearch(keyword: string) {
-    navigate(`/search?q=${encodeURIComponent(keyword)}`);
-  }
-
-  function handleCategoryClick(slug: string) {
-    const next = activeCategory === slug ? "" : slug;
-    setActiveCategory(next);
-
-    if (next) {
-      setTimeout(() => {
-        if (chipScrollRef.current) {
-          const container = chipScrollRef.current;
-          const chip = container.querySelector(`[data-slug="${next}"]`) as HTMLElement | null;
-          if (chip) {
-            container.scrollTo({ left: chip.offsetLeft - 64, behavior: "smooth" });
-          }
-        }
-        const searchNode = document.getElementById("hero-search");
-        if (searchNode) {
-          const y = searchNode.getBoundingClientRect().top + window.scrollY - 16;
-          window.scrollTo({ top: y, behavior: "smooth" });
-        }
-      }, 50);
-    } else {
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    }
-  }
-
-  function handleClearFilters() {
-    setActiveCategory("");
-    setVerifiedFilter("");
-    setShowAll(false);
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  }
-
-  useEffect(() => {
-    const handleReset = () => handleClearFilters();
-    window.addEventListener("reset-home", handleReset);
-    return () => window.removeEventListener("reset-home", handleReset);
-  }, []);
-
-  function handleCitySelect(c: City) {
-    setCity(c);
-    setShowCityPicker(false);
-    // Trigger onboarding tutorial for first-time users
-    if (!hasCompletedOnboarding()) {
-      setTimeout(() => setShowTutorial(true), 400);
-    }
-  }
-
-  const categories = categoriesData ?? [];
-  const cityPickerVisible = needsCityPicker || showCityPicker;
-
-  // ── Derived stats (real data from the local cache, scoped to the city) ──
-  const { contacts: allCachedContacts } = useContactsData();
-  const { totalKontak, newThisWeek, categoryCounts } = useMemo(() => {
-    const inCity = citySlug
-      ? allCachedContacts.filter((c) => c.city?.slug === citySlug)
-      : allCachedContacts;
-    const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
-    const counts: Record<string, number> = {};
-    let recent = 0;
-    for (const c of inCity) {
-      const slug = c.category?.slug;
-      if (slug) counts[slug] = (counts[slug] ?? 0) + 1;
-      if (new Date(c.createdAt).getTime() >= weekAgo) recent += 1;
-    }
-    return { totalKontak: inCity.length, newThisWeek: recent, categoryCounts: counts };
-  }, [allCachedContacts, citySlug]);
-
-  // ── Category scroll progress ──
-  useEffect(() => {
-    const el = catScrollRef.current;
-    if (!el) return;
-    function onScroll() {
-      if (!el) return;
-      const maxScroll = el.scrollWidth - el.clientWidth;
-      setCatScrollProgress(maxScroll > 0 ? el.scrollLeft / maxScroll : 0);
-    }
-    el.addEventListener("scroll", onScroll, { passive: true });
-    return () => el.removeEventListener("scroll", onScroll);
-  }, [categories.length]);
-
-  return (
-    <div className="min-h-screen bg-[#F1F3EE] max-w-md mx-auto relative pb-24">
-      {cityPickerVisible && (
-        <CityPickerOverlay
-          cities={citiesData?.data ?? cities}
-          onSelect={handleCitySelect}
-          onClose={citySlug ? () => setShowCityPicker(false) : undefined}
-        />
-      )}
-
-      {/* Onboarding Tutorial */}
-      <OnboardingTutorial
-        show={showTutorial}
-        onComplete={() => setShowTutorial(false)}
-      />
-
-      {/* ── Sticky search bar ── */}
-      <div
-        className={`fixed top-0 left-0 right-0 z-30 max-w-md mx-auto transition-all duration-300 ${showStickySearch ? "translate-y-0 opacity-100" : "-translate-y-full opacity-0 pointer-events-none"
-          }`}
-      >
-        <div className="bg-white/95 backdrop-blur-md px-4 py-3 shadow-[0_4px_20px_rgba(0,0,0,0.06)] border-b border-gray-100">
-          <div
-            onClick={() => navigate("/search")}
-            className="flex items-center bg-white border border-gray-200 rounded-full p-1 shadow-sm cursor-pointer hover:shadow-md transition-all group"
-          >
-            <div className="pl-3.5 text-gray-400 group-hover:text-[#1A5B45] transition-colors">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-            </div>
-            <span className="flex-1 h-9 pl-2.5 pr-2 text-[14px] text-gray-500 font-medium flex items-center truncate">{t("home.searchInCity", { city: city?.name ?? t("home.nearYou") })}</span>
-
-          </div>
-        </div>
-      </div>
-
-      {/* ── Header ── */}
-      <div ref={headerRef} className="px-5 pt-6 pb-1">
-        {/* Top row: brand + help button */}
-        <div className="flex items-center justify-between mb-5">
-          <span className="text-[26px] font-extrabold text-gray-900 font-display tracking-tight">
-            CariKontak
-          </span>
-          <div className="flex items-center gap-2">
-            <LanguageToggle />
-            <a
-              href={`https://wa.me/6282338588078?text=${encodeURIComponent(t("home.helpWhatsappText"))}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-white border border-gray-200/70 shadow-[0_1px_3px_rgba(0,0,0,0.05)] active:scale-95 transition-transform"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-              </svg>
-              <span className="text-sm font-bold text-gray-800">{t("home.help")}</span>
-            </a>
-          </div>
-        </div>
-
-        {/* Hero panel — soft green, holds location + search + stats */}
-        <div className="bg-[#E4EDE3] rounded-3xl p-4 shadow-[0_1px_3px_rgba(0,0,0,0.03)]">
-          {/* Location selector */}
-          <button onClick={() => setShowCityPicker(true)} className="flex items-center gap-2 mb-3.5 w-max active:scale-95 transition-transform">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-primary-600" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
-            </svg>
-            <span className="text-gray-900 font-bold text-lg tracking-tight">{city?.name ?? t("home.selectCity")}</span>
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-            </svg>
-          </button>
-
-          {/* Search bar */}
-          <div
-            id="hero-search"
-            onClick={() => navigate("/search")}
-            className="flex items-center bg-white rounded-2xl p-1.5 shadow-[0_2px_8px_rgba(0,0,0,0.04)] cursor-pointer hover:shadow-[0_4px_12px_rgba(0,0,0,0.07)] transition-shadow"
-          >
-            <div className="pl-3 text-gray-400">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-            </div>
-            <span className="flex-1 h-10 pl-3 pr-2 text-[15px] text-gray-400 flex items-center truncate">{t("home.searchPlaceholder")}</span>
-            <button className="w-12 h-11 rounded-xl bg-primary-700 hover:bg-primary-600 flex items-center justify-center text-white active:scale-95 transition-all">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-              </svg>
-            </button>
-          </div>
-
-          {/* Stats strip */}
-          <div className="flex items-center gap-2.5 mt-3.5 px-1 text-[13px] text-gray-500">
-            <span><span className="font-bold text-gray-900">{totalKontak}</span> {t("home.statContacts")}</span>
-            <span className="w-1 h-1 rounded-full bg-gray-400/60" />
-            <span><span className="font-bold text-gray-900">{categories.length}</span> {t("home.statCategories")}</span>
-            {newThisWeek > 0 && (
-              <>
-                <span className="w-1 h-1 rounded-full bg-gray-400/60" />
-                <span><span className="font-bold text-primary-700">+{newThisWeek}</span> {t("home.statThisWeek")}</span>
-              </>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* ── Content ── */}
-      <div className="pt-5 px-4 relative z-20">
-
-        {/* ── Browse mode ── */}
-        {!isFiltered && (
-          <>
-            {/* Emergency Contacts Button */}
-            <div className="mb-7 animate-fade-in-up">
-              <button
-                onClick={() => setShowEmergency(!showEmergency)}
-                className="w-full flex items-center justify-between bg-white rounded-2xl px-3.5 py-3 shadow-[0_2px_8px_rgba(0,0,0,0.04)] active:scale-[0.98] transition-all"
-              >
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-11 h-11 rounded-xl bg-[#FDECEC] flex items-center justify-center flex-shrink-0 text-red-500">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-[22px] w-[22px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
-                    </svg>
-                  </div>
-                  <div className="text-left min-w-0">
-                    <p className="text-[15px] font-bold text-gray-900 tracking-tight leading-tight">{t("home.emergencyTitle")}</p>
-                    <p className="text-[12.5px] text-gray-400 leading-tight mt-0.5 truncate">{t("home.emergencySubtitle")}</p>
-                  </div>
-                </div>
-                <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 text-gray-400 flex-shrink-0 transition-transform ${showEmergency ? 'rotate-90' : ''}`} viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
-                </svg>
-              </button>
-
-              {/* Collapsible Content */}
-              <div
-                className={`overflow-hidden ${showEmergency ? 'max-h-[200px] mt-3 opacity-100' : 'max-h-0 opacity-0'}`}
-              >
-                <div className="flex gap-2.5 overflow-x-auto scrollbar-hide px-1 pb-1">
-                  {EMERGENCY_CONTACTS.map((ec) => {
-                    const cardClass = "flex-shrink-0 w-[90px] flex flex-col items-center gap-2 bg-white rounded-2xl py-3.5 border border-red-50 shadow-sm shadow-red-100/50 active:scale-95 transition-transform";
-                    const inner = (
-                      <>
-                        <div className="w-[38px] h-[38px] rounded-full bg-[#FFF5F5] flex items-center justify-center flex-shrink-0 text-red-500">
-                          {ec.icon}
-                        </div>
-                        <div className="text-center">
-                          <p className="text-[10px] font-bold text-gray-900 leading-tight mb-1">{t(ec.labelKey)}</p>
-                          <p className="text-[10px] text-red-500 font-semibold leading-none">
-                            {ec.phone ?? t("emergency.searchAction")}
-                          </p>
-                        </div>
-                      </>
-                    );
-
-                    return ec.search ? (
-                      <button
-                        key={ec.labelKey}
-                        type="button"
-                        onClick={() => goToSearch(ec.search!)}
-                        className={cardClass}
-                      >
-                        {inner}
-                      </button>
-                    ) : (
-                      <a key={ec.labelKey} href={`tel:${ec.phone}`} className={cardClass}>
-                        {inner}
-                      </a>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
-
-            {/* Search recommendations */}
-            <div className="mb-7">
-              <h3 className="text-[12px] font-bold text-gray-400 uppercase tracking-[0.12em] mb-3 px-1">
-                {t("home.recommendTitle")}
-              </h3>
-              <div className="flex gap-2 overflow-x-auto scrollbar-hide px-1 pb-1">
-                {SEARCH_RECOMMENDATIONS.map((keyword) => (
-                  <button
-                    key={keyword}
-                    type="button"
-                    onClick={() => goToSearch(keyword)}
-                    className="flex-shrink-0 flex items-center gap-1.5 bg-white rounded-full pl-3 pr-3.5 py-2 shadow-[0_2px_8px_rgba(0,0,0,0.04)] active:scale-95 hover:shadow-[0_4px_12px_rgba(0,0,0,0.07)] transition-all"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 text-gray-400 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-                      <circle cx="11" cy="11" r="7" /><path d="M21 21l-4.35-4.35" />
-                    </svg>
-                    <span className="text-[13px] font-semibold text-gray-700 whitespace-nowrap">{keyword}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Categories */}
-            <div className="mb-8">
-              <button
-                onClick={() => setShowCategories((v) => !v)}
-                className="w-full flex items-center justify-between mb-3 px-1 active:opacity-70 transition-opacity"
-              >
-                <h3 className="text-[12px] font-bold text-gray-400 uppercase tracking-[0.12em]">{t("home.categories")}</h3>
-                <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 text-gray-400 transition-transform ${showCategories ? "" : "-rotate-90"}`} viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-                </svg>
-              </button>
-              {showCategories && (
-                categoriesLoading ? (
-                  <div className="grid grid-cols-2 gap-3">
-                    {Array.from({ length: 8 }).map((_, i) => (
-                      <div key={i} className="flex items-center gap-3 bg-white rounded-2xl p-3.5 shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
-                        <div className="w-11 h-11 rounded-xl shimmer flex-shrink-0" />
-                        <div className="flex-1">
-                          <div className="h-3 w-16 shimmer rounded mb-2" />
-                          <div className="h-2.5 w-10 shimmer rounded" />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-2 gap-3">
-                    {categories.map((cat) => (
-                      <button
-                        key={cat.slug}
-                        onClick={() => handleCategoryClick(cat.slug)}
-                        className="flex items-center gap-3 bg-white rounded-2xl p-3.5 shadow-[0_2px_8px_rgba(0,0,0,0.04)] group active:scale-[0.97] hover:shadow-[0_4px_12px_rgba(0,0,0,0.07)] transition-all text-left"
-                      >
-                        <div className="w-11 h-11 rounded-xl bg-gray-100 text-gray-600 flex items-center justify-center flex-shrink-0 group-hover:bg-gray-200 transition-colors">
-                          <CategoryIcon slug={cat.slug} className="w-[22px] h-[22px]" />
-                        </div>
-                        <div className="min-w-0">
-                          <p className="text-[15px] font-bold text-gray-900 leading-tight truncate">{categoryName(cat)}</p>
-                          <p className="text-[12.5px] text-gray-400 leading-tight mt-0.5">{t("common.contactsCount", { count: categoryCounts[cat.slug] ?? 0 })}</p>
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                )
-              )}
-            </div>
-
-            {/* Recent contacts */}
-            {recentLoading ? (
-              <RecentContactsShimmer />
-            ) : recentData?.data && recentData.data.length > 0 ? (
-              <div className="pb-6">
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-[12px] font-bold text-gray-400 uppercase tracking-[0.12em]">
-                    {t("home.recent")}
-                  </h3>
-                  <button
-                    onClick={() => {
-                      setShowAll(true);
-                      setTimeout(() => {
-                        const searchNode = document.getElementById("hero-search");
-                        if (searchNode) {
-                          const y = searchNode.getBoundingClientRect().top + window.scrollY - 16;
-                          window.scrollTo({ top: y, behavior: "smooth" });
-                        }
-                      }, 50);
-                    }}
-                    className="text-[13px] font-bold text-primary-600 active:scale-95 transition-transform"
-                  >
-                    {t("home.seeAll")} &rarr;
-                  </button>
-                </div>
-                <div className="space-y-3">
-                  {recentData.data.slice(0, 5).map((contact) => (
-                    <ContactCard key={contact.id} contact={contact} />
-                  ))}
-                </div>
-              </div>
-            ) : (
-              <div className="text-center py-12">
-                <p className="text-sm text-gray-400">{t("home.noContactsInCity", { city: city?.name ?? t("home.thisCity") })}</p>
-              </div>
-            )}
-          </>
-        )}
-
-        {/* ── Filtered mode ── */}
-        {isFiltered && (
-          <div className="pt-3 pb-6">
-            {/* Category chips + filter icon */}
-            <div className="flex items-center gap-2 pb-3 -mx-4 px-4">
-              {/* Filter icon */}
-              <div ref={filterRef} className="relative flex-shrink-0">
-                <button
-                  onClick={() => setShowFilterMenu(!showFilterMenu)}
-                  className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${verifiedFilter
-                    ? "bg-blue-600 text-white"
-                    : "bg-gray-100 text-gray-500"
-                    }`}
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z" clipRule="evenodd" />
-                  </svg>
-                </button>
-                {showFilterMenu && (
-                  <div className="absolute top-full left-0 mt-1.5 bg-white rounded-xl shadow-lg border border-gray-100 py-1 z-30 min-w-[160px]">
-                    {([
-                      { value: "", label: t("filter.all") },
-                      { value: "true", label: t("filter.verified") },
-                      { value: "false", label: t("filter.unverified") },
-                    ] as const).map(({ value, label }) => (
-                      <button
-                        key={value}
-                        onClick={() => { setVerifiedFilter(value); setShowFilterMenu(false); }}
-                        className={`w-full text-left px-3.5 py-2 text-xs font-medium flex items-center gap-2 transition-colors ${verifiedFilter === value ? "text-blue-600 bg-blue-50" : "text-gray-700 hover:bg-gray-50"
-                          }`}
-                      >
-                        {value === "true" && (
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 text-blue-500" viewBox="0 0 24 24" fill="currentColor">
-                            <path fillRule="evenodd" d="M8.603 3.799A4.49 4.49 0 0112 2.25c1.357 0 2.573.6 3.397 1.549a4.49 4.49 0 013.498 1.307 4.491 4.491 0 011.307 3.497A4.49 4.49 0 0121.75 12a4.49 4.49 0 01-1.549 3.397 4.491 4.491 0 01-1.307 3.497 4.491 4.491 0 01-3.497 1.307A4.49 4.49 0 0112 21.75a4.49 4.49 0 01-3.397-1.549 4.49 4.49 0 01-3.498-1.306 4.491 4.491 0 01-1.307-3.498A4.49 4.49 0 012.25 12c0-1.357.6-2.573 1.549-3.397a4.49 4.49 0 011.307-3.497 4.49 4.49 0 013.497-1.307zm7.007 6.387a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z" clipRule="evenodd" />
-                          </svg>
-                        )}
-                        {label}
-                        {verifiedFilter === value && (
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 ml-auto text-blue-600" viewBox="0 0 20 20" fill="currentColor">
-                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                          </svg>
-                        )}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              <div ref={chipScrollRef} className="flex items-center gap-2 overflow-x-auto scrollbar-hide">
-                <button
-                  onClick={handleClearFilters}
-                  className={`flex-shrink-0 px-3.5 py-2 rounded-full text-xs font-semibold transition-colors ${!activeCategory
-                    ? "bg-primary-700 text-white shadow-sm"
-                    : "bg-white text-gray-600 shadow-sm border border-gray-100"
-                    }`}
-                >
-                  {t("filter.all")}
-                </button>
-
-                {categories.map((cat) => (
-                  <button
-                    key={cat.slug}
-                    data-slug={cat.slug}
-                    onClick={() => handleCategoryClick(cat.slug)}
-                    className={`flex-shrink-0 inline-flex items-center gap-1 px-3.5 py-2 rounded-full text-xs font-semibold transition-colors ${activeCategory === cat.slug
-                      ? "bg-primary-700 text-white shadow-sm"
-                      : "bg-white shadow-sm border border-gray-100 text-primary-700"
-                      }`}
-                  >
-                    <CategoryIcon slug={cat.slug} className="w-3.5 h-3.5" />
-                    {categoryName(cat)}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Results header */}
-            <p className="text-xs text-gray-500 mb-3">
-              {`${t("common.contactsCount", { count: total })} ${categoryName(categories.find((c) => c.slug === activeCategory))}`.trim()}
-              {city ? ` ${t("common.inCity", { city: city.name })}` : ""}
-            </p>
-
-            {/* Contact list */}
-            {isLoading ? (
-              <ContactListShimmer count={4} />
-            ) : (
-              <>
-                <div className="space-y-3">
-                  {allContacts.map((contact) => (
-                    <ContactCard key={contact.id} contact={contact} />
-                  ))}
-                  {allContacts.length === 0 && (
-                    <div className="text-center py-16">
-                      <p className="text-gray-500 text-sm">{t("search.noResults")}</p>
-                      <button onClick={handleClearFilters} className="text-primary-600 text-sm font-medium mt-2">
-                        {t("filter.clear")}
-                      </button>
-                    </div>
-                  )}
-                </div>
-
-                {hasNextPage && (
-                  <div ref={setLoadMoreNode} className="py-4">
-                    {isFetchingNextPage ? (
-                      <ContactListShimmer count={2} />
-                    ) : (
-                      <div className="h-4" />
-                    )}
-                  </div>
-                )}
-
-              </>
-            )}
-          </div>
-        )}
-      </div>
+      <section className="mb-3 mt-8 min-[700px]:mt-[24px]"><SectionHeading title="Terbaru di CariKontak" onMore={() => navigate("/search")} /><div className="space-y-3">{contacts.slice(0, 3).map((contact) => <article key={contact.id} onClick={() => navigate(`/kontak/${contact.id}`)} className="relative flex gap-3 rounded-[21px] bg-white p-3 shadow-[0_7px_17px_rgba(14,43,66,0.07)] transition active:scale-[0.99] min-[700px]:min-h-[133px] min-[700px]:gap-5 min-[700px]:p-3"><div className="h-[94px] w-[94px] shrink-0 overflow-hidden rounded-[14px] bg-[#E8F0E8] min-[700px]:h-[118px] min-[700px]:w-[185px]"><ContactImage contact={contact} className="h-full w-full" /></div><div className="min-w-0 flex-1 pr-7 min-[700px]:pt-1"><h3 className="truncate text-[18px] font-extrabold tracking-[-0.05em] text-[#08234B] min-[700px]:text-[23px]">{contact.name}</h3><p className="mt-1 flex items-center gap-1.5 truncate text-[14px] font-medium text-[#7988A2] min-[700px]:text-[17px]"><PinIcon className="h-4 w-4 shrink-0 text-primary-700 min-[700px]:h-5 min-[700px]:w-5" />{categoryName(contact.category)} · {contact.city?.name ?? selectedCityName}</p><p className="mt-1 line-clamp-2 text-[14px] leading-5 text-[#74829C] min-[700px]:text-[17px] min-[700px]:leading-6">{contact.description ?? "Lihat informasi lengkap dan cara menghubungi."}</p></div><BookmarkButton contactId={contact.id} compact /></article>)}</div></section>
     </div>
-  );
+  </div>;
 }
