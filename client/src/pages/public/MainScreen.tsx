@@ -2,7 +2,13 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { FaWhatsapp } from "react-icons/fa";
-import { HiBookmark, HiOutlineBookmark } from "react-icons/hi2";
+import {
+  HiBookmark,
+  HiOutlineBookmark,
+  HiOutlineBuildingOffice2,
+  HiOutlineSquares2X2,
+  HiOutlineUserGroup,
+} from "react-icons/hi2";
 import { apiClient } from "../../lib/axios";
 import { useCity } from "../../context/CityContext";
 import { useCategories } from "../../context/CategoriesContext";
@@ -16,7 +22,6 @@ import { isSaved, toggleSaved } from "../../lib/saved";
 import { useI18n } from "../../i18n/LanguageContext";
 import type { City, Contact } from "../../types";
 
-const POPULAR_SEARCHES = ["rental mobil", "oleh-oleh", "rumah sakit", "puskesmas", "laundry"];
 const CATEGORY_FALLBACK = [
   { slug: "jasa", name: "Jasa" },
   { slug: "kuliner", name: "Kuliner" },
@@ -100,6 +105,8 @@ export default function MainScreen() {
   const { data: contactsData, isLoading: contactsLoading } = useContacts({ city: citySlug || undefined, limit: 10 });
   const contacts = contactsData?.data ?? [];
   const displayCategories = categories.length ? categories.slice(0, 8).map((category) => ({ slug: category.slug, name: categoryName(category) })) : CATEGORY_FALLBACK;
+  const totalContacts = contactsData?.meta?.total ?? contacts.length;
+  const totalCategories = categories.length || displayCategories.length;
   const selectedCityName = city?.name ?? "Sumbawa Besar";
   const cityPickerVisible = showCityPicker || (!citySlug && (citiesData?.data?.length ?? cities.length) > 0);
   const goToSearch = (keyword = query) => { const value = keyword.trim(); navigate(value ? `/search?q=${encodeURIComponent(value)}` : "/search"); };
@@ -108,18 +115,45 @@ export default function MainScreen() {
   return <div className="min-h-screen bg-[radial-gradient(circle_at_30%_8%,rgba(226,241,231,.62),transparent_26%),#F8FAF7] pb-[72px] text-[#08234B]">
     {cityPickerVisible && <CityPickerOverlay cities={citiesData?.data ?? cities} onSelect={chooseCity} onClose={citySlug ? () => setShowCityPicker(false) : undefined} />}
     <div className="mx-auto max-w-[425px] overflow-hidden px-5 pt-3 sm:shadow-[0_0_24px_rgba(15,47,45,0.06)]">
-      <header className="mb-1 flex h-[45px] items-start justify-between gap-2">
-        <div><button type="button" onClick={() => navigate("/")} className="text-left text-[28px] font-extrabold leading-none tracking-[-0.07em] text-[#08234B]">CariKontak</button><p className="mt-0.5 whitespace-nowrap text-[10.5px] font-medium leading-[13px] tracking-[-0.04em] text-[#697894]">Temukan kebutuhanmu di Sumbawa</p></div>
-        <div className="flex shrink-0 items-center gap-2"><LanguageToggle className="shadow-[0_3px_9px_rgba(4,44,37,0.06)]" /><a href={`https://wa.me/6282338588078?text=${encodeURIComponent(t("home.helpWhatsappText"))}`} target="_blank" rel="noopener noreferrer" className="inline-flex h-8 items-center gap-1.5 rounded-full bg-white px-[13px] text-[12px] font-extrabold text-[#08234B] shadow-[0_3px_9px_rgba(4,44,37,0.10)] transition active:scale-95"><ChatIcon className="h-4 w-4" /><span className="hidden min-[390px]:inline">Bantuan</span></a></div>
-      </header>
+      <section className="relative h-[252px] overflow-hidden rounded-[22px] bg-[#E6F2E9] shadow-[0_8px_20px_rgba(13,74,57,0.10)]">
+        <img
+          src="/hero-sumbawa-v2.jpg"
+          alt=""
+          aria-hidden="true"
+          className="absolute inset-0 h-full w-full object-cover object-[58%_center]"
+        />
+        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(246,251,247,.97)_0%,rgba(240,249,242,.88)_49%,rgba(229,244,234,.30)_100%)]" />
+        <div className="absolute inset-0 bg-[linear-gradient(0deg,rgba(238,248,241,.97)_0%,rgba(238,248,241,.12)_48%,rgba(246,251,247,.32)_100%)]" />
 
-      <section className="h-[140px] rounded-2xl bg-[radial-gradient(circle_at_12%_0%,#f6fbf8,transparent_42%),linear-gradient(135deg,#edf5ef,#e6efe9)] px-2.5 pb-[9px] pt-[9px] shadow-[0_5px_13px_rgba(15,67,54,0.04)]">
-        <div className="mb-[7px] flex h-6 items-center justify-between gap-1">
-          <button type="button" onClick={() => setShowCityPicker(true)} className="flex min-w-0 items-center gap-1.5 text-left active:scale-[0.98]"><span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-primary-700 text-white"><PinIcon className="h-3.5 w-3.5" /></span><span className="truncate text-[15px] font-extrabold leading-none tracking-[-0.05em] text-[#08234B]">{selectedCityName}</span><svg viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5 shrink-0 text-[#697894]"><path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.17l3.71-3.94a.75.75 0 111.09 1.03l-4.25 4.5a.75.75 0 01-1.09 0l-4.25-4.5a.75.75 0 01.02-1.05z" clipRule="evenodd" /></svg></button>
-          <button type="button" onClick={() => navigator.geolocation?.getCurrentPosition(() => setShowCityPicker(true), () => setShowCityPicker(true))} className="flex shrink-0 items-center gap-1.5 text-[12px] font-bold text-primary-700"><span className="grid h-5 w-5 place-items-center rounded-full border border-primary-700"><span className="h-1.5 w-1.5 rounded-full bg-primary-700" /></span><span className="hidden min-[360px]:inline">Pakai lokasi saya</span></button>
+        <div className="relative z-10 flex h-full flex-col px-3.5 pb-3 pt-3">
+          <div className="flex items-center justify-between gap-2">
+            <button type="button" onClick={() => setShowCityPicker(true)} className="flex min-w-0 items-center gap-2 rounded-full bg-white/72 py-1 pl-1 pr-2.5 text-left shadow-[0_2px_10px_rgba(9,60,45,.08)] backdrop-blur-sm transition active:scale-[0.98]">
+              <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-primary-700 text-white"><PinIcon className="h-4 w-4" /></span>
+              <span className="truncate text-[13px] font-extrabold leading-none tracking-[-0.04em] text-[#08234B]">{selectedCityName}</span>
+              <svg viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5 shrink-0 text-primary-700"><path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.17l3.71-3.94a.75.75 0 111.09 1.03l-4.25 4.5a.75.75 0 01-1.09 0l-4.25-4.5a.75.75 0 01.02-1.05z" clipRule="evenodd" /></svg>
+            </button>
+            <div className="flex shrink-0 items-center gap-2"><LanguageToggle className="shadow-[0_3px_9px_rgba(4,44,37,0.06)]" /><a href={`https://wa.me/6282338588078?text=${encodeURIComponent(t("home.helpWhatsappText"))}`} target="_blank" rel="noopener noreferrer" className="inline-flex h-8 items-center gap-1.5 rounded-full bg-white px-[13px] text-[12px] font-extrabold text-[#08234B] shadow-[0_3px_9px_rgba(4,44,37,0.10)] transition active:scale-95"><ChatIcon className="h-4 w-4" /><span className="hidden min-[390px]:inline">Bantuan</span></a></div>
+
+            <button type="button" aria-label="Pakai lokasi saya" title="Pakai lokasi saya" onClick={() => navigator.geolocation?.getCurrentPosition(() => setShowCityPicker(true), () => setShowCityPicker(true))} className="grid h-8 w-8 shrink-0 place-items-center rounded-full border border-white/80 bg-white/80 text-primary-700 shadow-[0_2px_10px_rgba(9,60,45,.10)] backdrop-blur-sm transition active:scale-95"><span className="grid h-5 w-5 place-items-center rounded-full border-[1.5px] border-current"><span className="h-1.5 w-1.5 rounded-full bg-current" /></span></button>
+          </div>
+
+          <div className="mt-2.5 max-w-[265px]">
+            <h1 className="text-[27px] font-extrabold leading-[28px] tracking-[-0.065em] text-[#071F43]">Cari kebutuhanmu<br /><span className="text-primary-700">di Sumbawa</span></h1>
+            <p className="mt-1 max-w-[245px] text-[11px] font-medium leading-[14px] tracking-[-0.025em] text-[#5F6F86]">Temukan kontak usaha, layanan, dan tempat penting di sekitarmu, lalu langsung hubungi.</p>
+          </div>
+
+          <form onSubmit={(event) => { event.preventDefault(); goToSearch(); }} className="mt-auto flex h-12 items-center rounded-[15px] bg-white p-1 shadow-[0_5px_14px_rgba(21,66,53,0.13)]">
+            <SearchIcon className="ml-2 h-[22px] w-[22px] shrink-0 text-[#8998B1]" />
+            <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Cari rental mobil, rumah sakit, oleh-oleh..." className="min-w-0 flex-1 bg-transparent px-2 text-[12px] font-medium tracking-[-0.035em] text-[#08234B] outline-none placeholder:text-[#8D99AE]" />
+            <button aria-label="Cari" type="submit" className="grid h-10 w-12 shrink-0 place-items-center rounded-[12px] bg-primary-700 text-white shadow-[0_3px_8px_rgba(0,111,74,0.24)] transition hover:bg-primary-600 active:scale-95"><ArrowIcon className="h-[22px] w-[22px]" /></button>
+          </form>
+
+          <div className="mt-2 flex h-5 items-center divide-x divide-primary-700/15 text-[9.5px] font-bold leading-none tracking-[-0.03em] text-[#315F55]">
+            <span className="flex flex-1 items-center gap-1.5 pr-2"><HiOutlineBuildingOffice2 className="h-4 w-4 shrink-0 text-primary-700" />{totalContacts} kontak</span>
+            <span className="flex flex-1 items-center gap-1.5 px-2"><HiOutlineSquares2X2 className="h-4 w-4 shrink-0 text-primary-700" />{totalCategories} kategori</span>
+            <span className="flex flex-1 items-center gap-1.5 pl-2"><HiOutlineUserGroup className="h-4 w-4 shrink-0 text-primary-700" />Siap dihubungi</span>
+          </div>
         </div>
-        <form onSubmit={(event) => { event.preventDefault(); goToSearch(); }} className="flex h-11 items-center rounded-[13px] bg-white p-1 shadow-[0_4px_9px_rgba(37,74,63,0.08)]"><SearchIcon className="ml-2 h-[22px] w-[22px] shrink-0 text-[#94A1BB]" /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Cari rental mobil, oleh-oleh, servis AC..." className="min-w-0 flex-1 bg-transparent px-2 text-[14px] font-medium tracking-[-0.04em] text-[#08234B] outline-none placeholder:text-[#95A0B8]" /><button aria-label="Cari" type="submit" className="grid h-9 w-11 shrink-0 place-items-center rounded-xl bg-primary-700 text-white shadow-[0_3px_7px_rgba(0,111,74,0.22)] transition hover:bg-primary-600 active:scale-95"><ArrowIcon className="h-[22px] w-[22px]" /></button></form>
-        <p className="mb-[3px] mt-1 text-[11px] font-medium leading-[14px] text-[#60708A]">Pencarian populer</p><div className="-mx-0.5 flex gap-2 overflow-x-auto px-0.5 pb-px scrollbar-hide">{POPULAR_SEARCHES.map((keyword) => <button key={keyword} type="button" onClick={() => goToSearch(keyword)} className="h-[25px] shrink-0 rounded-full bg-white px-[11px] text-[11px] font-bold text-[#315785] shadow-[0_2px_5px_rgba(29,73,64,0.06)] transition active:scale-95">{keyword}</button>)}</div>
       </section>
 
       <section className="mt-[9px]">
