@@ -1,11 +1,12 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { HiBookmark, HiOutlineBookmark } from "react-icons/hi2";
 import { apiClient } from "../../lib/axios";
 import { useCity } from "../../context/CityContext";
 import { useCategories } from "../../context/CategoriesContext";
-import { useContacts } from "../../hooks/useContacts";
+import { useContactsData } from "../../context/ContactsContext";
+import { filterContacts } from "../../lib/localContacts";
 import { CityPickerOverlay } from "../../components/shared/CityPickerOverlay";
 import { CategoryIcon } from "../../components/shared/CategoryIcon";
 import { CategoryPhoto } from "../../components/shared/CategoryPhoto";
@@ -194,11 +195,22 @@ export default function MainScreen() {
   }, [gateInitialRender]);
 
   useEffect(() => { if (citiesData?.data) setCities(citiesData.data); }, [citiesData, setCities]);
-  const { data: contactsData, isLoading: contactsLoading } = useContacts({ city: citySlug || undefined, limit: 10 });
-  const contacts = contactsData?.data ?? [];
-  const verifiedContacts = contacts.filter((contact) => contact.isVerified);
+  const { contacts: allContacts, isLoading: contactsLoading } = useContactsData();
+  const contacts = useMemo(
+    () => filterContacts(allContacts, { city: citySlug || undefined }),
+    [allContacts, citySlug]
+  );
   const contactsWithPhotos = contacts.filter((contact) => Boolean(contact.imageUrl?.trim()));
-  const recommendedContacts = (verifiedContacts.length ? verifiedContacts : contactsWithPhotos).slice(0, 6);
+  const contactsWithoutPhotos = contacts.filter((contact) => !contact.imageUrl?.trim());
+  // Use the whole city's collection before selecting six cards. Photos make the
+  // recommendation carousel more useful, while verified contacts still lead
+  // within each group.
+  const recommendedContacts = [
+    ...contactsWithPhotos.filter((contact) => contact.isVerified),
+    ...contactsWithPhotos.filter((contact) => !contact.isVerified),
+    ...contactsWithoutPhotos.filter((contact) => contact.isVerified),
+    ...contactsWithoutPhotos.filter((contact) => !contact.isVerified),
+  ].slice(0, 6);
   const displayCategories = categories.length
     ? [...categories]
       .sort((a, b) => {
