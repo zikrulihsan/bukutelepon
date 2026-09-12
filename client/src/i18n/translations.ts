@@ -77,9 +77,13 @@ const id = {
   "home.emergencySubtitle": "Polisi · Ambulans · Damkar",
   "home.recommendTitle": "Rekomendasi Pencarian",
   "home.categories": "Kategori",
+  "home.popularCategories": "Kategori Populer",
   "home.recent": "Terbaru",
   "home.seeAll": "Lihat semua",
   "home.view": "Lihat",
+  "home.whatsInSumbawa": "Ada apa di Sumbawa?",
+  "home.featuredCardHint": "Temukan info lengkap dan cara menghubunginya.",
+  "home.viewDetails": "Lihat detail",
   "home.noContactsInCity": "Belum ada kontak di {city}",
 
   // ── Emergency numbers ──
@@ -387,9 +391,13 @@ const en: Record<TranslationKey, string> = {
   "home.emergencySubtitle": "Police · Ambulance · Fire",
   "home.recommendTitle": "Search Suggestions",
   "home.categories": "Categories",
+  "home.popularCategories": "Popular Categories",
   "home.recent": "Recent",
   "home.seeAll": "See all",
   "home.view": "View",
+  "home.whatsInSumbawa": "What's in Sumbawa?",
+  "home.featuredCardHint": "See complete details and how to get in touch.",
+  "home.viewDetails": "View details",
   "home.noContactsInCity": "No contacts in {city} yet",
 
   // ── Emergency numbers ──
