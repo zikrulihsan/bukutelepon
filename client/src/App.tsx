@@ -1,4 +1,5 @@
 import { Routes, Route } from "react-router-dom";
+import { RouteViewportReset } from "./components/shared/RouteViewportReset";
 import { Navbar } from "./components/shared/Navbar";
 import { BottomNav } from "./components/shared/BottomNav";
 import { AdminLayout } from "./components/admin/AdminLayout";
@@ -30,6 +31,7 @@ export default function App() {
     <CityProvider>
       <CategoriesProvider>
         <InquiryProvider>
+        <RouteViewportReset />
         <div className="min-h-screen bg-white">
           <Routes>
           {/* Public routes */}

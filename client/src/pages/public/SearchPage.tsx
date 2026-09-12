@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useLayoutEffect, useRef } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "../../lib/axios";
@@ -73,7 +73,7 @@ export default function SearchPage() {
   // document itself must not scroll: a second scroller behind this one is what
   // makes the browser chrome collapse and expand mid-gesture, dragging the
   // header and the bottom bar with it.
-  useEffect(() => {
+  useLayoutEffect(() => {
     const previous = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     return () => {
@@ -96,7 +96,7 @@ export default function SearchPage() {
 
   // Auto-focus on mount
   useEffect(() => {
-    inputRef.current?.focus();
+    inputRef.current?.focus({ preventScroll: true });
   }, []);
 
   // Debounce search input
@@ -256,7 +256,7 @@ export default function SearchPage() {
             {search && (
               <button
                 type="button"
-                onClick={() => { setSearch(""); setSearchQuery(""); inputRef.current?.focus(); }}
+                onClick={() => { setSearch(""); setSearchQuery(""); inputRef.current?.focus({ preventScroll: true }); }}
                 className="mr-2 w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0 text-gray-500 hover:bg-gray-200 active:scale-95 transition-colors"
               >
                 <HiXMark className="h-4 w-4" />
