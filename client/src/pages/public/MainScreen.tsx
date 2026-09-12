@@ -9,6 +9,7 @@ import { useContacts } from "../../hooks/useContacts";
 import { CityPickerOverlay } from "../../components/shared/CityPickerOverlay";
 import { CategoryIcon } from "../../components/shared/CategoryIcon";
 import { CategoryPhoto } from "../../components/shared/CategoryPhoto";
+import { ContactCard } from "../../components/shared/ContactCard";
 import { LanguageToggle } from "../../components/shared/LanguageToggle";
 import { isSaved, toggleSaved } from "../../lib/saved";
 import { useI18n } from "../../i18n/LanguageContext";
@@ -78,21 +79,29 @@ function ContactImage({ contact, className = "" }: { contact: Contact; className
     : <CategoryPhoto slug={contact.category?.slug} className={`${className} bg-gradient-to-br`} iconClassName="h-6 w-6" />;
 }
 
-function ChoiceCard({ contact, categoryLabel, cityName, description, viewLabel, onOpen }: { contact: Contact; categoryLabel: string; cityName: string; description: string; viewLabel: string; onOpen: () => void }) {
-  return <article onClick={onOpen} className="relative flex h-[296px] w-[196px] shrink-0 snap-start cursor-pointer flex-col overflow-hidden rounded-[20px] border border-[#E6ECE8] bg-white shadow-[0_6px_16px_rgba(16,46,70,0.10)] transition active:scale-[0.98]">
-    <div className="relative h-[142px] shrink-0 overflow-hidden bg-[#E8F0E8]">
-      <ContactImage contact={contact} className="h-full w-full" />
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-[#071F43]/20 to-transparent" />
-      <BookmarkButton contactId={contact.id} compact />
-    </div>
-    <div className="flex min-h-0 flex-1 flex-col border-t border-[#E3EAE5] bg-[#FFFEFA] px-3 py-2.5">
-      <span className="w-fit max-w-full truncate rounded-full bg-[#E8F4EC] px-2 py-1 text-[10px] font-extrabold uppercase leading-3 tracking-[0.04em] text-primary-700">{categoryLabel}</span>
-      <h3 className="mt-1.5 line-clamp-2 text-[16px] font-extrabold leading-[19px] tracking-[-0.04em] text-[#08234B]">{contact.name}</h3>
-      <p className="mt-1 flex items-center gap-1 truncate text-[11px] font-semibold leading-4 text-[#71809B]"><PinIcon className="h-3.5 w-3.5 shrink-0 text-primary-700" />{contact.city?.name ?? cityName}</p>
-      <p className="mt-1 line-clamp-2 text-[11px] font-medium leading-[15px] text-[#71809B]">{description}</p>
-      <span className="mt-auto inline-flex items-center gap-1 border-t border-[#E8ECE8] pt-2 text-[12px] font-extrabold text-primary-700">{viewLabel}<ArrowIcon className="h-3.5 w-3.5" /></span>
-    </div>
+function ChoiceCard({ contact, categoryLabel, cityName, viewLabel, onOpen }: { contact: Contact; categoryLabel: string; cityName: string; viewLabel: string; onOpen: () => void }) {
+  return <article onClick={onOpen} className="relative flex h-[238px] w-[174px] shrink-0 snap-start cursor-pointer flex-col overflow-hidden rounded-2xl bg-white p-2 shadow-[0_4px_12px_rgba(16,46,70,0.09)] transition active:scale-[0.98]">
+    <div className="relative h-[116px] shrink-0 overflow-hidden rounded-xl bg-[#E8F0E8]"><ContactImage contact={contact} className="h-full w-full" /><BookmarkButton contactId={contact.id} compact /></div>
+    <h3 className="mt-2 line-clamp-2 min-h-10 text-[15px] font-extrabold leading-5 tracking-[-0.035em] text-[#08234B]">{contact.name}</h3>
+    <p className="mt-1 flex items-center gap-1 truncate text-[11px] font-semibold leading-4 text-[#7988A2]"><PinIcon className="h-3.5 w-3.5 shrink-0 text-primary-700" />{categoryLabel} <span>·</span> {contact.city?.name ?? cityName}</p>
+    <span className="mt-auto inline-flex items-center gap-1 text-[13px] font-extrabold text-primary-700">{viewLabel}<ArrowIcon className="h-4 w-4" /></span>
   </article>;
+}
+
+function DiscoveryPoster({ title, description, imageUrl, imagePosition = "center", onOpen }: { title: string; description: string; imageUrl: string; imagePosition?: string; onOpen: () => void }) {
+  return <button type="button" onClick={onOpen} className="group flex h-[226px] w-[198px] shrink-0 snap-start flex-col overflow-hidden rounded-[20px] border border-[#E4EAE6] bg-[#FFFEFA] text-left shadow-[0_5px_14px_rgba(16,46,70,0.09)] transition active:scale-[0.98]">
+    <span className="relative block h-[132px] w-full shrink-0 overflow-hidden bg-[#E8F0E8]">
+      <img src={imageUrl} alt="" aria-hidden="true" className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]" style={{ objectPosition: imagePosition }} />
+      <span className="absolute inset-x-0 bottom-0 h-9 bg-gradient-to-t from-[#071F43]/25 to-transparent" />
+    </span>
+    <span className="flex min-h-0 flex-1 items-center gap-2.5 px-3 py-2.5">
+      <span className="min-w-0 flex-1">
+        <span className="line-clamp-2 block text-[16px] font-extrabold leading-5 tracking-[-0.04em] text-[#08234B]">{title}</span>
+        <span className="mt-1 line-clamp-2 block text-[11.5px] font-medium leading-[15px] text-[#71809B]">{description}</span>
+      </span>
+      <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[#E8F4EC] text-primary-700"><ArrowIcon className="h-4 w-4" /></span>
+    </span>
+  </button>;
 }
 
 function SectionHeading({ title, onMore }: { title: string; onMore?: () => void }) {
@@ -116,6 +125,9 @@ export default function MainScreen() {
   useEffect(() => { if (citiesData?.data) setCities(citiesData.data); }, [citiesData, setCities]);
   const { data: contactsData, isLoading: contactsLoading } = useContacts({ city: citySlug || undefined, limit: 10 });
   const contacts = contactsData?.data ?? [];
+  const recommendedContacts = [...contacts]
+    .sort((first, second) => Number(second.isVerified) - Number(first.isVerified))
+    .slice(0, 6);
   const displayCategories = categories.length
     ? [...categories]
       .sort((a, b) => {
@@ -130,6 +142,12 @@ export default function MainScreen() {
   const cityPickerVisible = showCityPicker || (!citySlug && (citiesData?.data?.length ?? cities.length) > 0);
   const goToSearch = (keyword = query) => { const value = keyword.trim(); navigate(value ? `/search?q=${encodeURIComponent(value)}` : "/search"); };
   const chooseCity = (nextCity: City) => { setCity(nextCity); setShowCityPicker(false); };
+  const discoveryTopics = [
+    { id: "coffee", title: t("home.discoveryCoffeeTitle"), description: t("home.discoveryCoffeeDescription"), imageUrl: "/storefront/kopi-tambora.jpg", href: "/search?q=kopi" },
+    { id: "souvenirs", title: t("home.discoverySouvenirTitle"), description: t("home.discoverySouvenirDescription"), imageUrl: "/storefront/madu-sumbawa.jpg", href: "/search?q=oleh-oleh" },
+    { id: "travel", title: t("home.discoveryTravelTitle"), description: t("home.discoveryTravelDescription"), imageUrl: "/hero-sumbawa-v2.jpg", imagePosition: "62% center", href: "/search?q=travel" },
+    { id: "delivery", title: t("home.discoveryDeliveryTitle"), description: t("home.discoveryDeliveryDescription"), imageUrl: "/storefront/store-cover.jpg", imagePosition: "68% center", href: "/search?category=jasa" },
+  ];
 
   return <div className="min-h-screen bg-[radial-gradient(circle_at_30%_8%,rgba(226,241,231,.62),transparent_26%),#F8FAF7] pb-[82px] text-[#08234B]">
     {cityPickerVisible && <CityPickerOverlay cities={citiesData?.data ?? cities} onSelect={chooseCity} onClose={citySlug ? () => setShowCityPicker(false) : undefined} />}
@@ -182,10 +200,20 @@ export default function MainScreen() {
 
       <section className="mt-7">
         <SectionHeading title={t("home.whatsInSumbawa")} onMore={() => navigate("/search")} />
-        {contactsLoading ? <div className="-mx-4 flex gap-2.5 overflow-hidden px-4"><div className="h-[296px] w-[196px] shrink-0 rounded-[20px] shimmer" /><div className="h-[296px] w-[196px] shrink-0 rounded-[20px] shimmer" /><div className="h-[296px] w-[196px] shrink-0 rounded-[20px] shimmer" /></div> : contacts.length ? <div className="-mx-4 flex snap-x gap-2.5 overflow-x-auto px-4 pb-3 scrollbar-hide">{contacts.slice(0, 6).map((contact) => <ChoiceCard key={contact.id} contact={contact} categoryLabel={categoryName(contact.category)} cityName={selectedCityName} description={t("home.featuredCardHint")} viewLabel={t("home.viewDetails")} onOpen={() => navigate(`/kontak/${contact.id}`)} />)}</div> : <div className="grid h-[144px] place-items-center rounded-2xl bg-white p-5 text-center text-[14px] text-[#71809B]">{t("home.noContactsInCity", { city: selectedCityName })}</div>}
+        <div className="-mx-4 flex snap-x gap-2.5 overflow-x-auto px-4 pb-3 scrollbar-hide">{discoveryTopics.map((topic) => <DiscoveryPoster key={topic.id} title={topic.title} description={topic.description} imageUrl={topic.imageUrl} imagePosition={topic.imagePosition} onOpen={() => navigate(topic.href)} />)}</div>
       </section>
 
-      <section className="relative mb-5 mt-8 h-[152px] overflow-hidden rounded-2xl bg-[radial-gradient(circle_at_92%_12%,#15795c,transparent_32%),linear-gradient(120deg,#003f32,#007352)] px-4 py-4 text-white shadow-[0_6px_13px_rgba(0,91,69,0.20)]"><div className="relative z-10 max-w-[250px]"><h2 className="text-[20px] font-extrabold leading-6 tracking-[-0.045em]">Punya usaha di Sumbawa?</h2><p className="mt-1 max-w-[235px] text-[13px] leading-[18px] text-white/90">Jangan cuma bagikan nomor WhatsApp. Buat halaman usaha dengan katalog, lokasi, dan lainnya.</p><button type="button" onClick={() => navigate("/submit")} className="mt-3 h-10 min-w-[150px] rounded-xl bg-white px-4 text-[13px] font-extrabold text-primary-700 transition active:scale-95">Daftarkan Usaha</button></div><StoreIllustration /></section>
+      <section className="mt-7">
+        <SectionHeading title={t("home.carikontakRecommendations")} onMore={() => navigate("/search")} />
+        {contactsLoading ? <div className="-mx-4 flex gap-2.5 overflow-hidden px-4"><div className="h-[238px] w-[174px] shrink-0 rounded-2xl shimmer" /><div className="h-[238px] w-[174px] shrink-0 rounded-2xl shimmer" /><div className="h-[238px] w-[174px] shrink-0 rounded-2xl shimmer" /></div> : recommendedContacts.length ? <div className="-mx-4 flex snap-x gap-2.5 overflow-x-auto px-4 pb-2 scrollbar-hide">{recommendedContacts.map((contact) => <ChoiceCard key={contact.id} contact={contact} categoryLabel={categoryName(contact.category)} cityName={selectedCityName} viewLabel={t("home.view")} onOpen={() => navigate(`/kontak/${contact.id}`)} />)}</div> : <div className="grid h-[144px] place-items-center rounded-2xl bg-white p-5 text-center text-[14px] text-[#71809B]">{t("home.noContactsInCity", { city: selectedCityName })}</div>}
+      </section>
+
+      <section className="relative mt-8 h-[152px] overflow-hidden rounded-2xl bg-[radial-gradient(circle_at_92%_12%,#15795c,transparent_32%),linear-gradient(120deg,#003f32,#007352)] px-4 py-4 text-white shadow-[0_6px_13px_rgba(0,91,69,0.20)]"><div className="relative z-10 max-w-[250px]"><h2 className="text-[20px] font-extrabold leading-6 tracking-[-0.045em]">Punya usaha di Sumbawa?</h2><p className="mt-1 max-w-[235px] text-[13px] leading-[18px] text-white/90">Jangan cuma bagikan nomor WhatsApp. Buat halaman usaha dengan katalog, lokasi, dan lainnya.</p><button type="button" onClick={() => navigate("/submit")} className="mt-3 h-10 min-w-[150px] rounded-xl bg-white px-4 text-[13px] font-extrabold text-primary-700 transition active:scale-95">Daftarkan Usaha</button></div><StoreIllustration /></section>
+
+      <section className="mb-5 mt-8">
+        <SectionHeading title={t("home.latestInCariKontak")} onMore={() => navigate("/search")} />
+        {contactsLoading ? <div className="space-y-3"><div className="h-[160px] rounded-2xl shimmer" /><div className="h-[160px] rounded-2xl shimmer" /></div> : contacts.length ? <div className="space-y-3">{contacts.slice(0, 3).map((contact) => <ContactCard key={contact.id} contact={contact} />)}</div> : <div className="grid h-[144px] place-items-center rounded-2xl bg-white p-5 text-center text-[14px] text-[#71809B]">{t("home.noContactsInCity", { city: selectedCityName })}</div>}
+      </section>
       </div>
     </div>
   </div>;
