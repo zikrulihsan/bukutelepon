@@ -90,7 +90,8 @@ const id = {
   "home.discoveryTravelDescription": "Cari transportasi untuk perjalananmu.",
   "home.discoveryDeliveryTitle": "Jastip & delivery",
   "home.discoveryDeliveryDescription": "Titip belanja dan antar kebutuhan harian.",
-  "home.carikontakRecommendations": "Rekomendasi CariKontak",
+  "home.carikontakRecommendations": "Rekomendasi",
+  "home.noRecommendations": "Belum ada rekomendasi terverifikasi di kota ini.",
   "home.latestInCariKontak": "Terbaru di CariKontak",
   "home.noContactsInCity": "Belum ada kontak di {city}",
 
@@ -412,7 +413,8 @@ const en: Record<TranslationKey, string> = {
   "home.discoveryTravelDescription": "Find transport for your next trip.",
   "home.discoveryDeliveryTitle": "Personal shopper & delivery",
   "home.discoveryDeliveryDescription": "Get daily essentials shopped and delivered.",
-  "home.carikontakRecommendations": "CariKontak Recommendations",
+  "home.carikontakRecommendations": "Recommendations",
+  "home.noRecommendations": "No verified recommendations in this city yet.",
   "home.latestInCariKontak": "Latest on CariKontak",
   "home.noContactsInCity": "No contacts in {city} yet",
 

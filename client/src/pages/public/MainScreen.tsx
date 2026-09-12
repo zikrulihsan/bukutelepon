@@ -89,17 +89,13 @@ function ChoiceCard({ contact, categoryLabel, cityName, viewLabel, onOpen }: { c
 }
 
 function DiscoveryPoster({ title, description, imageUrl, imagePosition = "center", onOpen }: { title: string; description: string; imageUrl: string; imagePosition?: string; onOpen: () => void }) {
-  return <button type="button" onClick={onOpen} className="group flex h-[226px] w-[198px] shrink-0 snap-start flex-col overflow-hidden rounded-[20px] border border-[#E4EAE6] bg-[#FFFEFA] text-left shadow-[0_5px_14px_rgba(16,46,70,0.09)] transition active:scale-[0.98]">
-    <span className="relative block h-[132px] w-full shrink-0 overflow-hidden bg-[#E8F0E8]">
-      <img src={imageUrl} alt="" aria-hidden="true" className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]" style={{ objectPosition: imagePosition }} />
-      <span className="absolute inset-x-0 bottom-0 h-9 bg-gradient-to-t from-[#071F43]/25 to-transparent" />
-    </span>
-    <span className="flex min-h-0 flex-1 items-center gap-2.5 px-3 py-2.5">
-      <span className="min-w-0 flex-1">
-        <span className="line-clamp-2 block text-[16px] font-extrabold leading-5 tracking-[-0.04em] text-[#08234B]">{title}</span>
-        <span className="mt-1 line-clamp-2 block text-[11.5px] font-medium leading-[15px] text-[#71809B]">{description}</span>
-      </span>
-      <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[#E8F4EC] text-primary-700"><ArrowIcon className="h-4 w-4" /></span>
+  return <button type="button" onClick={onOpen} className="group relative h-[236px] w-[184px] shrink-0 snap-start overflow-hidden rounded-[20px] bg-[#173B32] text-left shadow-[0_6px_16px_rgba(16,46,70,0.15)] transition active:scale-[0.98]">
+    <img src={imageUrl} alt="" aria-hidden="true" className="absolute inset-0 h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]" style={{ objectPosition: imagePosition }} />
+    <span className="absolute inset-0 bg-[linear-gradient(180deg,rgba(5,28,38,.06)_22%,rgba(5,28,38,.20)_48%,rgba(5,28,38,.92)_100%)]" />
+    <span className="absolute right-3 top-3 grid h-8 w-8 place-items-center rounded-full border border-white/50 bg-white/90 text-primary-700 shadow-sm"><ArrowIcon className="h-4 w-4" /></span>
+    <span className="absolute inset-x-0 bottom-0 z-10 block px-3.5 pb-3.5 pt-12 text-white">
+      <span className="line-clamp-2 block text-[17px] font-extrabold leading-5 tracking-[-0.04em]">{title}</span>
+      <span className="mt-1 line-clamp-2 block text-[11.5px] font-medium leading-[15px] text-white/85">{description}</span>
     </span>
   </button>;
 }
@@ -125,9 +121,7 @@ export default function MainScreen() {
   useEffect(() => { if (citiesData?.data) setCities(citiesData.data); }, [citiesData, setCities]);
   const { data: contactsData, isLoading: contactsLoading } = useContacts({ city: citySlug || undefined, limit: 10 });
   const contacts = contactsData?.data ?? [];
-  const recommendedContacts = [...contacts]
-    .sort((first, second) => Number(second.isVerified) - Number(first.isVerified))
-    .slice(0, 6);
+  const recommendedContacts = contacts.filter((contact) => contact.isVerified).slice(0, 6);
   const displayCategories = categories.length
     ? [...categories]
       .sort((a, b) => {
@@ -199,16 +193,16 @@ export default function MainScreen() {
       </section>
 
       <section className="mt-7">
-        <SectionHeading title={t("home.whatsInSumbawa")} onMore={() => navigate("/search")} />
-        <div className="-mx-4 flex snap-x gap-2.5 overflow-x-auto px-4 pb-3 scrollbar-hide">{discoveryTopics.map((topic) => <DiscoveryPoster key={topic.id} title={topic.title} description={topic.description} imageUrl={topic.imageUrl} imagePosition={topic.imagePosition} onOpen={() => navigate(topic.href)} />)}</div>
+        <SectionHeading title={t("home.whatsInSumbawa")} />
+        <div className="-mr-4 flex snap-x snap-mandatory gap-2.5 overflow-x-auto pb-3 pr-4 scrollbar-hide">{discoveryTopics.map((topic) => <DiscoveryPoster key={topic.id} title={topic.title} description={topic.description} imageUrl={topic.imageUrl} imagePosition={topic.imagePosition} onOpen={() => navigate(topic.href)} />)}</div>
       </section>
 
       <section className="mt-7">
         <SectionHeading title={t("home.carikontakRecommendations")} onMore={() => navigate("/search")} />
-        {contactsLoading ? <div className="-mx-4 flex gap-2.5 overflow-hidden px-4"><div className="h-[238px] w-[174px] shrink-0 rounded-2xl shimmer" /><div className="h-[238px] w-[174px] shrink-0 rounded-2xl shimmer" /><div className="h-[238px] w-[174px] shrink-0 rounded-2xl shimmer" /></div> : recommendedContacts.length ? <div className="-mx-4 flex snap-x gap-2.5 overflow-x-auto px-4 pb-2 scrollbar-hide">{recommendedContacts.map((contact) => <ChoiceCard key={contact.id} contact={contact} categoryLabel={categoryName(contact.category)} cityName={selectedCityName} viewLabel={t("home.view")} onOpen={() => navigate(`/kontak/${contact.id}`)} />)}</div> : <div className="grid h-[144px] place-items-center rounded-2xl bg-white p-5 text-center text-[14px] text-[#71809B]">{t("home.noContactsInCity", { city: selectedCityName })}</div>}
+        {contactsLoading ? <div className="-mr-4 flex gap-2.5 overflow-hidden pr-4"><div className="h-[238px] w-[174px] shrink-0 rounded-2xl shimmer" /><div className="h-[238px] w-[174px] shrink-0 rounded-2xl shimmer" /><div className="h-[238px] w-[174px] shrink-0 rounded-2xl shimmer" /></div> : recommendedContacts.length ? <div className="-mr-4 flex snap-x snap-mandatory gap-2.5 overflow-x-auto pb-2 pr-4 scrollbar-hide">{recommendedContacts.map((contact) => <ChoiceCard key={contact.id} contact={contact} categoryLabel={categoryName(contact.category)} cityName={selectedCityName} viewLabel={t("home.view")} onOpen={() => navigate(`/kontak/${contact.id}`)} />)}</div> : <div className="grid h-[144px] place-items-center rounded-2xl bg-white p-5 text-center text-[14px] text-[#71809B]">{t("home.noRecommendations")}</div>}
       </section>
 
-      <section className="relative mt-8 h-[152px] overflow-hidden rounded-2xl bg-[radial-gradient(circle_at_92%_12%,#15795c,transparent_32%),linear-gradient(120deg,#003f32,#007352)] px-4 py-4 text-white shadow-[0_6px_13px_rgba(0,91,69,0.20)]"><div className="relative z-10 max-w-[250px]"><h2 className="text-[20px] font-extrabold leading-6 tracking-[-0.045em]">Punya usaha di Sumbawa?</h2><p className="mt-1 max-w-[235px] text-[13px] leading-[18px] text-white/90">Jangan cuma bagikan nomor WhatsApp. Buat halaman usaha dengan katalog, lokasi, dan lainnya.</p><button type="button" onClick={() => navigate("/submit")} className="mt-3 h-10 min-w-[150px] rounded-xl bg-white px-4 text-[13px] font-extrabold text-primary-700 transition active:scale-95">Daftarkan Usaha</button></div><StoreIllustration /></section>
+      <section className="relative mt-8 min-h-[170px] overflow-hidden rounded-2xl bg-[radial-gradient(circle_at_92%_12%,#15795c,transparent_32%),linear-gradient(120deg,#003f32,#007352)] px-4 py-4 text-white shadow-[0_6px_13px_rgba(0,91,69,0.20)]"><div className="relative z-10 max-w-[235px]"><h2 className="text-[20px] font-extrabold leading-6 tracking-[-0.045em]">Punya usaha di Sumbawa?</h2><p className="mt-1 text-[13px] leading-[18px] text-white/90">Jangan cuma bagikan nomor WhatsApp. Buat halaman usaha dengan katalog, lokasi, dan lainnya.</p><button type="button" onClick={() => navigate("/submit")} className="mt-3 h-10 min-w-[150px] rounded-xl bg-white px-4 text-[13px] font-extrabold text-primary-700 transition active:scale-95">Daftarkan Usaha</button></div><StoreIllustration /></section>
 
       <section className="mb-5 mt-8">
         <SectionHeading title={t("home.latestInCariKontak")} onMore={() => navigate("/search")} />
