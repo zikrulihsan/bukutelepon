@@ -2,7 +2,7 @@ import { apiClient } from "./axios";
 import type { Contact } from "../types";
 
 // localStorage keys. Bump the suffix if the cached shape changes.
-const LS_DATA_KEY = "bt_contacts_v2";
+const LS_DATA_KEY = "bt_contacts_v3";
 const LS_VERSION_KEY = "bt_contacts_version";
 
 export interface ContactsCache {
@@ -65,7 +65,8 @@ export function filterContacts(all: Contact[], filter: ContactFilter): Contact[]
     if (needle) {
       const inName = c.name?.toLowerCase().includes(needle);
       const inDesc = c.description?.toLowerCase().includes(needle) ?? false;
-      if (!inName && !inDesc) return false;
+      const inEnglishDesc = c.descriptionEn?.toLowerCase().includes(needle) ?? false;
+      if (!inName && !inDesc && !inEnglishDesc) return false;
     }
     return true;
   });

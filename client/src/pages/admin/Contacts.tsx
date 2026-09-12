@@ -16,6 +16,7 @@ interface EditForm {
   website: string;
   mapsUrl: string;
   description: string;
+  descriptionEn: string;
   imageUrl: string;
   cityId: string;
   categoryId: string;
@@ -33,6 +34,7 @@ export default function AdminContacts() {
   const queryClient = useQueryClient();
   const [searchParams] = useSearchParams();
   const [status, setStatus] = useState(searchParams.get("status") || "PENDING");
+  const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<EditForm | null>(null);
@@ -42,8 +44,8 @@ export default function AdminContacts() {
   const editImageInputRef = useRef<HTMLInputElement>(null);
 
   const { data, isLoading } = useQuery<PaginatedResponse<Contact>>({
-    queryKey: ["admin", "contacts", status, page],
-    queryFn: async () => (await apiClient.get(`/admin/contacts?status=${status}&page=${page}`)).data,
+    queryKey: ["admin", "contacts", status, search, page],
+    queryFn: async () => (await apiClient.get("/admin/contacts", { params: { status, search: search.trim() || undefined, page } })).data,
   });
 
   const { data: citiesData } = useQuery<{ success: boolean; data: City[] }>({
@@ -89,6 +91,7 @@ export default function AdminContacts() {
         website: data.website || null,
         mapsUrl: data.mapsUrl || null,
         description: data.description || null,
+        descriptionEn: data.descriptionEn || null,
         imageUrl,
       });
     },
@@ -111,6 +114,7 @@ export default function AdminContacts() {
       website: contact.website || "",
       mapsUrl: contact.mapsUrl || "",
       description: contact.description || "",
+      descriptionEn: contact.descriptionEn || "",
       imageUrl: contact.imageUrl || "",
       cityId: contact.cityId,
       categoryId: contact.categoryId,
@@ -165,6 +169,22 @@ export default function AdminContacts() {
         ))}
       </div>
 
+      <div className="relative mb-6">
+        <svg xmlns="http://www.w3.org/2000/svg" className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
+          <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-4.35-4.35m1.35-5.15a6.5 6.5 0 11-13 0 6.5 6.5 0 0113 0z" />
+        </svg>
+        <input
+          type="search"
+          value={search}
+          onChange={(event) => { setSearch(event.target.value); setPage(1); }}
+          placeholder={t("admin.searchContacts")}
+          className="w-full rounded-xl border border-gray-300 bg-white py-2.5 pl-10 pr-10 text-sm text-gray-900 outline-none transition focus:border-primary-500 focus:ring-2 focus:ring-primary-500"
+        />
+        {search && <button type="button" onClick={() => { setSearch(""); setPage(1); }} className="absolute right-3 top-1/2 -translate-y-1/2 rounded p-1 text-gray-400 transition hover:bg-gray-100 hover:text-gray-600" aria-label={t("admin.clearSearch")}>
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5} aria-hidden="true"><path strokeLinecap="round" strokeLinejoin="round" d="m6 6 12 12M18 6 6 18" /></svg>
+        </button>}
+      </div>
+
       {isLoading ? (
         <div className="space-y-3">
           {Array.from({ length: 5 }).map((_, i) => (
@@ -176,7 +196,7 @@ export default function AdminContacts() {
       ) : (
         <div className="space-y-3">
           {data?.data.length === 0 && (
-            <div className="text-center py-12 text-gray-400 text-sm">{t("admin.noContactsWithStatus", { status: status.toLowerCase() })}</div>
+            <div className="text-center py-12 text-gray-400 text-sm">{search.trim() ? t("admin.noContactsFound") : t("admin.noContactsWithStatus", { status: status.toLowerCase() })}</div>
           )}
           {data?.data.map((contact) => (
             <div key={contact.id} className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
@@ -232,6 +252,10 @@ export default function AdminContacts() {
                   <div>
                     <label className="block text-xs font-medium text-gray-500 mb-1">{t("form.description")}</label>
                     <textarea value={editForm.description} onChange={(e) => setEditForm({ ...editForm, description: e.target.value })} rows={2} className={`${inputClass} resize-none`} placeholder={t("common.optional")} />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-500 mb-1">{t("admin.descriptionEn")}</label>
+                    <textarea value={editForm.descriptionEn} onChange={(e) => setEditForm({ ...editForm, descriptionEn: e.target.value })} rows={2} className={`${inputClass} resize-none`} placeholder={t("admin.descriptionEnPlaceholder")} />
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-gray-500 mb-1">{t("form.photo")}</label>

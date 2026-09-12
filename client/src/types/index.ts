@@ -86,6 +86,7 @@ export interface Contact {
   website: string | null;
   mapsUrl: string | null;
   description: string | null;
+  descriptionEn: string | null;
   imageUrl: string | null;
   status: ContactStatus;
   isVerified: boolean;

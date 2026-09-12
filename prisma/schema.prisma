@@ -178,6 +178,7 @@ model Contact {
   phone           String
   address         String?
   description     String?       @db.VarChar(500)
+  descriptionEn   String?       @db.VarChar(500)
   website         String?
   mapsUrl         String?
   status          ContactStatus @default(PENDING)

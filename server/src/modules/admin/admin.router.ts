@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { Prisma, ContactStatus } from "@prisma/client";
 import { z } from "zod";
 import { prisma } from "../../utils/prisma";
 import { authenticate, AuthenticatedRequest } from "../../middleware/authenticate";
@@ -39,6 +40,7 @@ const adminCreateContactSchema = z.object({
   website: z.string().url().optional().or(z.literal("")),
   mapsUrl: z.string().url().optional().or(z.literal("")),
   description: z.string().max(500).optional(),
+  descriptionEn: z.string().max(500).optional(),
   imageUrl: z.string().url().optional().or(z.literal("")),
   cityId: z.string().uuid(),
   categoryId: z.string().uuid(),
@@ -99,15 +101,27 @@ router.post("/contacts/bulk", async (req: AuthenticatedRequest, res, next) => {
   }
 });
 
-// GET /api/admin/contacts?status=PENDING
+// GET /api/admin/contacts?status=PENDING&search=nama
 router.get("/contacts", async (req, res, next) => {
   try {
-    const status = req.query.status as string | undefined;
+    const status = req.query.status as ContactStatus | undefined;
+    const search = typeof req.query.search === "string" ? req.query.search.trim().slice(0, 100) : "";
     const page = parseInt(req.query.page as string) || 1;
     const limit = parseInt(req.query.limit as string) || 20;
 
-    const where: Record<string, unknown> = {};
+    const where: Prisma.ContactWhereInput = {};
     if (status) where.status = status;
+    if (search) {
+      where.OR = [
+        { name: { contains: search, mode: "insensitive" } },
+        { phone: { contains: search, mode: "insensitive" } },
+        { address: { contains: search, mode: "insensitive" } },
+        { description: { contains: search, mode: "insensitive" } },
+        { descriptionEn: { contains: search, mode: "insensitive" } },
+        { city: { name: { contains: search, mode: "insensitive" } } },
+        { category: { name: { contains: search, mode: "insensitive" } } },
+      ];
+    }
 
     const [contacts, total] = await Promise.all([
       prisma.contact.findMany({
@@ -138,6 +152,7 @@ const adminEditContactSchema = z.object({
   website: z.string().url().optional().nullable().or(z.literal("")),
   mapsUrl: z.string().url().optional().nullable().or(z.literal("")),
   description: z.string().max(500).optional().nullable(),
+  descriptionEn: z.string().max(500).optional().nullable(),
   imageUrl: z.string().url().optional().nullable().or(z.literal("")),
   cityId: z.string().uuid().optional(),
   categoryId: z.string().uuid().optional(),

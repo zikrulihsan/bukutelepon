@@ -35,7 +35,7 @@ function timeAgo(dateStr: string): { key: TranslationKey; count: number } {
 }
 
 export default function ContactDetailPage() {
-  const { t, categoryName } = useI18n();
+  const { t, categoryName, lang } = useI18n();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { data, isLoading } = useContact(id!);
@@ -102,6 +102,7 @@ export default function ContactDetailPage() {
   }
 
   const contact = data?.data;
+  const description = lang === "en" ? contact?.descriptionEn || contact?.description : contact?.description;
   if (!contact)
     return (
       <div className="max-w-md mx-auto px-5 py-20 text-center">
@@ -322,10 +323,10 @@ export default function ContactDetailPage() {
         )}
 
         {/* Description */}
-        {contact.description && (
+        {description && (
           <div className="bg-white rounded-2xl border border-gray-100/80 shadow-[0_2px_12px_rgba(0,0,0,0.03)] p-5">
             <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">{t("detail.about")}</p>
-            <p className="text-[14px] text-gray-700 leading-relaxed">{contact.description}</p>
+            <p className="text-[14px] text-gray-700 leading-relaxed">{description}</p>
           </div>
         )}
 

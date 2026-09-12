@@ -103,6 +103,7 @@ export default function AdminAddContact() {
     address: "",
     website: "",
     description: "",
+    descriptionEn: "",
     cityId: "",
     categoryId: "",
   });
@@ -137,6 +138,7 @@ export default function AdminAddContact() {
         website: formData.website || undefined,
         address: formData.address || undefined,
         description: formData.description || undefined,
+        descriptionEn: formData.descriptionEn || undefined,
         imageUrl: imageUrl || undefined,
       };
       return (await apiClient.post("/admin/contacts", payload)).data;
@@ -144,7 +146,7 @@ export default function AdminAddContact() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin"] });
       setSuccess(true);
-      setForm({ name: "", phone: "", address: "", website: "", description: "", cityId: form.cityId, categoryId: form.categoryId });
+      setForm({ name: "", phone: "", address: "", website: "", description: "", descriptionEn: "", cityId: form.cityId, categoryId: form.categoryId });
       setImageFile(null);
       setImagePreview(null);
       setTimeout(() => setSuccess(false), 3000);
@@ -551,6 +553,17 @@ export default function AdminAddContact() {
               rows={3}
               className="w-full rounded-xl border border-gray-300 px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none resize-none"
               placeholder={t("admin.descriptionPlaceholder")}
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">{t("admin.descriptionEn")}</label>
+            <textarea
+              value={form.descriptionEn}
+              onChange={(e) => setForm({ ...form, descriptionEn: e.target.value })}
+              rows={3}
+              className="w-full rounded-xl border border-gray-300 px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none resize-none"
+              placeholder={t("admin.descriptionEnPlaceholder")}
             />
           </div>
 

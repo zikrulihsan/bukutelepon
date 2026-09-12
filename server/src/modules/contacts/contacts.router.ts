@@ -15,6 +15,7 @@ const createContactSchema = z.object({
   website: z.string().url().optional().or(z.literal("")),
   mapsUrl: z.string().url().optional().or(z.literal("")),
   description: z.string().max(500).optional(),
+  descriptionEn: z.string().max(500).optional(),
   imageUrl: z.string().url().optional().or(z.literal("")),
   cityId: z.string().uuid(),
   categoryId: z.string().uuid(),
@@ -38,6 +39,7 @@ router.get("/", apiLimiter, async (req, res, next) => {
       where.OR = [
         { name: { contains: search, mode: "insensitive" } },
         { description: { contains: search, mode: "insensitive" } },
+        { descriptionEn: { contains: search, mode: "insensitive" } },
       ];
     }
     if (verified === "true") where.isVerified = true;

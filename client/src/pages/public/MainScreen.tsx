@@ -272,7 +272,7 @@ export default function MainScreen() {
           </div>
 
           <div className="mt-9 max-w-[310px]">
-            <h1 className="text-[32px] font-extrabold leading-[34px] tracking-[-0.06em] text-[#071F43]">{t("home.heroTitleFirst")}<br /><span className="text-primary-700">{t("home.heroTitleAccent")}</span></h1>
+            <h1 className="text-[32px] font-extrabold leading-[34px] tracking-[-0.06em] text-[#071F43]">{t("home.heroTitleFirst")}<br /><span className="text-primary-700">{t("home.heroTitleAccent", { city: selectedCityName })}</span></h1>
             <p className="mt-2 max-w-[300px] text-[14px] font-medium leading-5 tracking-[-0.025em] text-[#53667F]">{t("home.heroSubtitle")}</p>
           </div>
 
@@ -298,7 +298,7 @@ export default function MainScreen() {
       </section>
 
       <section className="mt-7">
-        <SectionHeading title={t("home.whatsInSumbawa")} />
+        <SectionHeading title={t("home.whatsInCity", { city: selectedCityName })} />
         <div className="-mr-4 flex snap-x snap-mandatory gap-2.5 overflow-x-auto pb-3 pr-4 scrollbar-hide">{discoveryTopics.map((topic) => <DiscoveryPoster key={topic.id} title={topic.title} description={topic.description} imageUrl={topic.imageUrl} imagePosition={topic.imagePosition} onOpen={() => navigate(topic.href)} />)}</div>
       </section>
 
@@ -307,7 +307,7 @@ export default function MainScreen() {
         <div className="-mr-4 flex snap-x snap-mandatory gap-2.5 overflow-x-auto pb-2 pr-4 scrollbar-hide">{recommendedContacts.map((contact) => <ChoiceCard key={contact.id} contact={contact} categoryLabel={categoryName(contact.category)} cityName={selectedCityName} viewLabel={t("home.view")} onOpen={() => navigate(`/kontak/${contact.id}`)} />)}</div>
       </section>}
 
-      <section className="relative mt-8 min-h-[170px] overflow-hidden rounded-2xl bg-[radial-gradient(circle_at_92%_12%,#15795c,transparent_32%),linear-gradient(120deg,#003f32,#007352)] px-4 py-4 text-white shadow-[0_6px_13px_rgba(0,91,69,0.20)]"><div className="relative z-10 max-w-[235px]"><h2 className="text-[20px] font-extrabold leading-6 tracking-[-0.045em]">Punya usaha di Sumbawa?</h2><p className="mt-1 text-[13px] leading-[18px] text-white/90">Jangan cuma bagikan nomor WhatsApp. Buat halaman usaha dengan katalog, lokasi, dan lainnya.</p><button type="button" onClick={() => navigate("/submit")} className="mt-3 h-10 min-w-[150px] rounded-xl bg-white px-4 text-[13px] font-extrabold text-primary-700 transition active:scale-95">Daftarkan Usaha</button></div><StoreIllustration /></section>
+      <section className="relative mt-8 min-h-[170px] overflow-hidden rounded-2xl bg-[radial-gradient(circle_at_92%_12%,#15795c,transparent_32%),linear-gradient(120deg,#003f32,#007352)] px-4 py-4 text-white shadow-[0_6px_13px_rgba(0,91,69,0.20)]"><div className="relative z-10 max-w-[235px]"><h2 className="text-[20px] font-extrabold leading-6 tracking-[-0.045em]">{t("home.businessPromoTitle", { city: selectedCityName })}</h2><p className="mt-1 text-[13px] leading-[18px] text-white/90">{t("home.businessPromoDescription")}</p><button type="button" onClick={() => navigate("/submit")} className="mt-3 h-10 min-w-[150px] rounded-xl bg-white px-4 text-[13px] font-extrabold text-primary-700 transition active:scale-95">{t("home.businessPromoAction")}</button></div><StoreIllustration /></section>
 
       <section className="mb-5 mt-8">
         <SectionHeading title={t("home.latestInCariKontak")} onMore={() => navigate("/search")} />

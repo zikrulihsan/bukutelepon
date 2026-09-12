@@ -17,7 +17,7 @@ interface ContactCardProps {
 export function ContactCard({ contact, hideSave }: ContactCardProps) {
   const [saved, setSaved] = useState(() => isSaved(contact.id));
   const navigate = useNavigate();
-  const { t, categoryName } = useI18n();
+  const { t, categoryName, lang } = useI18n();
 
   function handleSave() {
     setSaved(toggleSaved(contact.id));
@@ -28,6 +28,7 @@ export function ContactCard({ contact, hideSave }: ContactCardProps) {
   }
 
   const location = contact.address || contact.city?.name || "";
+  const description = lang === "en" ? contact.descriptionEn || contact.description : contact.description;
 
   return (
     <div className="bg-white rounded-2xl border border-gray-100/80 shadow-[0_2px_8px_rgba(0,0,0,0.04)] p-4">
@@ -68,9 +69,9 @@ export function ContactCard({ contact, hideSave }: ContactCardProps) {
             </p>
           )}
 
-          {contact.description && (
+          {description && (
             <p className="text-[13.5px] text-gray-600 leading-relaxed line-clamp-2 mt-1.5">
-              {contact.description}
+              {description}
             </p>
           )}
         </div>
