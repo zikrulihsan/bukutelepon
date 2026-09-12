@@ -27,9 +27,56 @@ const CATEGORY_FALLBACK = [
 ];
 
 const HOME_CATEGORY_ORDER = CATEGORY_FALLBACK.map((category) => category.slug);
+const HOME_CRITICAL_IMAGES = [
+  "/hero-sumbawa-v2.webp",
+  "/storefront/discovery-coffee.webp",
+  "/storefront/discovery-souvenir.webp",
+  "/storefront/discovery-delivery.webp",
+];
+const HOME_READY_STORAGE_KEY = "ck_home_ready_v1";
+
+function preloadImage(source: string): Promise<void> {
+  return new Promise((resolve) => {
+    const image = new Image();
+    let settled = false;
+    const finish = () => {
+      if (settled) return;
+      settled = true;
+      resolve();
+    };
+    const decodeAndFinish = () => {
+      if (typeof image.decode === "function") {
+        void image.decode().catch(() => undefined).finally(finish);
+      } else {
+        finish();
+      }
+    };
+
+    image.decoding = "async";
+    image.onload = decodeAndFinish;
+    image.onerror = finish;
+    image.src = source;
+    if (image.complete) decodeAndFinish();
+  });
+}
 
 function PinIcon({ className = "" }: { className?: string }) {
   return <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden="true"><path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" /></svg>;
+}
+
+function HomeInitialLoader({ label }: { label: string }) {
+  return <div className="fixed inset-0 z-[100] grid min-h-[100dvh] place-items-center bg-[radial-gradient(circle_at_50%_38%,rgba(218,240,226,.95),transparent_34%),#F8FAF7] px-6" role="status" aria-live="polite" aria-label={label}>
+    <div className="flex flex-col items-center text-center">
+      <div className="grid h-16 w-16 place-items-center rounded-[22px] bg-primary-700 text-white shadow-[0_10px_24px_rgba(0,105,75,.22)]">
+        <PinIcon className="h-8 w-8" />
+      </div>
+      <p className="mt-4 text-[25px] font-extrabold tracking-[-0.055em] text-[#08234B]">CariKontak</p>
+      <div className="mt-4 h-1.5 w-28 overflow-hidden rounded-full bg-[#DDEBE2]">
+        <div className="h-full w-2/3 animate-pulse rounded-full bg-primary-700" />
+      </div>
+      <p className="mt-3 text-[13px] font-semibold text-[#71809B]">{label}</p>
+    </div>
+  </div>;
 }
 
 function ArrowIcon({ className = "" }: { className?: string }) {
@@ -90,7 +137,7 @@ function ChoiceCard({ contact, categoryLabel, cityName, viewLabel, onOpen }: { c
 
 function DiscoveryPoster({ title, description, imageUrl, imagePosition = "center", onOpen }: { title: string; description: string; imageUrl: string; imagePosition?: string; onOpen: () => void }) {
   return <button type="button" onClick={onOpen} className="group relative h-[236px] w-[184px] shrink-0 snap-start overflow-hidden rounded-[20px] bg-[#173B32] text-left shadow-[0_6px_16px_rgba(16,46,70,0.15)] transition active:scale-[0.98]">
-    <img src={imageUrl} alt="" aria-hidden="true" className="absolute inset-0 h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]" style={{ objectPosition: imagePosition }} />
+    <img src={imageUrl} alt="" aria-hidden="true" loading="eager" decoding="async" className="absolute inset-0 h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]" style={{ objectPosition: imagePosition }} />
     <span className="absolute inset-0 bg-[linear-gradient(180deg,rgba(5,28,38,.06)_22%,rgba(5,28,38,.20)_48%,rgba(5,28,38,.92)_100%)]" />
     <span className="absolute right-3 top-3 grid h-8 w-8 place-items-center rounded-full border border-white/50 bg-white/90 text-primary-700 shadow-sm"><ArrowIcon className="h-4 w-4" /></span>
     <span className="absolute inset-x-0 bottom-0 z-10 block px-3.5 pb-3.5 pt-12 text-white">
@@ -116,12 +163,42 @@ export default function MainScreen() {
   const [showCityPicker, setShowCityPicker] = useState(false);
   const [showEmergency, setShowEmergency] = useState(false);
   const [query, setQuery] = useState("");
-  const { data: citiesData } = useQuery<{ success: boolean; data: City[] }>({ queryKey: ["cities"], queryFn: async () => (await apiClient.get("/cities")).data });
+  const [gateInitialRender] = useState(() => {
+    try {
+      return sessionStorage.getItem(HOME_READY_STORAGE_KEY) !== "1";
+    } catch {
+      return true;
+    }
+  });
+  const [criticalImagesReady, setCriticalImagesReady] = useState(false);
+  const [minimumLoaderElapsed, setMinimumLoaderElapsed] = useState(!gateInitialRender);
+  const [loaderDeadlineReached, setLoaderDeadlineReached] = useState(false);
+  const { data: citiesData, isLoading: citiesLoading } = useQuery<{ success: boolean; data: City[] }>({ queryKey: ["cities"], queryFn: async () => (await apiClient.get("/cities")).data });
+
+  useEffect(() => {
+    let active = true;
+    void Promise.all(HOME_CRITICAL_IMAGES.map(preloadImage)).then(() => {
+      if (active) setCriticalImagesReady(true);
+    });
+    return () => { active = false; };
+  }, []);
+
+  useEffect(() => {
+    if (!gateInitialRender) return;
+    const minimumTimer = window.setTimeout(() => setMinimumLoaderElapsed(true), 450);
+    const deadlineTimer = window.setTimeout(() => setLoaderDeadlineReached(true), 8000);
+    return () => {
+      window.clearTimeout(minimumTimer);
+      window.clearTimeout(deadlineTimer);
+    };
+  }, [gateInitialRender]);
 
   useEffect(() => { if (citiesData?.data) setCities(citiesData.data); }, [citiesData, setCities]);
   const { data: contactsData, isLoading: contactsLoading } = useContacts({ city: citySlug || undefined, limit: 10 });
   const contacts = contactsData?.data ?? [];
-  const recommendedContacts = contacts.filter((contact) => contact.isVerified).slice(0, 6);
+  const verifiedContacts = contacts.filter((contact) => contact.isVerified);
+  const contactsWithPhotos = contacts.filter((contact) => Boolean(contact.imageUrl?.trim()));
+  const recommendedContacts = (verifiedContacts.length ? verifiedContacts : contactsWithPhotos).slice(0, 6);
   const displayCategories = categories.length
     ? [...categories]
       .sort((a, b) => {
@@ -133,24 +210,40 @@ export default function MainScreen() {
       .map((category) => ({ slug: category.slug, name: categoryName(category) }))
     : CATEGORY_FALLBACK;
   const selectedCityName = city?.name ?? "Sumbawa Besar";
+  const initialDataReady = !contactsLoading && !categoriesLoading && !citiesLoading;
+  const initialAssetsReady = criticalImagesReady || loaderDeadlineReached;
+  const showInitialLoader = gateInitialRender && (!minimumLoaderElapsed || !initialAssetsReady || (!initialDataReady && !loaderDeadlineReached));
   const cityPickerVisible = showCityPicker || (!citySlug && (citiesData?.data?.length ?? cities.length) > 0);
   const goToSearch = (keyword = query) => { const value = keyword.trim(); navigate(value ? `/search?q=${encodeURIComponent(value)}` : "/search"); };
   const chooseCity = (nextCity: City) => { setCity(nextCity); setShowCityPicker(false); };
   const discoveryTopics = [
-    { id: "coffee", title: t("home.discoveryCoffeeTitle"), description: t("home.discoveryCoffeeDescription"), imageUrl: "/storefront/kopi-tambora.jpg", href: "/search?q=kopi" },
-    { id: "souvenirs", title: t("home.discoverySouvenirTitle"), description: t("home.discoverySouvenirDescription"), imageUrl: "/storefront/madu-sumbawa.jpg", href: "/search?q=oleh-oleh" },
-    { id: "travel", title: t("home.discoveryTravelTitle"), description: t("home.discoveryTravelDescription"), imageUrl: "/hero-sumbawa-v2.jpg", imagePosition: "62% center", href: "/search?q=travel" },
-    { id: "delivery", title: t("home.discoveryDeliveryTitle"), description: t("home.discoveryDeliveryDescription"), imageUrl: "/storefront/store-cover.jpg", imagePosition: "68% center", href: "/search?category=jasa" },
+    { id: "coffee", title: t("home.discoveryCoffeeTitle"), description: t("home.discoveryCoffeeDescription"), imageUrl: "/storefront/discovery-coffee.webp", href: "/search?q=kopi" },
+    { id: "souvenirs", title: t("home.discoverySouvenirTitle"), description: t("home.discoverySouvenirDescription"), imageUrl: "/storefront/discovery-souvenir.webp", href: "/search?q=oleh-oleh" },
+    { id: "travel", title: t("home.discoveryTravelTitle"), description: t("home.discoveryTravelDescription"), imageUrl: "/hero-sumbawa-v2.webp", imagePosition: "62% center", href: "/search?q=travel" },
+    { id: "delivery", title: t("home.discoveryDeliveryTitle"), description: t("home.discoveryDeliveryDescription"), imageUrl: "/storefront/discovery-delivery.webp", imagePosition: "68% center", href: "/search?category=jasa" },
   ];
+
+  useEffect(() => {
+    if (showInitialLoader) return;
+    try {
+      sessionStorage.setItem(HOME_READY_STORAGE_KEY, "1");
+    } catch {
+      // The loader still works when session storage is unavailable.
+    }
+  }, [showInitialLoader]);
+
+  if (showInitialLoader) return <HomeInitialLoader label={t("common.loading")} />;
 
   return <div className="min-h-screen bg-[radial-gradient(circle_at_30%_8%,rgba(226,241,231,.62),transparent_26%),#F8FAF7] pb-[82px] text-[#08234B]">
     {cityPickerVisible && <CityPickerOverlay cities={citiesData?.data ?? cities} onSelect={chooseCity} onClose={citySlug ? () => setShowCityPicker(false) : undefined} />}
     <div className="mx-auto max-w-md overflow-x-hidden bg-[#F8FAF7] sm:shadow-[0_0_24px_rgba(15,47,45,0.06)]">
       <section className="relative h-[316px] overflow-hidden bg-[#E6F2E9]">
         <img
-          src="/hero-sumbawa-v2.jpg"
+          src="/hero-sumbawa-v2.webp"
           alt=""
           aria-hidden="true"
+          fetchPriority="high"
+          decoding="async"
           className="absolute inset-0 h-full w-full object-cover object-[58%_center]"
         />
         <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(246,251,247,.97)_0%,rgba(240,249,242,.88)_49%,rgba(229,244,234,.30)_100%)]" />
@@ -197,10 +290,10 @@ export default function MainScreen() {
         <div className="-mr-4 flex snap-x snap-mandatory gap-2.5 overflow-x-auto pb-3 pr-4 scrollbar-hide">{discoveryTopics.map((topic) => <DiscoveryPoster key={topic.id} title={topic.title} description={topic.description} imageUrl={topic.imageUrl} imagePosition={topic.imagePosition} onOpen={() => navigate(topic.href)} />)}</div>
       </section>
 
-      <section className="mt-7">
+      {recommendedContacts.length > 0 && <section className="mt-7">
         <SectionHeading title={t("home.carikontakRecommendations")} onMore={() => navigate("/search")} />
-        {contactsLoading ? <div className="-mr-4 flex gap-2.5 overflow-hidden pr-4"><div className="h-[238px] w-[174px] shrink-0 rounded-2xl shimmer" /><div className="h-[238px] w-[174px] shrink-0 rounded-2xl shimmer" /><div className="h-[238px] w-[174px] shrink-0 rounded-2xl shimmer" /></div> : recommendedContacts.length ? <div className="-mr-4 flex snap-x snap-mandatory gap-2.5 overflow-x-auto pb-2 pr-4 scrollbar-hide">{recommendedContacts.map((contact) => <ChoiceCard key={contact.id} contact={contact} categoryLabel={categoryName(contact.category)} cityName={selectedCityName} viewLabel={t("home.view")} onOpen={() => navigate(`/kontak/${contact.id}`)} />)}</div> : <div className="grid h-[144px] place-items-center rounded-2xl bg-white p-5 text-center text-[14px] text-[#71809B]">{t("home.noRecommendations")}</div>}
-      </section>
+        <div className="-mr-4 flex snap-x snap-mandatory gap-2.5 overflow-x-auto pb-2 pr-4 scrollbar-hide">{recommendedContacts.map((contact) => <ChoiceCard key={contact.id} contact={contact} categoryLabel={categoryName(contact.category)} cityName={selectedCityName} viewLabel={t("home.view")} onOpen={() => navigate(`/kontak/${contact.id}`)} />)}</div>
+      </section>}
 
       <section className="relative mt-8 min-h-[170px] overflow-hidden rounded-2xl bg-[radial-gradient(circle_at_92%_12%,#15795c,transparent_32%),linear-gradient(120deg,#003f32,#007352)] px-4 py-4 text-white shadow-[0_6px_13px_rgba(0,91,69,0.20)]"><div className="relative z-10 max-w-[235px]"><h2 className="text-[20px] font-extrabold leading-6 tracking-[-0.045em]">Punya usaha di Sumbawa?</h2><p className="mt-1 text-[13px] leading-[18px] text-white/90">Jangan cuma bagikan nomor WhatsApp. Buat halaman usaha dengan katalog, lokasi, dan lainnya.</p><button type="button" onClick={() => navigate("/submit")} className="mt-3 h-10 min-w-[150px] rounded-xl bg-white px-4 text-[13px] font-extrabold text-primary-700 transition active:scale-95">Daftarkan Usaha</button></div><StoreIllustration /></section>
 
