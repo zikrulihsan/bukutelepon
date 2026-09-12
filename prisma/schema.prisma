@@ -45,6 +45,12 @@ enum StorefrontItemStatus {
   SOLD_OUT
 }
 
+enum CatalogLinkStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 enum TrustLevel {
   UNVERIFIED
   EMAIL_VERIFIED
@@ -104,8 +110,10 @@ model Business {
   createdAt         DateTime       @default(now())
   updatedAt         DateTime       @updatedAt
 
-  owner Profile          @relation(fields: [ownerId], references: [id], onDelete: Cascade)
-  items StorefrontItem[]
+  owner              Profile             @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  items              StorefrontItem[]
+  contact            Contact?            @relation("CatalogContact")
+  catalogLinkRequest CatalogLinkRequest?
 
   @@index([status])
   @@map("businesses")
@@ -191,6 +199,7 @@ model Contact {
   imageUrl        String?
   isVerified      Boolean       @default(false)
   claimedById     String?
+  businessId      String?       @unique
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
 
@@ -198,12 +207,30 @@ model Contact {
   category    Category @relation(fields: [categoryId], references: [id])
   submittedBy Profile  @relation("SubmittedContacts", fields: [submittedById], references: [id])
   claimedBy   Profile? @relation("ClaimedContacts", fields: [claimedById], references: [id])
+  business    Business? @relation("CatalogContact", fields: [businessId], references: [id], onDelete: SetNull)
+  catalogLinkRequests CatalogLinkRequest[]
   reviews     Review[]
 
   @@index([cityId])
   @@index([categoryId])
   @@index([status])
   @@map("contacts")
+}
+
+model CatalogLinkRequest {
+  id        String            @id @default(uuid())
+  businessId String            @unique
+  contactId String
+  status    CatalogLinkStatus @default(PENDING)
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  contact  Contact  @relation(fields: [contactId], references: [id], onDelete: Cascade)
+
+  @@index([contactId, status])
+  @@index([status, createdAt])
+  @@map("catalog_link_requests")
 }
 
 model CollectionVersion {

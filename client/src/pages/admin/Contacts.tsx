@@ -6,7 +6,7 @@ import { uploadContactImage, UploadError } from "../../lib/uploadImage";
 import { useCategories } from "../../context/CategoriesContext";
 import { Button } from "../../components/ui/Button";
 import { Badge } from "../../components/ui/Badge";
-import type { Contact, City, Category, PaginatedResponse } from "../../types";
+import type { ApiResponse, CatalogLinkRequest, Contact, City, Category, PaginatedResponse } from "../../types";
 import { useI18n } from "../../i18n/LanguageContext";
 
 interface EditForm {
@@ -48,6 +48,11 @@ export default function AdminContacts() {
     queryFn: async () => (await apiClient.get("/admin/contacts", { params: { status, search: search.trim() || undefined, page } })).data,
   });
 
+  const catalogLinkRequests = useQuery<ApiResponse<CatalogLinkRequest[]>>({
+    queryKey: ["admin", "catalog-link-requests", "PENDING"],
+    queryFn: async () => (await apiClient.get("/admin/catalog-link-requests", { params: { status: "PENDING" } })).data,
+  });
+
   const { data: citiesData } = useQuery<{ success: boolean; data: City[] }>({
     queryKey: ["cities"],
     queryFn: async () => (await apiClient.get("/cities")).data,
@@ -68,6 +73,19 @@ export default function AdminContacts() {
   const rejectMutation = useMutation({
     mutationFn: (id: string) => apiClient.patch(`/admin/contacts/${id}/reject`),
     onSuccess: invalidateAll,
+  });
+
+  const approveCatalogLink = useMutation({
+    mutationFn: (id: string) => apiClient.patch(`/admin/catalog-link-requests/${id}/approve`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "catalog-link-requests"] });
+      invalidateAll();
+    },
+  });
+
+  const rejectCatalogLink = useMutation({
+    mutationFn: (id: string) => apiClient.patch(`/admin/catalog-link-requests/${id}/reject`),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin", "catalog-link-requests"] }),
   });
 
   const editMutation = useMutation({
@@ -154,6 +172,21 @@ export default function AdminContacts() {
   return (
     <div>
       <h1 className="text-xl font-bold text-gray-900 mb-6">{t("admin.manageContacts")}</h1>
+
+      {(catalogLinkRequests.data?.data.length ?? 0) > 0 && (
+        <section className="mb-7 rounded-2xl border border-amber-200 bg-amber-50/60 p-4">
+          <div className="mb-3"><h2 className="text-sm font-bold text-amber-950">Pengajuan tautan katalog</h2><p className="mt-0.5 text-xs text-amber-800">Setujui hanya setelah memastikan pemilik etalase adalah bisnis pada profil kontak.</p></div>
+          <div className="space-y-2.5">
+            {catalogLinkRequests.data?.data.map((request) => (
+              <div key={request.id} className="rounded-xl bg-white p-3 ring-1 ring-amber-100">
+                <p className="text-xs text-gray-500">Etalase <b className="text-gray-800">{request.business?.name}</b> oleh {request.business?.owner?.name} ({request.business?.owner?.email})</p>
+                <p className="mt-1 text-xs text-gray-500">minta ditautkan ke <b className="text-gray-800">{request.contact.name}</b> · {request.contact.phone} · {request.contact.city?.name}</p>
+                <div className="mt-3 flex gap-2"><Button size="sm" onClick={() => approveCatalogLink.mutate(request.id)} loading={approveCatalogLink.isPending}>Setujui tautan</Button><Button variant="danger" size="sm" onClick={() => rejectCatalogLink.mutate(request.id)} loading={rejectCatalogLink.isPending}>Tolak</Button></div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       <div className="flex gap-2 mb-6">
         {["PENDING", "APPROVED", "REJECTED"].map((s) => (

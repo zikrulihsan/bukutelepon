@@ -6,7 +6,7 @@ import { CategoryIcon } from "../../components/shared/CategoryIcon";
 import { CategoryPhoto } from "../../components/shared/CategoryPhoto";
 import { isSaved, toggleSaved } from "../../lib/saved";
 import { formatWhatsAppUrl, formatTelUrl } from "../../lib/phone";
-import { HiChevronLeft, HiCheckBadge, HiMapPin, HiStar, HiBookmark, HiChevronRight, HiCheck, HiOutlineUser, HiOutlineGlobeAlt, HiArrowTopRightOnSquare, HiOutlineChatBubbleOvalLeft, HiOutlineMapPin } from "react-icons/hi2";
+import { HiChevronLeft, HiCheckBadge, HiMapPin, HiStar, HiBookmark, HiChevronRight, HiCheck, HiOutlineUser, HiOutlineGlobeAlt, HiArrowTopRightOnSquare, HiOutlineChatBubbleOvalLeft, HiOutlineMapPin, HiOutlineBuildingStorefront } from "react-icons/hi2";
 import { HiOutlineBookmark, HiOutlinePhone, HiOutlineClipboardCopy, HiOutlineShare } from "react-icons/hi";
 import { FaWhatsapp } from "react-icons/fa";
 import { useI18n } from "../../i18n/LanguageContext";
@@ -320,6 +320,20 @@ export default function ContactDetailPage() {
               <HiArrowTopRightOnSquare className="h-4 w-4 text-gray-300 flex-shrink-0" />
             </a>
           </div>
+        )}
+
+        {/* Catalog — only present after an administrator has approved the link. */}
+        {contact.business && (
+          <button
+            onClick={() => navigate(`/catalog?store=${encodeURIComponent(contact.business!.slug)}`)}
+            className="w-full rounded-2xl border border-amber-100 bg-amber-50/60 px-5 py-4 text-left shadow-[0_2px_12px_rgba(0,0,0,0.03)] transition-colors hover:bg-amber-50"
+          >
+            <span className="flex items-center gap-4">
+              <span className="flex h-10 w-10 flex-none items-center justify-center rounded-xl bg-amber-100 text-amber-700"><HiOutlineBuildingStorefront className="h-5 w-5" /></span>
+              <span className="min-w-0 flex-1"><span className="mb-0.5 block text-[11px] font-bold uppercase tracking-wider text-amber-700">Katalog</span><span className="block truncate text-[14px] font-semibold text-gray-800">Lihat katalog {contact.business.name}</span></span>
+              <HiChevronRight className="h-4 w-4 flex-none text-amber-600" />
+            </span>
+          </button>
         )}
 
         {/* Description */}

@@ -217,6 +217,86 @@ router.patch("/contacts/:id/reject", async (req: AuthenticatedRequest, res, next
   }
 });
 
+const catalogLinkStatusSchema = z.enum(["PENDING", "APPROVED", "REJECTED"]);
+
+// GET /api/admin/catalog-link-requests?status=PENDING
+router.get("/catalog-link-requests", async (req, res, next) => {
+  try {
+    const parsed = catalogLinkStatusSchema.safeParse(req.query.status ?? "PENDING");
+    if (!parsed.success) throw new AppError(400, "Status pengajuan tidak valid");
+
+    const requests = await prisma.catalogLinkRequest.findMany({
+      where: { status: parsed.data },
+      include: {
+        business: { include: { owner: { select: { id: true, name: true, email: true, phone: true } } } },
+        contact: { include: { city: true, category: true } },
+      },
+      orderBy: { createdAt: "asc" },
+      take: 100,
+    });
+    res.json({ success: true, data: requests });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// PATCH /api/admin/catalog-link-requests/:id/approve
+router.patch("/catalog-link-requests/:id/approve", async (req, res, next) => {
+  try {
+    const request = await prisma.catalogLinkRequest.findUnique({
+      where: { id: req.params.id as string },
+      include: { contact: true },
+    });
+    if (!request) throw new AppError(404, "Pengajuan katalog tidak ditemukan");
+    if (request.contact.status !== "APPROVED") throw new AppError(409, "Profil kontak belum disetujui");
+    if (request.contact.businessId && request.contact.businessId !== request.businessId) {
+      throw new AppError(409, "Profil kontak sudah terhubung ke etalase lain");
+    }
+
+    const approved = await prisma.$transaction(async (tx) => {
+      // A business can have exactly one public directory profile. Re-linking it
+      // intentionally removes the old association before attaching the new one.
+      await tx.contact.updateMany({
+        where: { businessId: request.businessId },
+        data: { businessId: null },
+      });
+      await tx.contact.update({
+        where: { id: request.contactId },
+        data: { businessId: request.businessId },
+      });
+      return tx.catalogLinkRequest.update({
+        where: { id: request.id },
+        data: { status: "APPROVED" },
+        include: {
+          business: { include: { owner: { select: { id: true, name: true, email: true, phone: true } } } },
+          contact: { include: { city: true, category: true } },
+        },
+      });
+    });
+
+    res.json({ success: true, data: approved });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// PATCH /api/admin/catalog-link-requests/:id/reject
+router.patch("/catalog-link-requests/:id/reject", async (req, res, next) => {
+  try {
+    const rejected = await prisma.catalogLinkRequest.update({
+      where: { id: req.params.id as string },
+      data: { status: "REJECTED" },
+      include: {
+        business: { include: { owner: { select: { id: true, name: true, email: true, phone: true } } } },
+        contact: { include: { city: true, category: true } },
+      },
+    });
+    res.json({ success: true, data: rejected });
+  } catch (err) {
+    next(err);
+  }
+});
+
 // GET /api/admin/reviews?status=PENDING
 router.get("/reviews", async (req, res, next) => {
   try {

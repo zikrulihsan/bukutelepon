@@ -47,6 +47,10 @@ const itemSchema = z.object({
   sortOrder: z.coerce.number().int().min(0).max(10_000).default(0),
 });
 
+const catalogLinkSchema = z.object({
+  contactId: z.string().uuid(),
+});
+
 function nullable(value: string | null | undefined): string | null {
   const trimmed = value?.trim();
   return trimmed ? trimmed : null;
@@ -77,9 +81,71 @@ router.get("/business", async (req: AuthenticatedRequest, res, next) => {
   try {
     const business = await prisma.business.findUnique({
       where: { ownerId: req.userId! },
-      include: { items: { orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }] } },
+      include: {
+        items: { orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }] },
+        contact: { include: { city: true, category: true } },
+        catalogLinkRequest: { include: { contact: { include: { city: true, category: true } } } },
+      },
     });
     res.json({ success: true, data: business });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// GET /api/pro/contact-candidates — approved directory profiles that may be claimed.
+router.get("/contact-candidates", async (req: AuthenticatedRequest, res, next) => {
+  try {
+    const business = await ownedBusiness(req.userId!);
+    const search = typeof req.query.search === "string" ? req.query.search.trim().slice(0, 100) : "";
+    const contacts = await prisma.contact.findMany({
+      where: {
+        status: "APPROVED",
+        OR: [
+          { businessId: null },
+          { businessId: business.id },
+        ],
+        ...(search ? {
+          AND: [{
+            OR: [
+              { name: { contains: search, mode: "insensitive" } },
+              { phone: { contains: search, mode: "insensitive" } },
+              { address: { contains: search, mode: "insensitive" } },
+            ],
+          }],
+        } : {}),
+      },
+      include: { city: true, category: true },
+      take: 20,
+      orderBy: { name: "asc" },
+    });
+    res.json({ success: true, data: contacts });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// PUT /api/pro/catalog-link-request — requests an admin review before a catalog is shown on a contact profile.
+router.put("/catalog-link-request", async (req: AuthenticatedRequest, res, next) => {
+  try {
+    const { contactId } = catalogLinkSchema.parse(req.body);
+    const business = await ownedBusiness(req.userId!);
+    const contact = await prisma.contact.findUnique({ where: { id: contactId } });
+
+    if (!contact || contact.status !== "APPROVED") {
+      throw new AppError(404, "Profil kontak tidak ditemukan atau belum disetujui");
+    }
+    if (contact.businessId && contact.businessId !== business.id) {
+      throw new AppError(409, "Profil kontak tersebut sudah terhubung ke etalase lain");
+    }
+
+    const request = await prisma.catalogLinkRequest.upsert({
+      where: { businessId: business.id },
+      create: { businessId: business.id, contactId, status: "PENDING" },
+      update: { contactId, status: "PENDING" },
+      include: { contact: { include: { city: true, category: true } } },
+    });
+    res.json({ success: true, data: request });
   } catch (err) {
     next(err);
   }
@@ -112,7 +178,11 @@ router.put("/business", async (req: AuthenticatedRequest, res, next) => {
       where: { ownerId: req.userId! },
       create: { ...data, ownerId: req.userId! },
       update: data,
-      include: { items: { orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }] } },
+      include: {
+        items: { orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }] },
+        contact: { include: { city: true, category: true } },
+        catalogLinkRequest: { include: { contact: { include: { city: true, category: true } } } },
+      },
     });
 
     if (existing) {

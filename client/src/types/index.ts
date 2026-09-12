@@ -2,6 +2,7 @@ export interface Profile {
   id: string;
   email: string;
   name: string;
+  phone?: string | null;
   role: "USER" | "ADMIN";
   plan: "FREE" | "PRO";
   hasContributed: boolean;
@@ -10,6 +11,7 @@ export interface Profile {
 }
 
 export type BusinessStatus = "DRAFT" | "ACTIVE" | "HIDDEN";
+export type CatalogLinkStatus = "PENDING" | "APPROVED" | "REJECTED";
 export type StorefrontItemStatus = "ACTIVE" | "HIDDEN" | "SOLD_OUT";
 export type StorefrontPriceType = "FIXED" | "STARTING_FROM" | "CONTACT" | "FREE";
 export type StorefrontItemType = "PRODUCT" | "SERVICE" | "PACKAGE" | "PROMO";
@@ -52,6 +54,19 @@ export interface ManagedBusiness {
   createdAt: string;
   updatedAt: string;
   items: ManagedStorefrontItem[];
+  contact?: Contact | null;
+  catalogLinkRequest?: CatalogLinkRequest | null;
+}
+
+export interface CatalogLinkRequest {
+  id: string;
+  businessId: string;
+  contactId: string;
+  status: CatalogLinkStatus;
+  createdAt: string;
+  updatedAt: string;
+  contact: Contact;
+  business?: ManagedBusiness & { owner?: Pick<Profile, "id" | "name" | "email" | "phone"> };
 }
 
 export interface City {
@@ -99,6 +114,7 @@ export interface Contact {
   submittedById: string;
   submittedBy?: Profile;
   reviews?: Review[];
+  business?: { name: string; slug: string; status: BusinessStatus } | null;
 }
 
 export interface Review {

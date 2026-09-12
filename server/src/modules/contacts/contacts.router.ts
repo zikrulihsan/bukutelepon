@@ -119,6 +119,9 @@ router.get("/:id", apiLimiter, async (req, res, next) => {
           orderBy: { createdAt: "desc" },
           take: 10,
         },
+        business: {
+          select: { name: true, slug: true, status: true },
+        },
       },
     });
 
@@ -126,7 +129,11 @@ router.get("/:id", apiLimiter, async (req, res, next) => {
       throw new AppError(404, "Contact not found");
     }
 
-    res.json({ success: true, data: contact });
+    // An inactive storefront must not be discoverable through a public contact profile.
+    res.json({
+      success: true,
+      data: contact.business?.status === "ACTIVE" ? contact : { ...contact, business: null },
+    });
   } catch (err) {
     next(err);
   }

@@ -21,6 +21,7 @@ import { useAuth } from "../../hooks/useAuth";
 import type {
   ApiResponse,
   BusinessStatus,
+  Contact,
   ManagedBusiness,
   ManagedStorefrontItem,
   StorefrontItemStatus,
@@ -144,6 +145,7 @@ export default function ProDashboardPage() {
   const [businessForm, setBusinessForm] = useState<BusinessDraft>(emptyBusiness);
   const [itemForm, setItemForm] = useState<ItemDraft | null>(null);
   const [uploading, setUploading] = useState<"logo" | "cover" | "item" | null>(null);
+  const [contactSearch, setContactSearch] = useState("");
   const [notice, setNotice] = useState("");
   const [failure, setFailure] = useState("");
 
@@ -154,6 +156,12 @@ export default function ProDashboardPage() {
     enabled: Boolean(user && canManage),
   });
   const managedBusiness = businessQuery.data?.data ?? null;
+
+  const contactCandidatesQuery = useQuery<ApiResponse<Contact[]>>({
+    queryKey: ["pro", "contact-candidates", contactSearch],
+    queryFn: async () => (await apiClient.get("/pro/contact-candidates", { params: { search: contactSearch.trim() || undefined } })).data,
+    enabled: Boolean(managedBusiness),
+  });
 
   useEffect(() => setBusinessForm(businessDraft(managedBusiness)), [managedBusiness]);
 
@@ -185,6 +193,16 @@ export default function ProDashboardPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["pro", "business"] });
       setNotice("Item dihapus dari etalase.");
+    },
+    onError: (error) => setFailure(errorMessage(error)),
+  });
+
+  const requestCatalogLink = useMutation({
+    mutationFn: async (contactId: string) => (await apiClient.put("/pro/catalog-link-request", { contactId })).data,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["pro", "business"] });
+      setNotice("Pengajuan tautan katalog sudah dikirim untuk ditinjau admin.");
+      setFailure("");
     },
     onError: (error) => setFailure(errorMessage(error)),
   });
@@ -284,6 +302,32 @@ export default function ProDashboardPage() {
               <PhotoField label="Logo bisnis" value={businessForm.logoUrl} busy={uploading === "logo"} onFile={(file) => upload(file, "logo")} onClear={() => setBusinessForm({ ...businessForm, logoUrl: "" })} />
               <PhotoField label="Foto sampul" value={businessForm.coverUrl} busy={uploading === "cover"} onFile={(file) => upload(file, "cover")} onClear={() => setBusinessForm({ ...businessForm, coverUrl: "" })} wide />
             </div>
+
+            <section className="rounded-2xl border border-amber-100 bg-amber-50/60 p-4">
+              <div className="flex items-start gap-3">
+                <span className="grid h-9 w-9 flex-none place-items-center rounded-xl bg-amber-100 text-amber-700"><HiOutlineBuildingStorefront className="h-5 w-5" /></span>
+                <div className="min-w-0"><h2 className="text-sm font-bold text-gray-900">Hubungkan ke profil kontak</h2><p className="mt-0.5 text-xs leading-5 text-gray-600">Pilih profil bisnis di direktori. Admin akan meninjau sebelum tombol katalog tampil ke publik.</p></div>
+              </div>
+              {!managedBusiness ? (
+                <p className="mt-3 text-xs font-medium text-amber-800">Simpan profil bisnis terlebih dahulu untuk mengajukan tautan.</p>
+              ) : (
+                <>
+                  {managedBusiness.contact && <p className="mt-3 rounded-xl bg-white px-3 py-2 text-xs font-semibold text-green-700">Terhubung ke profil kontak: {managedBusiness.contact.name}</p>}
+                  {managedBusiness.catalogLinkRequest?.status === "PENDING" && <p className="mt-3 rounded-xl bg-white px-3 py-2 text-xs font-semibold text-amber-800">Menunggu persetujuan admin untuk: {managedBusiness.catalogLinkRequest.contact.name}</p>}
+                  {managedBusiness.catalogLinkRequest?.status === "REJECTED" && <p className="mt-3 rounded-xl bg-white px-3 py-2 text-xs font-semibold text-red-700">Pengajuan sebelumnya ditolak. Anda dapat memilih profil kontak lain atau mengajukan kembali.</p>}
+                  <label className="mt-3 block text-xs font-semibold text-gray-700">Cari profil kontak<input value={contactSearch} onChange={(event) => setContactSearch(event.target.value)} placeholder="Nama, nomor, atau alamat" className={`${inputClass} mt-1.5`} /></label>
+                  <div className="mt-2 max-h-52 space-y-2 overflow-y-auto">
+                    {contactCandidatesQuery.isLoading ? <p className="px-1 py-2 text-xs text-gray-500">Memuat profil kontak…</p> : (contactCandidatesQuery.data?.data ?? []).map((contact) => (
+                      <div key={contact.id} className="flex items-center justify-between gap-3 rounded-xl bg-white px-3 py-2.5 ring-1 ring-amber-100">
+                        <div className="min-w-0"><p className="truncate text-xs font-bold text-gray-800">{contact.name}</p><p className="truncate text-[11px] text-gray-500">{contact.city?.name} · {contact.category?.name} · {contact.phone}</p></div>
+                        <button type="button" onClick={() => requestCatalogLink.mutate(contact.id)} disabled={requestCatalogLink.isPending || managedBusiness.contact?.id === contact.id} className="flex-none rounded-lg border border-primary-200 px-2.5 py-1.5 text-[11px] font-bold text-primary-700 hover:bg-primary-50 disabled:opacity-50">{managedBusiness.contact?.id === contact.id ? "Terhubung" : "Ajukan"}</button>
+                      </div>
+                    ))}
+                    {!contactCandidatesQuery.isLoading && (contactCandidatesQuery.data?.data ?? []).length === 0 && <p className="px-1 py-2 text-xs text-gray-500">Tidak ada profil kontak yang tersedia.</p>}
+                  </div>
+                </>
+              )}
+            </section>
 
             <div className="flex flex-col gap-3 border-t border-gray-100 pt-5 sm:flex-row sm:items-end sm:justify-between">
               <label className={`${labelClass} sm:w-64`}>Status etalase<select value={businessForm.status} onChange={(e) => setBusinessForm({ ...businessForm, status: e.target.value as BusinessStatus })} className={inputClass}><option value="DRAFT">Draf (belum publik)</option><option value="ACTIVE">Terbitkan</option><option value="HIDDEN">Sembunyikan sementara</option></select></label>
