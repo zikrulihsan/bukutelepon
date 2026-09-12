@@ -181,9 +181,12 @@ export default function MainScreen() {
   const [carouselHovered, setCarouselHovered] = useState(false);
   const [carouselFocused, setCarouselFocused] = useState(false);
   const [carouselPointerActive, setCarouselPointerActive] = useState(false);
+  const [heroTrackPosition, setHeroTrackPosition] = useState(0);
+  const [heroDragOffset, setHeroDragOffset] = useState(0);
+  const [heroTrackTransition, setHeroTrackTransition] = useState(true);
   const [documentVisible, setDocumentVisible] = useState(() => document.visibilityState === "visible");
   const [reduceMotion, setReduceMotion] = useState(false);
-  const swipeStartRef = useRef<{ x: number; y: number } | null>(null);
+  const swipeStartRef = useRef<{ x: number; y: number; startedAt: number; moved: boolean } | null>(null);
   const suppressHeroClickRef = useRef(false);
   const carouselPaused = carouselHovered || carouselFocused || carouselPointerActive;
   const [gateInitialRender] = useState(() => {
@@ -275,6 +278,15 @@ export default function MainScreen() {
       href: promotion.href,
     }));
   }, [heroPromotionsData, lang, selectedCityName, t]);
+  const carouselSlides = useMemo(() => {
+    if (heroSlides.length < 2) return heroSlides.map((slide, logicalIndex) => ({ slide, logicalIndex, clone: false, key: slide.id }));
+    return [
+      { slide: heroSlides[heroSlides.length - 1], logicalIndex: heroSlides.length - 1, clone: true, key: `clone-start-${heroSlides[heroSlides.length - 1].id}` },
+      ...heroSlides.map((slide, logicalIndex) => ({ slide, logicalIndex, clone: false, key: slide.id })),
+      { slide: heroSlides[0], logicalIndex: 0, clone: true, key: `clone-end-${heroSlides[0].id}` },
+    ];
+  }, [heroSlides]);
+  const heroTrackTransform = `translate3d(calc(-${heroTrackPosition * 100}% + ${heroDragOffset}px), 0, 0)`;
   const initialDataReady = !contactsLoading && !categoriesLoading && !citiesLoading;
   const initialAssetsReady = criticalImagesReady || loaderDeadlineReached;
   const showInitialLoader = gateInitialRender && (!minimumLoaderElapsed || !initialAssetsReady || (!initialDataReady && !loaderDeadlineReached));
@@ -303,12 +315,20 @@ export default function MainScreen() {
   }, []);
 
   useEffect(() => {
-    setActiveHeroSlide((current) => Math.min(current, Math.max(0, heroSlides.length - 1)));
+    setHeroTrackTransition(false);
+    setHeroDragOffset(0);
+    setActiveHeroSlide(0);
+    setHeroTrackPosition(heroSlides.length > 1 ? 1 : 0);
+    const frame = window.requestAnimationFrame(() => setHeroTrackTransition(true));
+    return () => window.cancelAnimationFrame(frame);
   }, [heroSlides.length]);
 
   useEffect(() => {
     if (heroSlides.length < 2 || carouselPaused || !documentVisible || reduceMotion) return;
     const timer = window.setInterval(() => {
+      setHeroTrackTransition(true);
+      setHeroDragOffset(0);
+      setHeroTrackPosition((current) => current + 1);
       setActiveHeroSlide((current) => (current + 1) % heroSlides.length);
     }, 5000);
     return () => window.clearInterval(timer);
@@ -323,7 +343,27 @@ export default function MainScreen() {
   }, [activeHeroSlide, heroSlides]);
 
   const moveHeroSlide = (direction: -1 | 1) => {
-    setActiveHeroSlide((current) => (current + direction + heroSlides.length) % heroSlides.length);
+    if (heroSlides.length < 2) return;
+    const next = (activeHeroSlide + direction + heroSlides.length) % heroSlides.length;
+    setHeroTrackTransition(!reduceMotion);
+    setHeroDragOffset(0);
+    setHeroTrackPosition(reduceMotion ? next + 1 : heroTrackPosition + direction);
+    setActiveHeroSlide(next);
+  };
+
+  const goToHeroSlide = (index: number) => {
+    setHeroTrackTransition(!reduceMotion);
+    setHeroDragOffset(0);
+    setHeroTrackPosition(heroSlides.length > 1 ? index + 1 : 0);
+    setActiveHeroSlide(index);
+  };
+
+  const handleHeroTrackTransitionEnd = () => {
+    if (heroSlides.length < 2) return;
+    if (heroTrackPosition !== 0 && heroTrackPosition !== heroSlides.length + 1) return;
+    setHeroTrackTransition(false);
+    setHeroTrackPosition(heroTrackPosition === 0 ? heroSlides.length : 1);
+    window.requestAnimationFrame(() => window.requestAnimationFrame(() => setHeroTrackTransition(true)));
   };
 
   const openHeroSlide = (slide: LocalizedHeroSlide) => {
@@ -335,22 +375,48 @@ export default function MainScreen() {
   };
 
   const handleHeroPointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
-    swipeStartRef.current = { x: event.clientX, y: event.clientY };
+    if ((event.target as HTMLElement).closest("button")) return;
+    swipeStartRef.current = { x: event.clientX, y: event.clientY, startedAt: performance.now(), moved: false };
+    event.currentTarget.setPointerCapture(event.pointerId);
+    setHeroTrackTransition(false);
     setCarouselPointerActive(true);
+  };
+
+  const handleHeroPointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
+    const start = swipeStartRef.current;
+    if (!start) return;
+    const deltaX = event.clientX - start.x;
+    const deltaY = event.clientY - start.y;
+    if (!start.moved && Math.abs(deltaY) > Math.abs(deltaX) && Math.abs(deltaY) > 8) return;
+    if (Math.abs(deltaX) > 6) start.moved = true;
+    if (start.moved) setHeroDragOffset(deltaX);
   };
 
   const finishHeroPointer = (event: React.PointerEvent<HTMLDivElement>) => {
     const start = swipeStartRef.current;
     swipeStartRef.current = null;
     setCarouselPointerActive(false);
+    setHeroTrackTransition(!reduceMotion);
+    setHeroDragOffset(0);
     if (!start) return;
     const deltaX = event.clientX - start.x;
     const deltaY = event.clientY - start.y;
-    if (Math.abs(deltaX) > 45 && Math.abs(deltaX) > Math.abs(deltaY)) {
+    const elapsed = Math.max(1, performance.now() - start.startedAt);
+    const velocity = Math.abs(deltaX) / elapsed;
+    if (start.moved) {
       suppressHeroClickRef.current = true;
-      moveHeroSlide(deltaX < 0 ? 1 : -1);
       window.setTimeout(() => { suppressHeroClickRef.current = false; }, 0);
     }
+    if (heroSlides.length > 1 && Math.abs(deltaX) > Math.abs(deltaY) && (Math.abs(deltaX) > 45 || velocity > 0.45)) {
+      moveHeroSlide(deltaX < 0 ? 1 : -1);
+    }
+  };
+
+  const cancelHeroPointer = () => {
+    swipeStartRef.current = null;
+    setCarouselPointerActive(false);
+    setHeroTrackTransition(!reduceMotion);
+    setHeroDragOffset(0);
   };
 
   useEffect(() => {
@@ -368,7 +434,7 @@ export default function MainScreen() {
     {cityPickerVisible && <CityPickerOverlay cities={citiesData?.data ?? cities} onSelect={chooseCity} onClose={citySlug ? () => setShowCityPicker(false) : undefined} />}
     <div className="mx-auto max-w-md overflow-x-hidden bg-[#F8FAF7] sm:shadow-[0_0_24px_rgba(15,47,45,0.06)]">
       <section
-        className="relative h-[316px] overflow-hidden bg-[#E6F2E9]"
+        className="relative h-[260px] overflow-visible bg-[#E6F2E9]"
         role="region"
         aria-roledescription="carousel"
         aria-label={t("home.heroCarouselLabel")}
@@ -377,23 +443,30 @@ export default function MainScreen() {
         onFocusCapture={() => setCarouselFocused(true)}
         onBlurCapture={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setCarouselFocused(false); }}
       >
-        {heroSlides.map((slide, index) => <div key={slide.id} aria-hidden="true" className={`absolute inset-0 ${reduceMotion ? "" : "transition-opacity duration-700 ease-out"} ${index === activeHeroSlide ? "opacity-100" : "opacity-0"}`}>
-          <img
-            src={slide.imageUrl}
-            alt=""
-            loading={index === 0 ? "eager" : "lazy"}
-            fetchPriority={index === 0 ? "high" : "auto"}
-            decoding="async"
-            onError={(event) => {
-              if (!event.currentTarget.src.endsWith("/hero-sumbawa-v2.webp")) event.currentTarget.src = "/hero-sumbawa-v2.webp";
-            }}
-            className="h-full w-full object-cover object-[58%_center]"
-          />
-        </div>)}
+        <div className="absolute inset-0 overflow-hidden" aria-hidden="true">
+          <div
+            className={`flex h-full will-change-transform ${heroTrackTransition && !reduceMotion ? "transition-transform duration-500 ease-[cubic-bezier(.22,.61,.36,1)]" : ""}`}
+            style={{ transform: heroTrackTransform }}
+          >
+            {carouselSlides.map(({ slide, key }, index) => <div key={key} className="h-full w-full shrink-0">
+              <img
+                src={slide.imageUrl}
+                alt=""
+                loading={index <= 2 ? "eager" : "lazy"}
+                fetchPriority={index === (heroSlides.length > 1 ? 1 : 0) ? "high" : "auto"}
+                decoding="async"
+                onError={(event) => {
+                  if (!event.currentTarget.src.endsWith("/hero-sumbawa-v2.webp")) event.currentTarget.src = "/hero-sumbawa-v2.webp";
+                }}
+                className="h-full w-full object-cover object-[58%_center]"
+              />
+            </div>)}
+          </div>
+        </div>
         <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(246,251,247,.97)_0%,rgba(240,249,242,.88)_49%,rgba(229,244,234,.30)_100%)]" />
         <div className="absolute inset-0 bg-[linear-gradient(0deg,rgba(238,248,241,.97)_0%,rgba(238,248,241,.12)_48%,rgba(246,251,247,.32)_100%)]" />
 
-        <div className="relative z-10 flex h-full flex-col px-4 pb-4 pt-4">
+        <div className="relative z-10 flex h-full flex-col px-4 pb-0 pt-4">
           <div className="relative z-30 flex items-center justify-between gap-2">
             <button type="button" onClick={() => setShowCityPicker(true)} className="flex h-10 min-w-0 flex-1 items-center gap-2 rounded-[14px] border border-white/75 bg-white/72 px-3 text-left shadow-[0_2px_10px_rgba(9,60,45,.08)] backdrop-blur-sm transition active:scale-[0.98]">
               <PinIcon className="h-[18px] w-[18px] shrink-0 text-primary-700" />
@@ -403,37 +476,47 @@ export default function MainScreen() {
             <div className="flex shrink-0 items-center gap-2"><LanguageToggle className="shadow-[0_3px_9px_rgba(4,44,37,0.06)]" /><a href={`https://wa.me/6282338588078?text=${encodeURIComponent(t("home.helpWhatsappText"))}`} target="_blank" rel="noopener noreferrer" className="inline-flex h-10 items-center gap-1.5 rounded-full bg-white/95 px-3 text-[13px] font-extrabold text-[#08234B] shadow-[0_3px_9px_rgba(4,44,37,0.10)] transition active:scale-95"><ChatIcon className="h-[18px] w-[18px]" /><span className="hidden min-[390px]:inline">{t("home.help")}</span></a></div>
           </div>
 
-          <div className="relative min-h-0 flex-1">
-            {heroSlides.map((slide, index) => <div
-              key={slide.id}
-              role="link"
-              tabIndex={index === activeHeroSlide ? 0 : -1}
-              aria-hidden={index !== activeHeroSlide}
-              aria-label={t("home.heroSlideLabel", { current: index + 1, total: heroSlides.length, title: `${slide.title} ${slide.highlight}`.trim() })}
-              onClick={() => {
-                if (!suppressHeroClickRef.current && index === activeHeroSlide) openHeroSlide(slide);
-              }}
-              onKeyDown={(event) => {
-                if (event.key === "ArrowLeft") { event.preventDefault(); moveHeroSlide(-1); }
-                if (event.key === "ArrowRight") { event.preventDefault(); moveHeroSlide(1); }
-                if (event.key === "Enter" || event.key === " ") { event.preventDefault(); openHeroSlide(slide); }
-              }}
-              onPointerDown={handleHeroPointerDown}
-              onPointerUp={finishHeroPointer}
-              onPointerCancel={() => { swipeStartRef.current = null; setCarouselPointerActive(false); }}
-              className={`absolute inset-0 flex cursor-pointer touch-pan-y flex-col justify-center pb-6 pt-2 outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary-600 ${reduceMotion ? "" : "transition-all duration-500 ease-out"} ${index === activeHeroSlide ? "pointer-events-auto translate-x-0 opacity-100" : "pointer-events-none translate-x-3 opacity-0"}`}
+          <div
+            className="relative min-h-0 flex-1 touch-pan-y overflow-hidden"
+            onPointerDown={handleHeroPointerDown}
+            onPointerMove={handleHeroPointerMove}
+            onPointerUp={finishHeroPointer}
+            onPointerCancel={cancelHeroPointer}
+          >
+            <div
+              onTransitionEnd={handleHeroTrackTransitionEnd}
+              className={`flex h-full will-change-transform ${heroTrackTransition && !reduceMotion ? "transition-transform duration-500 ease-[cubic-bezier(.22,.61,.36,1)]" : ""}`}
+              style={{ transform: heroTrackTransform }}
             >
-              <div className="max-w-[320px] rounded-2xl">
-                <h1 className="text-[29px] font-extrabold leading-[31px] tracking-[-0.06em] text-[#071F43]"><span className="block truncate">{slide.title}</span>{slide.highlight && <span className="block truncate text-primary-700">{slide.highlight}</span>}</h1>
-                <p className="mt-2 line-clamp-2 max-w-[310px] text-[13.5px] font-medium leading-5 tracking-[-0.025em] text-[#53667F]">{slide.description}</p>
-              </div>
-            </div>)}
-            {heroSlides.length > 1 && <div className="absolute bottom-1 left-0 z-20 flex items-center gap-1.5" role="group" aria-label={t("home.heroCarouselLabel")}>
-              {heroSlides.map((slide, index) => <button key={slide.id} type="button" onClick={() => setActiveHeroSlide(index)} aria-label={t("home.heroGoToSlide", { number: index + 1 })} aria-current={index === activeHeroSlide ? "true" : undefined} className={`h-2 rounded-full ${reduceMotion ? "" : "transition-all"} ${index === activeHeroSlide ? "w-6 bg-primary-700" : "w-2 bg-[#8CA99B]/65 hover:bg-[#668B79]"}`} />)}
+              {carouselSlides.map(({ slide, logicalIndex, clone, key }) => <div
+                key={key}
+                role={clone ? undefined : "link"}
+                tabIndex={!clone && logicalIndex === activeHeroSlide ? 0 : -1}
+                aria-hidden={clone || logicalIndex !== activeHeroSlide}
+                aria-label={clone ? undefined : t("home.heroSlideLabel", { current: logicalIndex + 1, total: heroSlides.length, title: `${slide.title} ${slide.highlight}`.trim() })}
+                onClick={() => {
+                  if (!clone && !suppressHeroClickRef.current && logicalIndex === activeHeroSlide) openHeroSlide(slide);
+                }}
+                onKeyDown={(event) => {
+                  if (clone) return;
+                  if (event.key === "ArrowLeft") { event.preventDefault(); moveHeroSlide(-1); }
+                  if (event.key === "ArrowRight") { event.preventDefault(); moveHeroSlide(1); }
+                  if (event.key === "Enter" || event.key === " ") { event.preventDefault(); openHeroSlide(slide); }
+                }}
+                className={`flex h-full w-full shrink-0 flex-col justify-center pb-2 pt-2 outline-none ${!clone && logicalIndex === activeHeroSlide ? "cursor-grab focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary-600 active:cursor-grabbing" : "pointer-events-none"}`}
+              >
+                <div className="max-w-[320px] rounded-2xl">
+                  <h1 className="text-[29px] font-extrabold leading-[31px] tracking-[-0.06em] text-[#071F43]"><span className="block truncate">{slide.title}</span>{slide.highlight && <span className="block truncate text-primary-700">{slide.highlight}</span>}</h1>
+                  <p className="mt-2 line-clamp-2 max-w-[310px] text-[13.5px] font-medium leading-5 tracking-[-0.025em] text-[#53667F]">{slide.description}</p>
+                </div>
+              </div>)}
+            </div>
+            {heroSlides.length > 1 && <div className="absolute bottom-1 left-1/2 z-20 flex -translate-x-1/2 items-center gap-1" role="group" aria-label={t("home.heroCarouselLabel")}>
+              {heroSlides.map((slide, index) => <button key={slide.id} type="button" onClick={() => goToHeroSlide(index)} aria-label={t("home.heroGoToSlide", { number: index + 1 })} aria-current={index === activeHeroSlide ? "true" : undefined} className={`h-1.5 rounded-full ${reduceMotion ? "" : "transition-all"} ${index === activeHeroSlide ? "w-4 bg-primary-700" : "w-1.5 bg-[#8CA99B]/65 hover:bg-[#668B79]"}`} />)}
             </div>}
           </div>
 
-          <form onSubmit={(event) => { event.preventDefault(); goToSearch(); }} className="relative z-30 mt-auto flex h-14 items-center rounded-[18px] bg-white p-1 shadow-[0_5px_14px_rgba(21,66,53,0.13)]">
+          <form onSubmit={(event) => { event.preventDefault(); goToSearch(); }} className="relative z-30 mt-auto flex h-14 translate-y-1/2 items-center rounded-[18px] bg-white p-1 shadow-[0_5px_14px_rgba(21,66,53,0.13)]">
             <SearchIcon className="ml-3 h-6 w-6 shrink-0 text-[#8998B1]" />
             <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder={t("home.heroSearchPlaceholder")} className="min-w-0 flex-1 bg-transparent px-3 text-[16px] font-medium tracking-[-0.035em] text-[#08234B] outline-none placeholder:text-[#8D99AE]" />
             <button aria-label="Cari" type="submit" className="grid h-12 w-14 shrink-0 place-items-center rounded-[15px] bg-primary-700 text-white shadow-[0_3px_8px_rgba(0,111,74,0.24)] transition hover:bg-primary-600 active:scale-95"><ArrowIcon className="h-6 w-6" /></button>
@@ -441,7 +524,7 @@ export default function MainScreen() {
         </div>
       </section>
 
-      <div className="px-4">
+      <div className="px-4 pt-7">
 
       <section className="mt-6">
         <div className="grid grid-cols-4 gap-2.5">{categoriesLoading ? Array.from({ length: 8 }).map((_, index) => <div key={index} className="h-[84px] rounded-2xl shimmer" />) : categoryTiles.map((category) => <button key={category.slug} type="button" onClick={() => navigate(category.slug === "all" ? "/search?all=1" : `/search?category=${encodeURIComponent(category.slug)}`)} className="flex h-[84px] min-w-0 flex-col items-center justify-center gap-2 rounded-2xl bg-white px-1.5 shadow-[0_4px_10px_rgba(11,49,45,0.07)] transition hover:-translate-y-0.5 active:scale-95">{category.slug === "all" ? <ArrowIcon className="h-8 w-8 text-[#08234B]" /> : <CategoryIcon slug={category.slug} className="h-8 w-8 text-[#08234B]" />}<span className="w-full truncate text-[12px] font-bold tracking-[-0.035em] text-[#08234B]">{category.name}</span></button>)}</div>
