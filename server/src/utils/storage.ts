@@ -3,6 +3,7 @@ import { logger } from "./logger";
 
 export const CONTACT_IMAGE_BUCKET = "contact-images";
 export const CATALOG_IMAGE_BUCKET = "catalog-images";
+export const HERO_IMAGE_BUCKET = "hero-images";
 
 const PUBLIC_PREFIX = `/storage/v1/object/public/${CONTACT_IMAGE_BUCKET}/`;
 
@@ -82,5 +83,22 @@ export async function deleteCatalogImage(
     if (error) logger.warn(`Failed to delete orphaned catalog image ${path}: ${error.message}`);
   } catch (err) {
     logger.warn(`Failed to delete orphaned catalog image ${path}: ${(err as Error).message}`);
+  }
+}
+
+/** Best-effort cleanup for replaced or deleted admin-managed hero images. */
+export async function deleteHeroImage(
+  url: string | null | undefined,
+  expectedOwnerId?: string
+): Promise<void> {
+  const path = storageObjectPath(url, HERO_IMAGE_BUCKET);
+  if (!path) return;
+  if (expectedOwnerId && path.split("/")[0] !== expectedOwnerId) return;
+
+  try {
+    const { error } = await supabaseAdmin.storage.from(HERO_IMAGE_BUCKET).remove([path]);
+    if (error) logger.warn(`Failed to delete orphaned hero image ${path}: ${error.message}`);
+  } catch (err) {
+    logger.warn(`Failed to delete orphaned hero image ${path}: ${(err as Error).message}`);
   }
 }

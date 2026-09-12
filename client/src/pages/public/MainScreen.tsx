@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { HiBookmark, HiOutlineBookmark } from "react-icons/hi2";
@@ -14,7 +14,7 @@ import { ContactCard } from "../../components/shared/ContactCard";
 import { LanguageToggle } from "../../components/shared/LanguageToggle";
 import { isSaved, toggleSaved } from "../../lib/saved";
 import { useI18n } from "../../i18n/LanguageContext";
-import type { City, Contact } from "../../types";
+import type { ApiResponse, City, Contact, HeroPromotion } from "../../types";
 
 const CATEGORY_FALLBACK = [
   { slug: "jasa", name: "Jasa" },
@@ -35,6 +35,19 @@ const HOME_CRITICAL_IMAGES = [
   "/storefront/discovery-delivery.webp",
 ];
 const HOME_READY_STORAGE_KEY = "ck_home_ready_v1";
+
+interface LocalizedHeroSlide {
+  id: string;
+  title: string;
+  highlight: string;
+  description: string;
+  imageUrl: string;
+  href: string;
+}
+
+function fillCityToken(value: string | null | undefined, city: string): string {
+  return (value ?? "").replace(/\{city\}/g, city);
+}
 
 function preloadImage(source: string): Promise<void> {
   return new Promise((resolve) => {
@@ -160,10 +173,19 @@ export default function MainScreen() {
   const navigate = useNavigate();
   const { citySlug, city, cities, setCity, setCities } = useCity();
   const { categories, isLoading: categoriesLoading } = useCategories();
-  const { categoryName, t } = useI18n();
+  const { categoryName, lang, t } = useI18n();
   const [showCityPicker, setShowCityPicker] = useState(false);
   const [showEmergency, setShowEmergency] = useState(false);
   const [query, setQuery] = useState("");
+  const [activeHeroSlide, setActiveHeroSlide] = useState(0);
+  const [carouselHovered, setCarouselHovered] = useState(false);
+  const [carouselFocused, setCarouselFocused] = useState(false);
+  const [carouselPointerActive, setCarouselPointerActive] = useState(false);
+  const [documentVisible, setDocumentVisible] = useState(() => document.visibilityState === "visible");
+  const [reduceMotion, setReduceMotion] = useState(false);
+  const swipeStartRef = useRef<{ x: number; y: number } | null>(null);
+  const suppressHeroClickRef = useRef(false);
+  const carouselPaused = carouselHovered || carouselFocused || carouselPointerActive;
   const [gateInitialRender] = useState(() => {
     try {
       return sessionStorage.getItem(HOME_READY_STORAGE_KEY) !== "1";
@@ -175,6 +197,12 @@ export default function MainScreen() {
   const [minimumLoaderElapsed, setMinimumLoaderElapsed] = useState(!gateInitialRender);
   const [loaderDeadlineReached, setLoaderDeadlineReached] = useState(false);
   const { data: citiesData, isLoading: citiesLoading } = useQuery<{ success: boolean; data: City[] }>({ queryKey: ["cities"], queryFn: async () => (await apiClient.get("/cities")).data });
+  const { data: heroPromotionsData } = useQuery<ApiResponse<HeroPromotion[]>>({
+    queryKey: ["hero-promotions"],
+    queryFn: async () => (await apiClient.get("/hero-promotions")).data,
+    staleTime: 60_000,
+    retry: 1,
+  });
 
   useEffect(() => {
     let active = true;
@@ -226,6 +254,27 @@ export default function MainScreen() {
     { slug: "all", name: t("home.seeAll") },
   ];
   const selectedCityName = city?.name ?? "Sumbawa Besar";
+  const heroSlides = useMemo<LocalizedHeroSlide[]>(() => {
+    if (!heroPromotionsData?.data.length) {
+      return [{
+        id: "fallback",
+        title: t("home.heroTitleFirst"),
+        highlight: t("home.heroTitleAccent", { city: selectedCityName }),
+        description: t("home.heroSubtitle"),
+        imageUrl: "/hero-sumbawa-v2.webp",
+        href: "/search",
+      }];
+    }
+
+    return heroPromotionsData.data.map((promotion) => ({
+      id: promotion.id,
+      title: fillCityToken(lang === "en" && promotion.titleEn?.trim() ? promotion.titleEn : promotion.title, selectedCityName),
+      highlight: fillCityToken(lang === "en" && promotion.highlightEn?.trim() ? promotion.highlightEn : promotion.highlight, selectedCityName),
+      description: fillCityToken(lang === "en" && promotion.descriptionEn?.trim() ? promotion.descriptionEn : promotion.description, selectedCityName),
+      imageUrl: promotion.imageUrl,
+      href: promotion.href,
+    }));
+  }, [heroPromotionsData, lang, selectedCityName, t]);
   const initialDataReady = !contactsLoading && !categoriesLoading && !citiesLoading;
   const initialAssetsReady = criticalImagesReady || loaderDeadlineReached;
   const showInitialLoader = gateInitialRender && (!minimumLoaderElapsed || !initialAssetsReady || (!initialDataReady && !loaderDeadlineReached));
@@ -238,6 +287,71 @@ export default function MainScreen() {
     { id: "travel", title: t("home.discoveryTravelTitle"), description: t("home.discoveryTravelDescription"), imageUrl: "/hero-sumbawa-v2.webp", imagePosition: "62% center", href: "/search?q=travel" },
     { id: "delivery", title: t("home.discoveryDeliveryTitle"), description: t("home.discoveryDeliveryDescription"), imageUrl: "/storefront/discovery-delivery.webp", imagePosition: "68% center", href: "/search?category=jasa" },
   ];
+
+  useEffect(() => {
+    const media = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const update = () => setReduceMotion(media.matches);
+    update();
+    media.addEventListener("change", update);
+    return () => media.removeEventListener("change", update);
+  }, []);
+
+  useEffect(() => {
+    const update = () => setDocumentVisible(document.visibilityState === "visible");
+    document.addEventListener("visibilitychange", update);
+    return () => document.removeEventListener("visibilitychange", update);
+  }, []);
+
+  useEffect(() => {
+    setActiveHeroSlide((current) => Math.min(current, Math.max(0, heroSlides.length - 1)));
+  }, [heroSlides.length]);
+
+  useEffect(() => {
+    if (heroSlides.length < 2 || carouselPaused || !documentVisible || reduceMotion) return;
+    const timer = window.setInterval(() => {
+      setActiveHeroSlide((current) => (current + 1) % heroSlides.length);
+    }, 5000);
+    return () => window.clearInterval(timer);
+  }, [carouselPaused, documentVisible, heroSlides.length, reduceMotion]);
+
+  useEffect(() => {
+    if (heroSlides.length < 2) return;
+    const next = heroSlides[(activeHeroSlide + 1) % heroSlides.length];
+    const image = new Image();
+    image.decoding = "async";
+    image.src = next.imageUrl;
+  }, [activeHeroSlide, heroSlides]);
+
+  const moveHeroSlide = (direction: -1 | 1) => {
+    setActiveHeroSlide((current) => (current + direction + heroSlides.length) % heroSlides.length);
+  };
+
+  const openHeroSlide = (slide: LocalizedHeroSlide) => {
+    if (/^\/(?!\/)/.test(slide.href)) {
+      navigate(slide.href);
+    } else {
+      window.open(slide.href, "_blank", "noopener,noreferrer");
+    }
+  };
+
+  const handleHeroPointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
+    swipeStartRef.current = { x: event.clientX, y: event.clientY };
+    setCarouselPointerActive(true);
+  };
+
+  const finishHeroPointer = (event: React.PointerEvent<HTMLDivElement>) => {
+    const start = swipeStartRef.current;
+    swipeStartRef.current = null;
+    setCarouselPointerActive(false);
+    if (!start) return;
+    const deltaX = event.clientX - start.x;
+    const deltaY = event.clientY - start.y;
+    if (Math.abs(deltaX) > 45 && Math.abs(deltaX) > Math.abs(deltaY)) {
+      suppressHeroClickRef.current = true;
+      moveHeroSlide(deltaX < 0 ? 1 : -1);
+      window.setTimeout(() => { suppressHeroClickRef.current = false; }, 0);
+    }
+  };
 
   useEffect(() => {
     if (showInitialLoader) return;
@@ -253,20 +367,34 @@ export default function MainScreen() {
   return <div className="min-h-screen bg-[radial-gradient(circle_at_30%_8%,rgba(226,241,231,.62),transparent_26%),#F8FAF7] pb-[82px] text-[#08234B]">
     {cityPickerVisible && <CityPickerOverlay cities={citiesData?.data ?? cities} onSelect={chooseCity} onClose={citySlug ? () => setShowCityPicker(false) : undefined} />}
     <div className="mx-auto max-w-md overflow-x-hidden bg-[#F8FAF7] sm:shadow-[0_0_24px_rgba(15,47,45,0.06)]">
-      <section className="relative h-[316px] overflow-hidden bg-[#E6F2E9]">
-        <img
-          src="/hero-sumbawa-v2.webp"
-          alt=""
-          aria-hidden="true"
-          fetchPriority="high"
-          decoding="async"
-          className="absolute inset-0 h-full w-full object-cover object-[58%_center]"
-        />
+      <section
+        className="relative h-[316px] overflow-hidden bg-[#E6F2E9]"
+        role="region"
+        aria-roledescription="carousel"
+        aria-label={t("home.heroCarouselLabel")}
+        onMouseEnter={() => setCarouselHovered(true)}
+        onMouseLeave={() => setCarouselHovered(false)}
+        onFocusCapture={() => setCarouselFocused(true)}
+        onBlurCapture={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setCarouselFocused(false); }}
+      >
+        {heroSlides.map((slide, index) => <div key={slide.id} aria-hidden="true" className={`absolute inset-0 ${reduceMotion ? "" : "transition-opacity duration-700 ease-out"} ${index === activeHeroSlide ? "opacity-100" : "opacity-0"}`}>
+          <img
+            src={slide.imageUrl}
+            alt=""
+            loading={index === 0 ? "eager" : "lazy"}
+            fetchPriority={index === 0 ? "high" : "auto"}
+            decoding="async"
+            onError={(event) => {
+              if (!event.currentTarget.src.endsWith("/hero-sumbawa-v2.webp")) event.currentTarget.src = "/hero-sumbawa-v2.webp";
+            }}
+            className="h-full w-full object-cover object-[58%_center]"
+          />
+        </div>)}
         <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(246,251,247,.97)_0%,rgba(240,249,242,.88)_49%,rgba(229,244,234,.30)_100%)]" />
         <div className="absolute inset-0 bg-[linear-gradient(0deg,rgba(238,248,241,.97)_0%,rgba(238,248,241,.12)_48%,rgba(246,251,247,.32)_100%)]" />
 
         <div className="relative z-10 flex h-full flex-col px-4 pb-4 pt-4">
-          <div className="flex items-center justify-between gap-2">
+          <div className="relative z-30 flex items-center justify-between gap-2">
             <button type="button" onClick={() => setShowCityPicker(true)} className="flex h-10 min-w-0 flex-1 items-center gap-2 rounded-[14px] border border-white/75 bg-white/72 px-3 text-left shadow-[0_2px_10px_rgba(9,60,45,.08)] backdrop-blur-sm transition active:scale-[0.98]">
               <PinIcon className="h-[18px] w-[18px] shrink-0 text-primary-700" />
               <span className="truncate text-[14px] font-bold leading-none tracking-[-0.035em] text-[#08234B]">{selectedCityName}</span>
@@ -275,17 +403,41 @@ export default function MainScreen() {
             <div className="flex shrink-0 items-center gap-2"><LanguageToggle className="shadow-[0_3px_9px_rgba(4,44,37,0.06)]" /><a href={`https://wa.me/6282338588078?text=${encodeURIComponent(t("home.helpWhatsappText"))}`} target="_blank" rel="noopener noreferrer" className="inline-flex h-10 items-center gap-1.5 rounded-full bg-white/95 px-3 text-[13px] font-extrabold text-[#08234B] shadow-[0_3px_9px_rgba(4,44,37,0.10)] transition active:scale-95"><ChatIcon className="h-[18px] w-[18px]" /><span className="hidden min-[390px]:inline">{t("home.help")}</span></a></div>
           </div>
 
-          <div className="mt-9 max-w-[310px]">
-            <h1 className="text-[32px] font-extrabold leading-[34px] tracking-[-0.06em] text-[#071F43]">{t("home.heroTitleFirst")}<br /><span className="text-primary-700">{t("home.heroTitleAccent", { city: selectedCityName })}</span></h1>
-            <p className="mt-2 max-w-[300px] text-[14px] font-medium leading-5 tracking-[-0.025em] text-[#53667F]">{t("home.heroSubtitle")}</p>
+          <div className="relative min-h-0 flex-1">
+            {heroSlides.map((slide, index) => <div
+              key={slide.id}
+              role="link"
+              tabIndex={index === activeHeroSlide ? 0 : -1}
+              aria-hidden={index !== activeHeroSlide}
+              aria-label={t("home.heroSlideLabel", { current: index + 1, total: heroSlides.length, title: `${slide.title} ${slide.highlight}`.trim() })}
+              onClick={() => {
+                if (!suppressHeroClickRef.current && index === activeHeroSlide) openHeroSlide(slide);
+              }}
+              onKeyDown={(event) => {
+                if (event.key === "ArrowLeft") { event.preventDefault(); moveHeroSlide(-1); }
+                if (event.key === "ArrowRight") { event.preventDefault(); moveHeroSlide(1); }
+                if (event.key === "Enter" || event.key === " ") { event.preventDefault(); openHeroSlide(slide); }
+              }}
+              onPointerDown={handleHeroPointerDown}
+              onPointerUp={finishHeroPointer}
+              onPointerCancel={() => { swipeStartRef.current = null; setCarouselPointerActive(false); }}
+              className={`absolute inset-0 flex cursor-pointer touch-pan-y flex-col justify-center pb-6 pt-2 outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary-600 ${reduceMotion ? "" : "transition-all duration-500 ease-out"} ${index === activeHeroSlide ? "pointer-events-auto translate-x-0 opacity-100" : "pointer-events-none translate-x-3 opacity-0"}`}
+            >
+              <div className="max-w-[320px] rounded-2xl">
+                <h1 className="text-[29px] font-extrabold leading-[31px] tracking-[-0.06em] text-[#071F43]"><span className="block truncate">{slide.title}</span>{slide.highlight && <span className="block truncate text-primary-700">{slide.highlight}</span>}</h1>
+                <p className="mt-2 line-clamp-2 max-w-[310px] text-[13.5px] font-medium leading-5 tracking-[-0.025em] text-[#53667F]">{slide.description}</p>
+              </div>
+            </div>)}
+            {heroSlides.length > 1 && <div className="absolute bottom-1 left-0 z-20 flex items-center gap-1.5" role="group" aria-label={t("home.heroCarouselLabel")}>
+              {heroSlides.map((slide, index) => <button key={slide.id} type="button" onClick={() => setActiveHeroSlide(index)} aria-label={t("home.heroGoToSlide", { number: index + 1 })} aria-current={index === activeHeroSlide ? "true" : undefined} className={`h-2 rounded-full ${reduceMotion ? "" : "transition-all"} ${index === activeHeroSlide ? "w-6 bg-primary-700" : "w-2 bg-[#8CA99B]/65 hover:bg-[#668B79]"}`} />)}
+            </div>}
           </div>
 
-          <form onSubmit={(event) => { event.preventDefault(); goToSearch(); }} className="mt-auto flex h-14 items-center rounded-[18px] bg-white p-1 shadow-[0_5px_14px_rgba(21,66,53,0.13)]">
+          <form onSubmit={(event) => { event.preventDefault(); goToSearch(); }} className="relative z-30 mt-auto flex h-14 items-center rounded-[18px] bg-white p-1 shadow-[0_5px_14px_rgba(21,66,53,0.13)]">
             <SearchIcon className="ml-3 h-6 w-6 shrink-0 text-[#8998B1]" />
             <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder={t("home.heroSearchPlaceholder")} className="min-w-0 flex-1 bg-transparent px-3 text-[16px] font-medium tracking-[-0.035em] text-[#08234B] outline-none placeholder:text-[#8D99AE]" />
             <button aria-label="Cari" type="submit" className="grid h-12 w-14 shrink-0 place-items-center rounded-[15px] bg-primary-700 text-white shadow-[0_3px_8px_rgba(0,111,74,0.24)] transition hover:bg-primary-600 active:scale-95"><ArrowIcon className="h-6 w-6" /></button>
           </form>
-
         </div>
       </section>
 

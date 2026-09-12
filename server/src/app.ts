@@ -12,6 +12,7 @@ import guestRouter from "./modules/guest/guest.router";
 import adminRouter from "./modules/admin/admin.router";
 import proRouter from "./modules/pro/pro.router";
 import storefrontRouter from "./modules/storefront/storefront.router";
+import heroPromotionsRouter from "./modules/hero-promotions/hero-promotions.router";
 
 const app = express();
 
@@ -47,6 +48,7 @@ app.use("/api/guest", guestRouter);
 app.use("/api/admin", adminRouter);
 app.use("/api/pro", proRouter);
 app.use("/api/storefront", storefrontRouter);
+app.use("/api/hero-promotions", heroPromotionsRouter);
 
 app.use(errorHandler);
 

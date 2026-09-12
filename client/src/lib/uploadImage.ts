@@ -3,6 +3,7 @@ import type { TranslationKey } from "../i18n/translations";
 
 const BUCKET = "contact-images";
 const CATALOG_BUCKET = "catalog-images";
+const HERO_BUCKET = "hero-images";
 
 // Mirrors the bucket's own limits, so we fail with a clear message instead of
 // letting Storage reject the upload with an opaque error.
@@ -67,6 +68,8 @@ export async function uploadContactImage(file: File): Promise<string> {
 
 export const MAX_CATALOG_IMAGE_BYTES = 5 * 1024 * 1024;
 const CATALOG_MIME_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "image/avif"]);
+export const HERO_IMAGE_MIME_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "image/avif"]);
+export const MAX_HERO_IMAGE_BYTES = 5 * 1024 * 1024;
 
 /** Uploads a Pro catalog asset into the signed-in user's owner-scoped folder. */
 export async function uploadCatalogImage(
@@ -97,4 +100,33 @@ export async function uploadCatalogImage(
   if (error) throw new Error(error.message || "Foto gagal diunggah.");
 
   return supabase.storage.from(CATALOG_BUCKET).getPublicUrl(path).data.publicUrl;
+}
+
+/** Uploads an admin-managed hero image into an owner-scoped folder. */
+export async function uploadHeroImage(file: File, userId: string): Promise<string> {
+  if (!HERO_IMAGE_MIME_TYPES.has(file.type)) {
+    throw new Error("Gunakan gambar JPG, PNG, WebP, atau AVIF.");
+  }
+  if (file.size > MAX_HERO_IMAGE_BYTES) {
+    throw new Error("Ukuran gambar maksimal 5 MB.");
+  }
+
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+  if (!session || session.user.id !== userId) {
+    throw new Error("Sesi login berakhir. Silakan masuk kembali.");
+  }
+
+  const token = typeof crypto !== "undefined" && "randomUUID" in crypto
+    ? crypto.randomUUID()
+    : `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+  const path = `${userId}/hero/${token}.${extensionFor(file)}`;
+  const { error } = await supabase.storage.from(HERO_BUCKET).upload(path, file, {
+    cacheControl: "31536000",
+    upsert: false,
+  });
+  if (error) throw new Error(error.message || "Gambar hero gagal diunggah.");
+
+  return supabase.storage.from(HERO_BUCKET).getPublicUrl(path).data.publicUrl;
 }

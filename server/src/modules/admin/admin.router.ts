@@ -5,13 +5,154 @@ import { prisma } from "../../utils/prisma";
 import { authenticate, AuthenticatedRequest } from "../../middleware/authenticate";
 import { requireRole } from "../../middleware/requireRole";
 import { AppError } from "../../middleware/errorHandler";
-import { deleteContactImage } from "../../utils/storage";
+import { deleteContactImage, deleteHeroImage } from "../../utils/storage";
 
 const router = Router();
 
 // All admin routes require authentication + ADMIN role
 router.use(authenticate);
 router.use(requireRole("ADMIN"));
+
+function isInternalPath(value: string): boolean {
+  return /^\/(?!\/)/.test(value);
+}
+
+function isHttpsUrl(value: string): boolean {
+  try {
+    return new URL(value).protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
+const optionalPromoText = (max: number) => z.preprocess(
+  (value) => typeof value === "string" && value.trim() === "" ? null : value,
+  z.string().trim().max(max).nullable().optional()
+);
+
+const heroPromotionSchema = z.object({
+  title: z.string().trim().min(2).max(160),
+  titleEn: optionalPromoText(160),
+  highlight: optionalPromoText(160),
+  highlightEn: optionalPromoText(160),
+  description: z.string().trim().min(2).max(500),
+  descriptionEn: optionalPromoText(500),
+  imageUrl: z.string().trim().min(1).max(2048).refine(
+    (value) => isInternalPath(value) || isHttpsUrl(value),
+    "Gambar harus berupa path internal atau URL HTTPS"
+  ),
+  href: z.string().trim().min(1).max(2048).refine(
+    (value) => isInternalPath(value) || isHttpsUrl(value),
+    "Tujuan harus berupa path internal atau URL HTTPS"
+  ),
+  isActive: z.boolean().optional(),
+  sortOrder: z.number().int().min(0).optional(),
+});
+
+// GET /api/admin/hero-promotions
+router.get("/hero-promotions", async (_req, res, next) => {
+  try {
+    const promotions = await prisma.heroPromotion.findMany({
+      orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
+    });
+    res.json({ success: true, data: promotions });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// POST /api/admin/hero-promotions
+router.post("/hero-promotions", async (req, res, next) => {
+  try {
+    const data = heroPromotionSchema.parse(req.body);
+    const last = await prisma.heroPromotion.aggregate({ _max: { sortOrder: true } });
+    const promotion = await prisma.heroPromotion.create({
+      data: {
+        ...data,
+        sortOrder: data.sortOrder ?? (last._max.sortOrder ?? -1) + 1,
+      },
+    });
+    res.status(201).json({ success: true, data: promotion });
+  } catch (err) {
+    next(err);
+  }
+});
+
+const reorderSchema = z.object({
+  orderedIds: z.array(z.string().uuid()).min(1).refine(
+    (ids) => new Set(ids).size === ids.length,
+    "Urutan promo berisi ID duplikat"
+  ),
+});
+
+// PUT /api/admin/hero-promotions/reorder
+router.put("/hero-promotions/reorder", async (req, res, next) => {
+  try {
+    const { orderedIds } = reorderSchema.parse(req.body);
+    const existing = await prisma.heroPromotion.count({ where: { id: { in: orderedIds } } });
+    if (existing !== orderedIds.length) throw new AppError(404, "Satu atau beberapa promo tidak ditemukan");
+
+    await prisma.$transaction(
+      orderedIds.map((id, sortOrder) => prisma.heroPromotion.update({
+        where: { id },
+        data: { sortOrder },
+      }))
+    );
+    const promotions = await prisma.heroPromotion.findMany({ orderBy: { sortOrder: "asc" } });
+    res.json({ success: true, data: promotions });
+  } catch (err) {
+    next(err);
+  }
+});
+
+const toggleHeroPromotionSchema = z.object({ isActive: z.boolean() });
+
+// PATCH /api/admin/hero-promotions/:id/toggle
+router.patch("/hero-promotions/:id/toggle", async (req, res, next) => {
+  try {
+    const { isActive } = toggleHeroPromotionSchema.parse(req.body);
+    const promotion = await prisma.heroPromotion.update({
+      where: { id: req.params.id as string },
+      data: { isActive },
+    });
+    res.json({ success: true, data: promotion });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// PUT /api/admin/hero-promotions/:id
+router.put("/hero-promotions/:id", async (req: AuthenticatedRequest, res, next) => {
+  try {
+    const data = heroPromotionSchema.parse(req.body);
+    const id = req.params.id as string;
+    const previous = await prisma.heroPromotion.findUnique({ where: { id } });
+    if (!previous) throw new AppError(404, "Promo hero tidak ditemukan");
+
+    const promotion = await prisma.heroPromotion.update({ where: { id }, data });
+    if (previous.imageUrl !== promotion.imageUrl) {
+      await deleteHeroImage(previous.imageUrl);
+    }
+    res.json({ success: true, data: promotion });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// DELETE /api/admin/hero-promotions/:id
+router.delete("/hero-promotions/:id", async (req: AuthenticatedRequest, res, next) => {
+  try {
+    const id = req.params.id as string;
+    const previous = await prisma.heroPromotion.findUnique({ where: { id } });
+    if (!previous) throw new AppError(404, "Promo hero tidak ditemukan");
+
+    await prisma.heroPromotion.delete({ where: { id } });
+    await deleteHeroImage(previous.imageUrl);
+    res.json({ success: true, data: { id } });
+  } catch (err) {
+    next(err);
+  }
+});
 
 // GET /api/admin/stats
 router.get("/stats", async (_req, res, next) => {

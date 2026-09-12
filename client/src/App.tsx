@@ -26,6 +26,7 @@ import ProductDetailPage from "./pages/public/ProductDetailPage";
 import { InquiryProvider } from "./features/storefront/InquiryContext";
 import ProDashboardPage from "./pages/pro/ProDashboardPage";
 import CatalogPlansPage from "./pages/public/CatalogPlansPage";
+import AdminHeroPromotions from "./pages/admin/HeroPromotions";
 
 export default function App() {
   return (
@@ -72,6 +73,7 @@ export default function App() {
             <Route path="add-contact" element={<AdminAddContact />} />
             <Route path="reviews" element={<AdminReviews />} />
             <Route path="users" element={<AdminUsers />} />
+            <Route path="hero-promotions" element={<AdminHeroPromotions />} />
           </Route>
         </Routes>
         </div>

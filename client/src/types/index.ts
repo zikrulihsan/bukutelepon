@@ -16,6 +16,22 @@ export type StorefrontItemStatus = "ACTIVE" | "HIDDEN" | "SOLD_OUT";
 export type StorefrontPriceType = "FIXED" | "STARTING_FROM" | "CONTACT" | "FREE";
 export type StorefrontItemType = "PRODUCT" | "SERVICE" | "PACKAGE" | "PROMO";
 
+export interface HeroPromotion {
+  id: string;
+  title: string;
+  titleEn: string | null;
+  highlight: string | null;
+  highlightEn: string | null;
+  description: string;
+  descriptionEn: string | null;
+  imageUrl: string;
+  href: string;
+  isActive: boolean;
+  sortOrder: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface ManagedStorefrontItem {
   id: string;
   businessId: string;

@@ -10,6 +10,7 @@ const navItems: { to: string; labelKey: TranslationKey; end?: boolean }[] = [
   { to: "/admin/add-contact", labelKey: "admin.addContact" },
   { to: "/admin/reviews", labelKey: "admin.reviews" },
   { to: "/admin/users", labelKey: "admin.users" },
+  { to: "/admin/hero-promotions", labelKey: "admin.heroPromotions" },
 ];
 
 export function AdminLayout() {
