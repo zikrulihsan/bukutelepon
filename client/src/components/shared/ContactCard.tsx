@@ -12,9 +12,10 @@ import { CategoryPhoto } from "./CategoryPhoto";
 interface ContactCardProps {
   contact: Contact;
   hideSave?: boolean;
+  onBeforeNavigate?: () => void;
 }
 
-export function ContactCard({ contact, hideSave }: ContactCardProps) {
+export function ContactCard({ contact, hideSave, onBeforeNavigate }: ContactCardProps) {
   const [saved, setSaved] = useState(() => isSaved(contact.id));
   const navigate = useNavigate();
   const { t, categoryName, lang } = useI18n();
@@ -24,6 +25,7 @@ export function ContactCard({ contact, hideSave }: ContactCardProps) {
   }
 
   function handleNavigate() {
+    onBeforeNavigate?.();
     navigate(`/kontak/${contact.id}`);
   }
 

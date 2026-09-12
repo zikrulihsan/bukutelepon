@@ -221,6 +221,10 @@ export default function MainScreen() {
       .slice(0, 8)
       .map((category) => ({ slug: category.slug, name: categoryName(category) }))
     : CATEGORY_FALLBACK;
+  const categoryTiles = [
+    ...displayCategories.slice(0, 7),
+    { slug: "all", name: t("home.seeAll") },
+  ];
   const selectedCityName = city?.name ?? "Sumbawa Besar";
   const initialDataReady = !contactsLoading && !categoriesLoading && !citiesLoading;
   const initialAssetsReady = criticalImagesReady || loaderDeadlineReached;
@@ -288,13 +292,12 @@ export default function MainScreen() {
       <div className="px-4">
 
       <section className="mt-6">
-        <SectionHeading title={t("home.popularCategories")} onMore={() => navigate("/search")} />
-        <div className="grid grid-cols-4 gap-2.5">{categoriesLoading ? Array.from({ length: 8 }).map((_, index) => <div key={index} className="h-[84px] rounded-2xl shimmer" />) : displayCategories.map((category) => <button key={category.slug} type="button" onClick={() => navigate(`/search?category=${encodeURIComponent(category.slug)}`)} className="flex h-[84px] min-w-0 flex-col items-center justify-center gap-2 rounded-2xl bg-white px-1.5 shadow-[0_4px_10px_rgba(11,49,45,0.07)] transition hover:-translate-y-0.5 active:scale-95"><CategoryIcon slug={category.slug} className="h-8 w-8 text-[#08234B]" /><span className="w-full truncate text-[12px] font-bold tracking-[-0.035em] text-[#08234B]">{category.name}</span></button>)}</div>
+        <div className="grid grid-cols-4 gap-2.5">{categoriesLoading ? Array.from({ length: 8 }).map((_, index) => <div key={index} className="h-[84px] rounded-2xl shimmer" />) : categoryTiles.map((category) => <button key={category.slug} type="button" onClick={() => navigate(category.slug === "all" ? "/search?all=1" : `/search?category=${encodeURIComponent(category.slug)}`)} className="flex h-[84px] min-w-0 flex-col items-center justify-center gap-2 rounded-2xl bg-white px-1.5 shadow-[0_4px_10px_rgba(11,49,45,0.07)] transition hover:-translate-y-0.5 active:scale-95">{category.slug === "all" ? <ArrowIcon className="h-8 w-8 text-[#08234B]" /> : <CategoryIcon slug={category.slug} className="h-8 w-8 text-[#08234B]" />}<span className="w-full truncate text-[12px] font-bold tracking-[-0.035em] text-[#08234B]">{category.name}</span></button>)}</div>
       </section>
 
       <section className="mt-5">
-        <button type="button" onClick={() => setShowEmergency((value) => !value)} className="flex h-16 w-full items-center justify-between rounded-2xl bg-[linear-gradient(105deg,#fff7f7,#fff2f5)] px-3 text-left shadow-[0_3px_9px_rgba(126,52,67,0.07)] transition active:scale-[0.99]"><span className="flex items-center gap-3"><span className="grid h-10 w-10 place-items-center rounded-xl bg-[#FFE0E0]"><SirenIcon className="h-7 w-7" /></span><span><span className="block text-[15px] font-extrabold leading-5 tracking-[-0.035em] text-[#08234B]">{t("home.emergencyTitle")}</span><span className="block text-[12px] font-medium leading-4 text-[#8190AA]">{t("home.emergencySubtitle")}</span></span></span><svg viewBox="0 0 20 20" fill="currentColor" className={`h-5 w-5 text-[#95A0B8] transition-transform ${showEmergency ? "rotate-90" : ""}`}><path fillRule="evenodd" d="M7.23 4.21a.75.75 0 011.06.02L12.5 8.7a1.75 1.75 0 010 2.6l-4.21 4.47a.75.75 0 11-1.09-1.03l4.21-4.47a.25.25 0 000-.34L7.2 5.26a.75.75 0 01.03-1.05z" clipRule="evenodd" /></svg></button>
-        {showEmergency && <div className="mt-2 grid grid-cols-3 gap-2 rounded-xl bg-white p-2 shadow-[0_3px_9px_rgba(15,47,45,0.07)]">{[{ label: "Polisi", phone: "110" }, { label: "Ambulans", phone: "119" }, { label: "Damkar", phone: "113" }].map((item) => <a key={item.label} href={`tel:${item.phone}`} className="rounded-[10px] bg-[#F7F9F5] px-2 py-2.5 text-center text-[12px] font-bold text-[#08234B]"><span className="mb-0.5 block text-[14px] text-primary-700">{item.phone}</span>{item.label}</a>)}</div>}
+        <button type="button" onClick={() => setShowEmergency((value) => !value)} className="flex h-16 w-full items-center justify-between rounded-2xl bg-[linear-gradient(105deg,#fff7f7,#fff2f5)] px-3 text-left shadow-[0_3px_9px_rgba(126,52,67,0.07)] transition active:scale-[0.99]"><span className="flex items-center gap-3"><span className="grid h-10 w-10 place-items-center rounded-xl bg-[#FFE0E0]"><SirenIcon className="h-7 w-7" /></span><span><span className="block text-[15px] font-extrabold leading-5 tracking-[-0.035em] text-[#08234B]">{t("home.emergencyTitle")}</span><span className="block text-[12px] font-medium leading-4 text-[#8190AA]">{t("home.emergencySubtitle")}</span></span></span><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round" className={`h-5 w-5 text-[#95A0B8] transition-transform ${showEmergency ? "rotate-180" : ""}`} aria-hidden="true"><path d="m5 7.5 5 5 5-5" /></svg></button>
+        {showEmergency && <div className="mt-2 grid grid-cols-2 gap-2 rounded-xl bg-white p-2 shadow-[0_3px_9px_rgba(15,47,45,0.07)]">{[{ label: t("emergency.emergency"), query: "darurat" }, { label: t("emergency.fire"), query: "damkar" }, { label: t("emergency.ambulance"), query: "ambulans" }, { label: t("emergency.police"), query: "polisi" }].map((item) => <button key={item.query} type="button" onClick={() => navigate(`/search?q=${encodeURIComponent(item.query)}`)} className="rounded-[10px] bg-[#F7F9F5] px-3 py-3 text-center text-[13px] font-bold text-[#08234B] transition hover:bg-[#EEF6F0] active:scale-[0.98]">{item.label}</button>)}</div>}
       </section>
 
       <section className="mt-7">
@@ -303,14 +306,14 @@ export default function MainScreen() {
       </section>
 
       {recommendedContacts.length > 0 && <section className="mt-7">
-        <SectionHeading title={t("home.carikontakRecommendations")} onMore={() => navigate("/search")} />
+        <SectionHeading title={t("home.carikontakRecommendations")} onMore={() => navigate("/search?all=1")} />
         <div className="-mr-4 flex snap-x snap-mandatory gap-2.5 overflow-x-auto pb-2 pr-4 scrollbar-hide">{recommendedContacts.map((contact) => <ChoiceCard key={contact.id} contact={contact} categoryLabel={categoryName(contact.category)} cityName={selectedCityName} viewLabel={t("home.view")} onOpen={() => navigate(`/kontak/${contact.id}`)} />)}</div>
       </section>}
 
       <section className="relative mt-8 min-h-[170px] overflow-hidden rounded-2xl bg-[radial-gradient(circle_at_92%_12%,#15795c,transparent_32%),linear-gradient(120deg,#003f32,#007352)] px-4 py-4 text-white shadow-[0_6px_13px_rgba(0,91,69,0.20)]"><div className="relative z-10 max-w-[235px]"><h2 className="text-[20px] font-extrabold leading-6 tracking-[-0.045em]">{t("home.businessPromoTitle", { city: selectedCityName })}</h2><p className="mt-1 text-[13px] leading-[18px] text-white/90">{t("home.businessPromoDescription")}</p><button type="button" onClick={() => navigate("/submit")} className="mt-3 h-10 min-w-[150px] rounded-xl bg-white px-4 text-[13px] font-extrabold text-primary-700 transition active:scale-95">{t("home.businessPromoAction")}</button></div><StoreIllustration /></section>
 
       <section className="mb-5 mt-8">
-        <SectionHeading title={t("home.latestInCariKontak")} onMore={() => navigate("/search")} />
+        <SectionHeading title={t("home.latestInCariKontak")} onMore={() => navigate("/search?all=1")} />
         {contactsLoading ? <div className="space-y-3"><div className="h-[160px] rounded-2xl shimmer" /><div className="h-[160px] rounded-2xl shimmer" /></div> : contacts.length ? <div className="space-y-3">{contacts.slice(0, 3).map((contact) => <ContactCard key={contact.id} contact={contact} />)}</div> : <div className="grid h-[144px] place-items-center rounded-2xl bg-white p-5 text-center text-[14px] text-[#71809B]">{t("home.noContactsInCity", { city: selectedCityName })}</div>}
       </section>
       </div>

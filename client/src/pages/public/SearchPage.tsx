@@ -1,5 +1,5 @@
-import { useState, useEffect, useLayoutEffect, useRef } from "react";
-import { useSearchParams, useNavigate } from "react-router-dom";
+import { useState, useEffect, useLayoutEffect, useRef, useMemo, useCallback } from "react";
+import { useSearchParams, useNavigate, useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "../../lib/axios";
 import { buildSearchShareUrl } from "../../lib/searchShare";
@@ -15,25 +15,51 @@ import { HiFilter, HiOutlineShare } from "react-icons/hi";
 import { useI18n } from "../../i18n/LanguageContext";
 import type { City } from "../../types";
 
+type SearchScrollSnapshot = {
+  top: number;
+  pageCount: number;
+};
+
+function readSearchScrollSnapshot(key: string): SearchScrollSnapshot | null {
+  try {
+    const stored = sessionStorage.getItem(key);
+    if (!stored) return null;
+    const value = JSON.parse(stored) as Partial<SearchScrollSnapshot>;
+    if (typeof value.top !== "number" || typeof value.pageCount !== "number") return null;
+    return { top: Math.max(0, value.top), pageCount: Math.max(1, value.pageCount) };
+  } catch {
+    return null;
+  }
+}
+
 export default function SearchPage() {
   const { t, categoryName } = useI18n();
   const { citySlug, city, setCity, cities, setCities } = useCity();
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
   const inputRef = useRef<HTMLInputElement>(null);
   const [loadMoreNode, setLoadMoreNode] = useState<HTMLDivElement | null>(null);
   const chipScrollRef = useRef<HTMLDivElement>(null);
   const resultsRef = useRef<HTMLDivElement>(null);
+  const initialFilterRender = useRef(true);
+  const restoredScrollKey = useRef<string | null>(null);
+  const scrollStorageKey = `ck-search-scroll:${location.key}`;
+  const savedScrollSnapshot = useMemo(
+    () => readSearchScrollSnapshot(scrollStorageKey),
+    [scrollStorageKey]
+  );
 
   const urlQ = searchParams.get("q") || "";
   const urlCat = searchParams.get("category") || "";
-
   const urlVerified = searchParams.get("verified") || "";
+  const urlShowAll = searchParams.get("all") === "1";
 
   const [search, setSearch] = useState(urlQ);
   const [searchQuery, setSearchQuery] = useState(urlQ);
   const [activeCategory, setActiveCategory] = useState(urlCat);
   const [verifiedFilter, setVerifiedFilter] = useState(urlVerified);
+  const [showAll, setShowAll] = useState(urlShowAll);
   const [showFilterMenu, setShowFilterMenu] = useState(false);
   const [shareCopied, setShareCopied] = useState(false);
   const filterRef = useRef<HTMLDivElement>(null);
@@ -94,16 +120,19 @@ export default function SearchPage() {
     }
   }, [showFilterMenu]);
 
-  // Auto-focus on mount
+  // Opening a chosen category or a populated result should show the results
+  // immediately. Only the intentionally blank search screen receives focus.
   useEffect(() => {
+    if (urlQ || urlCat || urlVerified || urlShowAll) return;
     inputRef.current?.focus({ preventScroll: true });
-  }, []);
+  }, [urlQ, urlCat, urlVerified, urlShowAll]);
 
   // Debounce search input
   useEffect(() => {
     const trimmed = search.trim();
     if (trimmed === searchQuery) return;
     const timer = setTimeout(() => {
+      setShowAll(false);
       setSearchQuery(trimmed);
     }, 300);
     return () => clearTimeout(timer);
@@ -112,7 +141,7 @@ export default function SearchPage() {
   const { categories, isLoading: categoriesLoading } = useCategories();
   const { isLoading: contactsLoading } = useContactsData();
 
-  const hasFilter = !!searchQuery || !!activeCategory || !!verifiedFilter;
+  const hasFilter = showAll || !!searchQuery || !!activeCategory || !!verifiedFilter;
 
   // First paint of the page: the contact cache is still downloading, the chips
   // have nothing to render, or a shared link's city has yet to resolve. Show
@@ -132,6 +161,7 @@ export default function SearchPage() {
     search: searchQuery || undefined,
     verified: verifiedFilter || undefined,
     enabled: hasFilter,
+    initialPageCount: savedScrollSnapshot?.pageCount,
   });
 
   // Intersection observer, watched inside the results scroller rather than the
@@ -154,11 +184,44 @@ export default function SearchPage() {
   const allContacts = infiniteData?.pages.flatMap((p) => p.data) ?? [];
   const total = infiniteData?.pages[0]?.meta.total ?? 0;
 
+  const persistResultsScroll = useCallback(() => {
+    const top = resultsRef.current?.scrollTop;
+    if (typeof top !== "number") return;
+    try {
+      sessionStorage.setItem(scrollStorageKey, JSON.stringify({
+        top,
+        pageCount: infiniteData?.pages.length ?? 1,
+      } satisfies SearchScrollSnapshot));
+    } catch {
+      // Search results still work when session storage is unavailable.
+    }
+  }, [infiniteData?.pages.length, scrollStorageKey]);
+
   // A new filter means a new, shorter list. Start it from the top so the old
-  // scroll offset does not land the reader in the middle of nowhere.
+  // scroll offset does not land the reader in the middle of nowhere. Skip the
+  // initial render: it may be a browser Back navigation with a saved position.
   useEffect(() => {
+    if (initialFilterRender.current) {
+      initialFilterRender.current = false;
+      return;
+    }
     resultsRef.current?.scrollTo({ top: 0 });
-  }, [searchQuery, activeCategory, verifiedFilter]);
+  }, [searchQuery, activeCategory, verifiedFilter, showAll]);
+
+  // Restore the internal results scroller after its saved pages have painted.
+  // The document-level route reset intentionally does not touch this element.
+  useLayoutEffect(() => {
+    if (restoredScrollKey.current === scrollStorageKey) return;
+    if (!savedScrollSnapshot || initialLoading || isLoading) {
+      restoredScrollKey.current = scrollStorageKey;
+      return;
+    }
+
+    restoredScrollKey.current = scrollStorageKey;
+    requestAnimationFrame(() => {
+      resultsRef.current?.scrollTo({ top: savedScrollSnapshot.top, behavior: "auto" });
+    });
+  }, [scrollStorageKey, savedScrollSnapshot, initialLoading, isLoading, allContacts.length]);
 
   // URL sync
   useEffect(() => {
@@ -166,6 +229,7 @@ export default function SearchPage() {
     if (searchQuery) params.set("q", searchQuery);
     if (activeCategory) params.set("category", activeCategory);
     if (verifiedFilter) params.set("verified", verifiedFilter);
+    if (showAll) params.set("all", "1");
     if (citySlug) params.set("city", citySlug);
     // Skip no-op history writes; each one re-renders the whole route.
     if (params.toString() === searchParams.toString()) return;
@@ -174,6 +238,7 @@ export default function SearchPage() {
 
   function handleSearch(e: React.FormEvent) {
     e.preventDefault();
+    setShowAll(false);
     setSearchQuery(search.trim());
     inputRef.current?.blur();
   }
@@ -213,6 +278,7 @@ export default function SearchPage() {
 
   function handleCategoryClick(slug: string) {
     const next = activeCategory === slug ? "" : slug;
+    setShowAll(false);
     setActiveCategory(next);
 
     if (next && chipScrollRef.current) {
@@ -256,7 +322,7 @@ export default function SearchPage() {
             {search && (
               <button
                 type="button"
-                onClick={() => { setSearch(""); setSearchQuery(""); inputRef.current?.focus({ preventScroll: true }); }}
+                onClick={() => { setSearch(""); setSearchQuery(""); setShowAll(false); inputRef.current?.focus({ preventScroll: true }); }}
                 className="mr-2 w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0 text-gray-500 hover:bg-gray-200 active:scale-95 transition-colors"
               >
                 <HiXMark className="h-4 w-4" />
@@ -288,7 +354,7 @@ export default function SearchPage() {
                 ] as const).map(({ value, label }) => (
                   <button
                     key={value}
-                    onClick={() => { setVerifiedFilter(value); setShowFilterMenu(false); }}
+                    onClick={() => { setVerifiedFilter(value); if (value) setShowAll(false); setShowFilterMenu(false); }}
                     className={`w-full text-left px-3.5 py-2 text-xs font-medium flex items-center gap-2 transition-colors ${
                       verifiedFilter === value ? "text-blue-600 bg-blue-50" : "text-gray-700 hover:bg-gray-50"
                     }`}
@@ -333,6 +399,7 @@ export default function SearchPage() {
       {/* Results — the only scrolling region on the page */}
       <div
         ref={resultsRef}
+        onScroll={persistResultsScroll}
         className="flex-1 min-h-0 overflow-y-auto scroll-region px-4 pt-4 pb-28"
       >
         {initialLoading ? (
@@ -355,7 +422,9 @@ export default function SearchPage() {
               <p className="text-xs text-gray-500">
                 {searchQuery
                   ? t("search.resultsFor", { query: searchQuery })
-                  : `${t("common.contactsCount", { count: total })} ${categoryName(categories.find((c) => c.slug === activeCategory))}`.trim()}
+                  : activeCategory
+                    ? `${t("common.contactsCount", { count: total })} ${categoryName(categories.find((c) => c.slug === activeCategory))}`
+                    : t("common.contactsCount", { count: total })}
                 {city ? ` ${t("common.inCity", { city: city.name })}` : ""}
               </p>
 
@@ -379,7 +448,7 @@ export default function SearchPage() {
             ) : (
               <div className="space-y-2.5">
                 {allContacts.map((contact) => (
-                  <ContactCard key={contact.id} contact={contact} />
+                  <ContactCard key={contact.id} contact={contact} onBeforeNavigate={persistResultsScroll} />
                 ))}
               </div>
             )}

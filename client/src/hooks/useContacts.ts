@@ -48,6 +48,8 @@ export function useContacts(options: UseContactsOptions = {}) {
 
 interface UseInfiniteContactsOptions extends ContactFilter {
   enabled?: boolean;
+  /** Restores enough pages to put a returning reader back at their last offset. */
+  initialPageCount?: number;
 }
 
 /**
@@ -55,10 +57,10 @@ interface UseInfiniteContactsOptions extends ContactFilter {
  * page slicing. Drop-in replacement for the inline infinite queries.
  */
 export function useInfiniteContacts(options: UseInfiniteContactsOptions = {}) {
-  const { city, category, search, verified, enabled = true } = options;
+  const { city, category, search, verified, enabled = true, initialPageCount = 1 } = options;
   const { contacts, isLoading } = useContactsData();
 
-  const [pageCount, setPageCount] = useState(1);
+  const [pageCount, setPageCount] = useState(() => Math.max(1, initialPageCount));
 
   // Reset the paging window during render rather than in an effect: an effect
   // would let one frame paint the new filter with the old page count, which
