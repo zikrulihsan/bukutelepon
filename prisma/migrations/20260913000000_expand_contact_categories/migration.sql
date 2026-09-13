@@ -1,15 +1,14 @@
-INSERT INTO "categories" ("id", "name", "slug", "icon", "createdAt", "updatedAt")
+INSERT INTO "categories" ("id", "name", "slug", "icon")
 VALUES
-  ('10000000-0000-0000-0000-000000000001', 'Penginapan', 'penginapan', '🏨', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-  ('10000000-0000-0000-0000-000000000002', 'Toko & Retail', 'toko-retail', '🛍️', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-  ('10000000-0000-0000-0000-000000000003', 'Properti', 'properti', '🏠', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-  ('10000000-0000-0000-0000-000000000004', 'Keuangan', 'keuangan', '💳', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-  ('10000000-0000-0000-0000-000000000005', 'Elektronik', 'elektronik', '🎧', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-  ('10000000-0000-0000-0000-000000000006', 'Lainnya', 'lainnya', '•••', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+  ('10000000-0000-0000-0000-000000000001', 'Penginapan', 'penginapan', '🏨'),
+  ('10000000-0000-0000-0000-000000000002', 'Toko & Retail', 'toko-retail', '🛍️'),
+  ('10000000-0000-0000-0000-000000000003', 'Properti', 'properti', '🏠'),
+  ('10000000-0000-0000-0000-000000000004', 'Keuangan', 'keuangan', '💳'),
+  ('10000000-0000-0000-0000-000000000005', 'Elektronik', 'elektronik', '🎧'),
+  ('10000000-0000-0000-0000-000000000006', 'Lainnya', 'lainnya', '•••')
 ON CONFLICT ("slug") DO UPDATE SET
   "name" = EXCLUDED."name",
-  "icon" = EXCLUDED."icon",
-  "updatedAt" = CURRENT_TIMESTAMP;
+  "icon" = EXCLUDED."icon";
 
 INSERT INTO "collection_versions" ("key", "version", "updatedAt")
 VALUES ('categories', 1, CURRENT_TIMESTAMP)
