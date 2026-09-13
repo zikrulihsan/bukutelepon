@@ -6,6 +6,8 @@ import { useLocation } from "react-router-dom";
 
 const DISMISSED_KEY = "pwa_install_dismissed";
 const DISMISSED_EXPIRY_DAYS = 7;
+const VISIT_COUNT_KEY = "pwa_install_visit_count";
+const MIN_VISITS_BEFORE_PROMPT = 2;
 
 const IS_DEV = import.meta.env.DEV;
 
@@ -28,6 +30,19 @@ function markDismissed() {
   try {
     localStorage.setItem(DISMISSED_KEY, JSON.stringify({ ts: Date.now() }));
   } catch { /* noop */ }
+}
+
+function canOfferInstall(): boolean {
+  // Keep local development easy to preview while avoiding an intrusive first-visit prompt in production.
+  if (IS_DEV) return true;
+  try {
+    const visits = Number.parseInt(localStorage.getItem(VISIT_COUNT_KEY) ?? "0", 10);
+    const nextVisitCount = Number.isFinite(visits) ? visits + 1 : 1;
+    localStorage.setItem(VISIT_COUNT_KEY, String(nextVisitCount));
+    return nextVisitCount >= MIN_VISITS_BEFORE_PROMPT;
+  } catch {
+    return false;
+  }
 }
 
 function isIOS(): boolean {
@@ -60,10 +75,12 @@ export function PWAInstallBanner() {
     // Never show if already running as installed PWA
     if (isInStandaloneMode()) return;
     if (isDismissed()) return;
+    const shouldOfferInstall = canOfferInstall();
 
     // Android/Chrome: listen for install prompt
     function handleBeforeInstall(e: Event) {
       e.preventDefault();
+      if (!shouldOfferInstall) return;
       setDeferredPrompt(e as BeforeInstallPromptEvent);
       triggerShow();
     }
@@ -71,7 +88,7 @@ export function PWAInstallBanner() {
 
     // iOS: show manual instructions after a delay
     let iosTimer: ReturnType<typeof setTimeout> | undefined;
-    if (isIOS()) {
+    if (isIOS() && shouldOfferInstall) {
       iosTimer = setTimeout(() => {
         setShowIOSHint(true);
         triggerShow();

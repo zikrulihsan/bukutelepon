@@ -520,7 +520,7 @@ export default function MainScreen() {
                 className={`flex h-full w-full shrink-0 flex-col justify-center pb-2 pt-2 outline-none ${!clone && logicalIndex === activeHeroSlide ? "cursor-grab focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary-600 active:cursor-grabbing" : "pointer-events-none"}`}
               >
                 <div className="max-w-[320px] rounded-2xl">
-                  <h1 className="text-[29px] font-extrabold leading-[31px] tracking-[-0.06em] text-[#071F43]"><span className="block truncate">{slide.title}</span>{slide.highlight && <span className="block truncate text-primary-700">{slide.highlight}</span>}</h1>
+                  <h1 className="text-[29px] font-extrabold leading-[35px] tracking-[-0.06em] text-[#071F43]"><span className="block truncate">{slide.title}</span>{slide.highlight && <span className="block truncate text-primary-700">{slide.highlight}</span>}</h1>
                   <p className="mt-2 line-clamp-2 max-w-[310px] text-[13.5px] font-medium leading-5 tracking-[-0.025em] text-[#53667F]">{slide.description}</p>
                 </div>
               </div>)}
