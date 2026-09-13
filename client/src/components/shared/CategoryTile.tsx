@@ -1,4 +1,5 @@
 import { CategoryIcon, getCategoryVisual, preloadCategoryIcon } from "./CategoryIcon";
+import { HiOutlineSquares2X2 } from "react-icons/hi2";
 
 interface CategoryTileProps {
   slug: string;
@@ -8,8 +9,8 @@ interface CategoryTileProps {
 
 function MoreIcon() {
   return (
-    <span className="absolute bottom-2 left-1/2 grid h-10 w-10 -translate-x-1/2 place-items-center rounded-full bg-white/70 shadow-[0_4px_10px_rgba(50,61,78,0.08)]" aria-hidden="true">
-      <span className="mb-1 text-[22px] font-extrabold tracking-[0.08em] text-[#344054]">•••</span>
+    <span className="absolute bottom-2 left-1/2 grid h-10 w-10 -translate-x-1/2 place-items-center rounded-full bg-white/70 text-[#344054] shadow-[0_4px_10px_rgba(50,61,78,0.08)]" aria-hidden="true">
+      <HiOutlineSquares2X2 className="h-[22px] w-[22px] stroke-[1.8]" />
     </span>
   );
 }
