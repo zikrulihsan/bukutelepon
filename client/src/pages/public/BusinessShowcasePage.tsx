@@ -25,10 +25,17 @@ import {
 } from "../../features/storefront/storefrontData";
 import { usePublicStorefront } from "../../features/storefront/usePublicStorefront";
 
-function ProductCard({ item, onOpen }: { item: StorefrontItem; onOpen: () => void }) {
+function ProductCard({ item, whatsapp, onOpen }: { item: StorefrontItem; whatsapp: string; onOpen: () => void }) {
   const { quantities, addItem, setQuantity } = useInquiry();
   const quantity = quantities[item.id] ?? 0;
   const supportsQuantity = itemSupportsQuantity(item);
+  const isService = item.type === "service";
+  const serviceWhatsappUrl = `https://wa.me/${whatsapp}?text=${encodeURIComponent([
+    "Halo, saya melihat etalase Anda di CariKontak.",
+    "",
+    `Saya tertarik dengan layanan ${item.name}.`,
+    "Mohon informasi jadwal, area layanan, biaya, dan langkah selanjutnya.",
+  ].join("\n"))}`;
 
   return (
     <article
@@ -66,7 +73,21 @@ function ProductCard({ item, onOpen }: { item: StorefrontItem; onOpen: () => voi
         <div className="mt-auto flex items-end justify-between gap-2 pt-3">
           <p className="text-[12px] font-extrabold text-[#A45A22] sm:text-sm">{formatPrice(item)}</p>
           {item.available && (
-            quantity > 0 && supportsQuantity ? (
+            isService ? (
+              <a
+                href={serviceWhatsappUrl}
+                target="_blank"
+                rel="noreferrer"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  trackStorefrontEvent("whatsapp_click", item.id);
+                }}
+                className="inline-flex h-8 flex-none items-center gap-1.5 rounded-full bg-[#167C52] px-3 text-[10px] font-extrabold text-white shadow-sm transition hover:bg-[#116642] active:scale-95"
+                aria-label={`Tanya ${item.name} di WhatsApp`}
+              >
+                <FaWhatsapp className="h-3.5 w-3.5" /> Tanya di WA
+              </a>
+            ) : quantity > 0 && supportsQuantity ? (
               <div className="flex flex-none items-center rounded-full border border-[#C7D6CC] bg-[#F2F7F3] p-0.5" onClick={(event) => event.stopPropagation()}>
                 <button onClick={() => setQuantity(item.id, quantity - 1)} className="grid h-7 w-7 place-items-center rounded-full text-[#245843] hover:bg-white" aria-label={`Kurangi ${item.name}`}>
                   <HiMinus className="h-3.5 w-3.5" />
@@ -311,7 +332,7 @@ export default function BusinessShowcasePage() {
 
           {filteredItems.length > 0 ? (
             <div className="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4">
-              {filteredItems.map((item) => <ProductCard key={item.id} item={item} onOpen={() => openItem(item)} />)}
+              {filteredItems.map((item) => <ProductCard key={item.id} item={item} whatsapp={business.whatsapp} onOpen={() => openItem(item)} />)}
             </div>
           ) : (
             <div className="rounded-[24px] border border-dashed border-[#D7D1C4] bg-[#FFFEFA]/60 px-6 py-16 text-center">
