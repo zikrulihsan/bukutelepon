@@ -1,7 +1,9 @@
 export type PriceType = "fixed" | "starting_from" | "contact" | "free";
+export type ItemType = "product" | "service" | "package" | "promo";
 
 export interface StorefrontItem {
   id: string;
+  type: ItemType;
   slug: string;
   name: string;
   shortDescription: string;
@@ -64,6 +66,7 @@ export const business: StorefrontBusiness = {
 export const storefrontItems: StorefrontItem[] = [
   {
     id: "madu-sumbawa",
+    type: "product",
     slug: "madu-sumbawa",
     name: "Madu Sumbawa",
     shortDescription: "Tersedia dalam beberapa ukuran kemasan",
@@ -87,6 +90,7 @@ export const storefrontItems: StorefrontItem[] = [
   },
   {
     id: "susu-kuda-liar",
+    type: "product",
     slug: "susu-kuda-liar",
     name: "Susu Kuda Liar Sumbawa",
     shortDescription: "Oleh-oleh ikonik khas Sumbawa",
@@ -110,6 +114,7 @@ export const storefrontItems: StorefrontItem[] = [
   },
   {
     id: "permen-susu",
+    type: "product",
     slug: "permen-susu",
     name: "Permen Susu Sumbawa",
     shortDescription: "Camilan manis khas untuk buah tangan",
@@ -132,6 +137,7 @@ export const storefrontItems: StorefrontItem[] = [
   },
   {
     id: "kacang-mete",
+    type: "product",
     slug: "kacang-mete",
     name: "Kacang Mete",
     shortDescription: "Camilan khas dalam kemasan praktis",
@@ -154,6 +160,7 @@ export const storefrontItems: StorefrontItem[] = [
   },
   {
     id: "manjareal",
+    type: "product",
     slug: "manjareal",
     name: "Manjareal",
     shortDescription: "Jajanan tradisional khas Sumbawa",
@@ -177,6 +184,7 @@ export const storefrontItems: StorefrontItem[] = [
   },
   {
     id: "sirup-khas-sumbawa",
+    type: "product",
     slug: "sirup-khas-sumbawa",
     name: "Sirup Khas Sumbawa",
     shortDescription: "Pilihan minuman lokal dalam botol",
@@ -235,6 +243,24 @@ export function formatPrice(item: Pick<StorefrontItem, "price" | "priceType">) {
     maximumFractionDigits: 0,
   }).format(item.price);
   return item.priceType === "starting_from" ? `Mulai ${value}` : value;
+}
+
+export function itemSupportsQuantity(item: Pick<StorefrontItem, "type">) {
+  return item.type === "product";
+}
+
+export function itemTypeLabel(item: Pick<StorefrontItem, "type">) {
+  return {
+    product: "Produk",
+    service: "Layanan",
+    package: "Paket",
+    promo: "Promo",
+  }[item.type];
+}
+
+export function itemAvailabilityLabel(item: Pick<StorefrontItem, "type" | "available">) {
+  if (item.available) return item.type === "service" ? "Menerima permintaan" : "Tersedia";
+  return item.type === "product" ? "Stok habis" : "Tidak tersedia sementara";
 }
 
 export function getItem(slug: string | undefined) {

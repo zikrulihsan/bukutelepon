@@ -1,7 +1,7 @@
 import { HiMinus, HiPlus, HiShoppingBag, HiTrash, HiXMark } from "react-icons/hi2";
 import { FaWhatsapp } from "react-icons/fa";
 import { useInquiry, trackStorefrontEvent } from "./InquiryContext";
-import { formatPrice } from "./storefrontData";
+import { formatPrice, itemSupportsQuantity, itemTypeLabel } from "./storefrontData";
 import { StorefrontImage } from "./StorefrontImage";
 
 interface InquiryDrawerProps {
@@ -12,6 +12,7 @@ interface InquiryDrawerProps {
 export function InquiryDrawer({ open, onClose }: InquiryDrawerProps) {
   const { quantities, totalCount, totalPrice, hasUnpriced, setQuantity, clear, whatsappUrl, catalogItems } = useInquiry();
   const selectedItems = catalogItems.filter((item) => (quantities[item.id] ?? 0) > 0);
+  const containsProduct = selectedItems.some(itemSupportsQuantity);
 
   if (!open) return null;
 
@@ -26,7 +27,7 @@ export function InquiryDrawer({ open, onClose }: InquiryDrawerProps) {
             </span>
             <div>
               <h2 className="text-base font-extrabold text-[#19362A]">Daftar Pilihan</h2>
-              <p className="text-xs text-[#718078]">{totalCount} item siap ditanyakan</p>
+              <p className="text-xs text-[#718078]">{totalCount} pilihan siap dikonsultasikan</p>
             </div>
           </div>
           <button onClick={onClose} className="grid h-10 w-10 place-items-center rounded-full bg-[#F1EEE7] text-[#526159] hover:bg-[#E9E4D8]" aria-label="Tutup">
@@ -41,32 +42,38 @@ export function InquiryDrawer({ open, onClose }: InquiryDrawerProps) {
                 <HiShoppingBag className="h-6 w-6" />
               </div>
               <p className="font-bold text-[#294437]">Belum ada pilihan</p>
-              <p className="mt-1 text-sm text-[#7B877F]">Tambahkan produk yang ingin Anda tanyakan.</p>
+              <p className="mt-1 text-sm text-[#7B877F]">Pilih produk atau layanan yang ingin Anda tanyakan.</p>
             </div>
           ) : (
-            selectedItems.map((item) => (
-              <div key={item.id} className="flex gap-3 rounded-2xl border border-[#EAE5D9] bg-white p-3">
-                <StorefrontImage item={item} loading="lazy" className="h-20 w-20 flex-none rounded-xl object-cover" />
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-bold text-[#20382D]">{item.name}</p>
-                  <p className="mt-0.5 text-xs font-semibold text-[#A3622A]">{formatPrice(item)}</p>
-                  <div className="mt-3 flex items-center justify-between">
-                    <div className="flex items-center rounded-full border border-[#DBD6CB] bg-[#FAF8F3] p-0.5">
-                      <button onClick={() => setQuantity(item.id, quantities[item.id] - 1)} className="grid h-7 w-7 place-items-center rounded-full text-[#53665C] hover:bg-white" aria-label={`Kurangi ${item.name}`}>
-                        <HiMinus className="h-3.5 w-3.5" />
-                      </button>
-                      <span className="w-7 text-center text-xs font-extrabold text-[#20382D]">{quantities[item.id]}</span>
-                      <button onClick={() => setQuantity(item.id, quantities[item.id] + 1)} className="grid h-7 w-7 place-items-center rounded-full text-[#53665C] hover:bg-white" aria-label={`Tambah ${item.name}`}>
-                        <HiPlus className="h-3.5 w-3.5" />
+            selectedItems.map((item) => {
+              const supportsQuantity = itemSupportsQuantity(item);
+              return (
+                <div key={item.id} className="flex gap-3 rounded-2xl border border-[#EAE5D9] bg-white p-3">
+                  <StorefrontImage item={item} loading="lazy" className="h-20 w-20 flex-none rounded-xl object-cover" />
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-bold text-[#20382D]">{item.name}</p>
+                    <p className="mt-0.5 text-[10px] font-bold uppercase tracking-wide text-[#7D8A82]">{itemTypeLabel(item)}</p>
+                    <p className="mt-0.5 text-xs font-semibold text-[#A3622A]">{formatPrice(item)}</p>
+                    <div className="mt-3 flex items-center justify-between">
+                      {supportsQuantity ? (
+                        <div className="flex items-center rounded-full border border-[#DBD6CB] bg-[#FAF8F3] p-0.5">
+                          <button onClick={() => setQuantity(item.id, quantities[item.id] - 1)} className="grid h-7 w-7 place-items-center rounded-full text-[#53665C] hover:bg-white" aria-label={`Kurangi ${item.name}`}>
+                            <HiMinus className="h-3.5 w-3.5" />
+                          </button>
+                          <span className="w-7 text-center text-xs font-extrabold text-[#20382D]">{quantities[item.id]}</span>
+                          <button onClick={() => setQuantity(item.id, quantities[item.id] + 1)} className="grid h-7 w-7 place-items-center rounded-full text-[#53665C] hover:bg-white" aria-label={`Tambah ${item.name}`}>
+                            <HiPlus className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      ) : <span className="text-xs font-semibold text-[#547062]">Siap dikonsultasikan</span>}
+                      <button onClick={() => setQuantity(item.id, 0)} className="grid h-8 w-8 place-items-center rounded-full text-[#A8A29A] hover:bg-red-50 hover:text-red-500" aria-label={`Hapus ${item.name}`}>
+                        <HiTrash className="h-4 w-4" />
                       </button>
                     </div>
-                    <button onClick={() => setQuantity(item.id, 0)} className="grid h-8 w-8 place-items-center rounded-full text-[#A8A29A] hover:bg-red-50 hover:text-red-500" aria-label={`Hapus ${item.name}`}>
-                      <HiTrash className="h-4 w-4" />
-                    </button>
                   </div>
                 </div>
-              </div>
-            ))
+              );
+            })
           )}
         </div>
 
@@ -99,9 +106,13 @@ export function InquiryDrawer({ open, onClose }: InquiryDrawerProps) {
             }`}
           >
             <FaWhatsapp className="h-5 w-5" />
-            Pesan via WhatsApp
+            Hubungi via WhatsApp
           </a>
-          <p className="mt-2 text-center text-[10px] leading-relaxed text-[#98A098]">Belum termasuk ongkir. Ketersediaan akan dikonfirmasi penjual.</p>
+          <p className="mt-2 text-center text-[10px] leading-relaxed text-[#98A098]">
+            {containsProduct
+              ? "Ketersediaan, biaya akhir, dan pengiriman akan dikonfirmasi penyedia."
+              : "Jadwal, area layanan, dan biaya akan dikonfirmasi penyedia."}
+          </p>
         </div>
       </section>
     </div>

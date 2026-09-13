@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
-import { business, storefrontItems, type StorefrontBusiness, type StorefrontItem } from "./storefrontData";
+import { business, itemSupportsQuantity, storefrontItems, type StorefrontBusiness, type StorefrontItem } from "./storefrontData";
 
 type InquiryMap = Record<string, number>;
 
@@ -44,16 +44,16 @@ export function InquiryProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo<InquiryContextValue>(() => {
     const selectedItems = catalogItems.filter((item) => (quantities[item.id] ?? 0) > 0);
-    const totalCount = selectedItems.reduce((sum, item) => sum + quantities[item.id], 0);
-    const totalPrice = selectedItems.reduce((sum, item) => sum + item.price * quantities[item.id], 0);
+    const totalCount = selectedItems.reduce((sum, item) => sum + (itemSupportsQuantity(item) ? quantities[item.id] : 1), 0);
+    const totalPrice = selectedItems.reduce((sum, item) => sum + item.price * (itemSupportsQuantity(item) ? quantities[item.id] : 1), 0);
     const hasUnpriced = selectedItems.some((item) => item.priceType === "contact");
     const message = [
       "Halo, saya melihat etalase Anda di CariKontak.",
       "",
       "Saya tertarik dengan:",
-      ...selectedItems.map((item) => `• ${quantities[item.id]}x ${item.name}`),
+      ...selectedItems.map((item) => `• ${itemSupportsQuantity(item) ? `${quantities[item.id]}x ` : ""}${item.name}`),
       "",
-      "Apakah produknya tersedia?",
+      "Mohon informasi ketersediaan, biaya, dan langkah selanjutnya.",
     ].join("\n");
 
     return {
@@ -64,12 +64,18 @@ export function InquiryProvider({ children }: { children: ReactNode }) {
       catalogItems,
       catalogBusiness,
       addItem: (itemId, amount = 1) =>
-        setQuantities((current) => ({ ...current, [itemId]: (current[itemId] ?? 0) + amount })),
+        setQuantities((current) => {
+          const item = catalogItems.find((entry) => entry.id === itemId);
+          return { ...current, [itemId]: item && !itemSupportsQuantity(item) ? 1 : (current[itemId] ?? 0) + amount };
+        }),
       setQuantity: (itemId, quantity) =>
         setQuantities((current) => {
           const next = { ...current };
           if (quantity <= 0) delete next[itemId];
-          else next[itemId] = quantity;
+          else {
+            const item = catalogItems.find((entry) => entry.id === itemId);
+            next[itemId] = item && !itemSupportsQuantity(item) ? 1 : quantity;
+          }
           return next;
         }),
       clear: () => setQuantities({}),

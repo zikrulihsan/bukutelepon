@@ -13,7 +13,7 @@ import { FaWhatsapp } from "react-icons/fa";
 import { InquiryDrawer } from "../../features/storefront/InquiryDrawer";
 import { trackStorefrontEvent, useInquiry } from "../../features/storefront/InquiryContext";
 import { StorefrontImage } from "../../features/storefront/StorefrontImage";
-import { formatPrice } from "../../features/storefront/storefrontData";
+import { formatPrice, itemAvailabilityLabel, itemSupportsQuantity, itemTypeLabel } from "../../features/storefront/storefrontData";
 import { usePublicStorefront } from "../../features/storefront/usePublicStorefront";
 
 export default function ProductDetailPage() {
@@ -45,7 +45,7 @@ export default function ProductDetailPage() {
     return (
       <div className="grid min-h-screen place-items-center bg-[#F4F0E7] px-6 text-center">
         <div>
-          <p className="font-serif text-3xl font-black text-[#1D3C2F]">Produk tidak ditemukan</p>
+          <p className="font-serif text-3xl font-black text-[#1D3C2F]">Pilihan tidak ditemukan</p>
           <button onClick={() => navigate(`/catalog?store=${encodeURIComponent(business.slug)}`)} className="mt-4 rounded-full bg-[#245843] px-5 py-3 text-sm font-bold text-white">Kembali ke etalase</button>
         </div>
       </div>
@@ -53,13 +53,18 @@ export default function ProductDetailPage() {
   }
 
   const product = item;
+  const supportsQuantity = itemSupportsQuantity(product);
+  const typeLabel = itemTypeLabel(product);
+  const selected = (quantities[product.id] ?? 0) > 0;
 
   const relatedItems = storefrontItems.filter((entry) => entry.id !== product.id && entry.category === product.category).slice(0, 3);
   const directMessage = [
     "Halo, saya melihat etalase Anda di CariKontak.",
     "",
-    `Saya tertarik dengan ${quantity}x ${product.name}${variant ? ` (${variant})` : ""}.`,
-    "Apakah produknya tersedia?",
+    `Saya tertarik dengan ${supportsQuantity ? `${quantity}x ` : ""}${product.name}${variant ? ` (${variant})` : ""}.`,
+    supportsQuantity
+      ? "Apakah produk ini tersedia?"
+      : "Mohon informasi jadwal, area layanan, biaya, dan langkah selanjutnya.",
   ].join("\n");
 
   function addSelected() {
@@ -95,12 +100,12 @@ export default function ProductDetailPage() {
                     <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-[#F2C965] px-1 text-[10px] font-black text-[#503708]">{totalCount}</span>
                   </button>
                 )}
-                <button onClick={shareItem} className="grid h-11 w-11 place-items-center rounded-full border border-white/25 bg-[#152A20]/45 text-white backdrop-blur-md transition hover:bg-[#152A20]/70" aria-label="Bagikan produk">
+                <button onClick={shareItem} className="grid h-11 w-11 place-items-center rounded-full border border-white/25 bg-[#152A20]/45 text-white backdrop-blur-md transition hover:bg-[#152A20]/70" aria-label={`Bagikan ${typeLabel.toLocaleLowerCase("id")}`}>
                   <HiArrowUpTray className="h-5 w-5" />
                 </button>
               </div>
             </div>
-            {!item.available && <div className="absolute bottom-5 left-5 rounded-full bg-[#24332C]/90 px-4 py-2 text-xs font-bold text-white">Stok habis sementara</div>}
+            {!item.available && <div className="absolute bottom-5 left-5 rounded-full bg-[#24332C]/90 px-4 py-2 text-xs font-bold text-white">{itemAvailabilityLabel(item)}</div>}
           </div>
 
           <section className="px-5 pb-8 pt-7 sm:px-8 lg:flex lg:flex-col lg:justify-center lg:px-12 lg:py-12">
@@ -108,7 +113,7 @@ export default function ProductDetailPage() {
               <HiChevronLeft className="h-4 w-4" /> Kembali ke etalase
             </button>
             <div className="flex items-center gap-2">
-              <span className="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[#A36B3F]">{item.category}</span>
+              <span className="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[#A36B3F]">{typeLabel} · {item.category}</span>
               {item.badge && <span className="rounded-full bg-[#F4E1A7] px-2.5 py-1 text-[9px] font-extrabold text-[#71500C]">{item.badge}</span>}
             </div>
             <h1 className="mt-3 font-serif text-[33px] font-black leading-[1.1] tracking-[-0.025em] text-[#193B2D] sm:text-4xl lg:text-[42px]">{item.name}</h1>
@@ -138,13 +143,15 @@ export default function ProductDetailPage() {
             </div>
 
             <div className="mt-7 flex items-center gap-3">
-              <div className="flex h-12 items-center rounded-full border border-[#D9D3C7] bg-[#FAF8F3] p-1">
+              {supportsQuantity && <div className="flex h-12 items-center rounded-full border border-[#D9D3C7] bg-[#FAF8F3] p-1">
                 <button onClick={() => setQuantity((value) => Math.max(1, value - 1))} className="grid h-9 w-9 place-items-center rounded-full text-[#506158] hover:bg-white" aria-label="Kurangi jumlah"><HiMinus className="h-4 w-4" /></button>
                 <span className="w-8 text-center text-sm font-extrabold">{quantity}</span>
                 <button onClick={() => setQuantity((value) => value + 1)} className="grid h-9 w-9 place-items-center rounded-full text-[#506158] hover:bg-white" aria-label="Tambah jumlah"><HiPlus className="h-4 w-4" /></button>
-              </div>
+              </div>}
               <button disabled={!item.available} onClick={addSelected} className={`flex h-12 flex-1 items-center justify-center gap-2 rounded-full px-4 text-sm font-extrabold transition active:scale-[0.98] ${item.available ? "bg-[#245843] text-white shadow-[0_9px_24px_rgba(36,88,67,0.22)] hover:bg-[#193F30]" : "cursor-not-allowed bg-[#DFDDD7] text-[#999B97]"}`}>
-                {added ? <><HiCheck className="h-5 w-5" /> Ditambahkan</> : <><HiShoppingBag className="h-[18px] w-[18px]" /> Tambah ke pilihan</>}
+                {added || (!supportsQuantity && selected)
+                  ? <><HiCheck className="h-5 w-5" /> {supportsQuantity ? "Ditambahkan" : `${typeLabel} dipilih`}</>
+                  : <><HiShoppingBag className="h-[18px] w-[18px]" /> {supportsQuantity ? "Tambah ke pilihan" : `Pilih ${typeLabel.toLocaleLowerCase("id")}`}</>}
               </button>
             </div>
 
@@ -155,7 +162,7 @@ export default function ProductDetailPage() {
               onClick={() => trackStorefrontEvent("whatsapp_click", item.id)}
               className="mt-3 flex h-12 w-full items-center justify-center gap-2 rounded-full border border-[#1A8158] bg-white text-sm font-extrabold text-[#14724C] transition hover:bg-[#F0F7F2]"
             >
-              <FaWhatsapp className="h-5 w-5" /> Tanya produk ini
+              <FaWhatsapp className="h-5 w-5" /> {supportsQuantity ? "Tanya produk ini" : `Konsultasikan ${typeLabel.toLocaleLowerCase("id")}`}
             </a>
           </section>
         </div>

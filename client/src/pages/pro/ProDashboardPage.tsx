@@ -260,7 +260,7 @@ export default function ProDashboardPage() {
             <div>
               <span className="inline-flex rounded-full bg-amber-300 px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-amber-950">Akun Pro</span>
               <h1 className="mt-3 text-2xl font-black sm:text-3xl">Kelola etalase bisnis</h1>
-              <p className="mt-1 max-w-xl text-sm text-emerald-50/80">Perbarui informasi bisnis dan produk tanpa mengubah kode website.</p>
+              <p className="mt-1 max-w-xl text-sm text-emerald-50/80">Perbarui informasi bisnis, produk, dan layanan tanpa mengubah kode website.</p>
             </div>
             {managedBusiness?.status === "ACTIVE" && (
               <a href={`/catalog?store=${encodeURIComponent(managedBusiness.slug)}`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-xl bg-white/10 px-4 py-2.5 text-xs font-bold ring-1 ring-white/20 hover:bg-white/20">
@@ -343,7 +343,7 @@ export default function ProDashboardPage() {
             {!managedBusiness ? (
               <div className="rounded-2xl border border-dashed border-gray-300 bg-white px-5 py-12 text-center text-sm text-gray-500">Simpan profil bisnis lebih dulu, lalu tambahkan isi etalase.</div>
             ) : managedBusiness.items.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-gray-300 bg-white px-5 py-12 text-center"><HiOutlineCube className="mx-auto h-8 w-8 text-gray-300" /><p className="mt-3 text-sm font-semibold text-gray-700">Belum ada item</p><p className="mt-1 text-xs text-gray-500">Tambahkan produk unggulan pertama Anda.</p></div>
+              <div className="rounded-2xl border border-dashed border-gray-300 bg-white px-5 py-12 text-center"><HiOutlineCube className="mx-auto h-8 w-8 text-gray-300" /><p className="mt-3 text-sm font-semibold text-gray-700">Belum ada item</p><p className="mt-1 text-xs text-gray-500">Tambahkan produk atau layanan unggulan pertama Anda.</p></div>
             ) : (
               <div className="grid gap-3 sm:grid-cols-2">
                 {managedBusiness.items.map((item) => (
@@ -376,7 +376,7 @@ export default function ProDashboardPage() {
               <label className={labelClass}>Harga (Rp)<input type="number" min={0} value={itemForm.price} onChange={(e) => setItemForm({ ...itemForm, price: Number(e.target.value) })} disabled={itemForm.priceType === "CONTACT" || itemForm.priceType === "FREE"} className={inputClass} /></label>
               <label className={labelClass}>Satuan<input value={itemForm.unit} onChange={(e) => setItemForm({ ...itemForm, unit: e.target.value })} className={inputClass} placeholder="box, botol, sesi" /></label>
               <label className={labelClass}>Badge<input value={itemForm.badge} onChange={(e) => setItemForm({ ...itemForm, badge: e.target.value })} className={inputClass} placeholder="Best Seller" /></label>
-              <label className={labelClass}>Status<select value={itemForm.status} onChange={(e) => setItemForm({ ...itemForm, status: e.target.value as StorefrontItemStatus })} className={inputClass}><option value="ACTIVE">Aktif</option><option value="SOLD_OUT">Stok habis</option><option value="HIDDEN">Disembunyikan</option></select></label>
+              <label className={labelClass}>Status<select value={itemForm.status} onChange={(e) => setItemForm({ ...itemForm, status: e.target.value as StorefrontItemStatus })} className={inputClass}><option value="ACTIVE">Aktif</option><option value="SOLD_OUT">{itemForm.type === "PRODUCT" ? "Stok habis" : "Tidak tersedia"}</option><option value="HIDDEN">Disembunyikan</option></select></label>
               <label className={labelClass}>Urutan<input type="number" min={0} value={itemForm.sortOrder} onChange={(e) => setItemForm({ ...itemForm, sortOrder: Number(e.target.value) })} className={inputClass} /></label>
             </div>
             <div className="mt-4"><PhotoField label="Foto item" value={itemForm.imageUrl} busy={uploading === "item"} onFile={(file) => upload(file, "item")} onClear={() => setItemForm({ ...itemForm, imageUrl: "" })} wide /></div>

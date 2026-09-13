@@ -390,7 +390,7 @@ export default function CatalogPlansPage() {
                 </a>
               </div>
               <p className="mt-4 text-[12px] font-semibold leading-5 text-[#6f8190]">
-                Akun CariKontak gratis <span className="mx-1.5 text-[#bdc8c1]">·</span> Katalog Pro Rp499.000 per tahun
+                Akun CariKontak gratis <span className="mx-1.5 text-[#bdc8c1]">·</span> Pro Rp29.000 per bulan atau Rp299.000 per tahun
               </p>
             </div>
             <HeroCards />
@@ -518,7 +518,8 @@ export default function CatalogPlansPage() {
                 <span className="absolute -top-3 left-5 rounded-full bg-[#ffe28a] px-3 py-1.5 text-[9px] font-black tracking-[0.1em] text-[#715300]">TERSEDIA SEKARANG</span>
                 <p className="text-[11px] font-extrabold uppercase tracking-[0.12em] text-[#8de0bd]">Pro</p>
                 <p className="mt-3 min-h-12 text-[13px] font-semibold leading-6 text-white/70">Untuk menampilkan dan mengelola katalog bisnis.</p>
-                <div className="mt-5 flex items-end gap-2"><strong className="text-[34px] font-extrabold tracking-[-0.04em]">Rp499.000</strong><span className="mb-1.5 text-[11px] font-bold text-white/60">per tahun</span></div>
+                <div className="mt-5 flex items-end gap-2"><strong className="text-[34px] font-extrabold tracking-[-0.04em]">Rp29.000</strong><span className="mb-1.5 text-[11px] font-bold text-white/60">per bulan</span></div>
+                <p className="mt-2 text-[11px] font-bold text-[#8de0bd]">atau Rp299.000 per tahun</p>
                 <FeatureList light items={["Halaman katalog khusus", "Produk, layanan, harga, dan foto", "WhatsApp, lokasi, dan jam buka", "Kelola katalog melalui dasbor"]} />
                 <div className="mt-auto pt-7"><PrimaryAction href={activationMessage} light>Ajukan Aktivasi Pro</PrimaryAction></div>
               </article>
@@ -590,7 +591,7 @@ export default function CatalogPlansPage() {
             <h2 className="mx-auto mt-4 max-w-3xl text-[36px] font-extrabold leading-[1.1] tracking-[-0.045em] sm:text-[54px]">Buat bisnismu lebih mudah dipahami dan dihubungi.</h2>
             <p className="mx-auto mt-5 max-w-2xl text-[15px] font-medium leading-7 text-[#c2d9d1]">Ceritakan kebutuhanmu. Tim kami akan membantu proses aktivasi Katalog Pro.</p>
             <div className="mt-8"><PrimaryAction href={activationMessage} light>Konsultasikan Katalog</PrimaryAction></div>
-            <p className="mt-5 text-[12px] font-semibold text-white/70">Pro Rp499.000 per tahun · Aktivasi dibantu melalui WhatsApp</p>
+            <p className="mt-5 text-[12px] font-semibold text-white/70">Pro Rp29.000 per bulan atau Rp299.000 per tahun · Aktivasi melalui WhatsApp</p>
           </div>
         </section>
       </main>

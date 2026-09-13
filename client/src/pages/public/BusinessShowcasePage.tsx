@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   HiArrowUpTray,
+  HiCheck,
   HiCheckBadge,
   HiChevronRight,
   HiClock,
@@ -17,6 +18,9 @@ import { trackStorefrontEvent, useInquiry } from "../../features/storefront/Inqu
 import { StorefrontImage } from "../../features/storefront/StorefrontImage";
 import {
   formatPrice,
+  itemAvailabilityLabel,
+  itemSupportsQuantity,
+  itemTypeLabel,
   type StorefrontItem,
 } from "../../features/storefront/storefrontData";
 import { usePublicStorefront } from "../../features/storefront/usePublicStorefront";
@@ -24,6 +28,7 @@ import { usePublicStorefront } from "../../features/storefront/usePublicStorefro
 function ProductCard({ item, onOpen }: { item: StorefrontItem; onOpen: () => void }) {
   const { quantities, addItem, setQuantity } = useInquiry();
   const quantity = quantities[item.id] ?? 0;
+  const supportsQuantity = itemSupportsQuantity(item);
 
   return (
     <article
@@ -49,19 +54,19 @@ function ProductCard({ item, onOpen }: { item: StorefrontItem; onOpen: () => voi
             </span>
           ) : <span />}
           {!item.available && (
-            <span className="rounded-full bg-[#24332C]/85 px-2.5 py-1 text-[10px] font-bold text-white">Habis</span>
+            <span className="rounded-full bg-[#24332C]/85 px-2.5 py-1 text-[10px] font-bold text-white">{itemAvailabilityLabel(item)}</span>
           )}
         </div>
       </div>
 
       <div className="flex flex-1 flex-col p-3.5 sm:p-4">
-        <p className="mb-1 text-[9px] font-extrabold uppercase tracking-[0.16em] text-[#A6784F]">{item.category}</p>
+        <p className="mb-1 text-[9px] font-extrabold uppercase tracking-[0.16em] text-[#A6784F]">{itemTypeLabel(item)} · {item.category}</p>
         <h3 className="text-[14px] font-extrabold leading-snug text-[#1D382C] sm:text-base">{item.name}</h3>
         <p className="mt-1.5 line-clamp-2 text-[11px] leading-relaxed text-[#7B857E] sm:text-xs">{item.shortDescription}</p>
         <div className="mt-auto flex items-end justify-between gap-2 pt-3">
           <p className="text-[12px] font-extrabold text-[#A45A22] sm:text-sm">{formatPrice(item)}</p>
           {item.available && (
-            quantity > 0 ? (
+            quantity > 0 && supportsQuantity ? (
               <div className="flex flex-none items-center rounded-full border border-[#C7D6CC] bg-[#F2F7F3] p-0.5" onClick={(event) => event.stopPropagation()}>
                 <button onClick={() => setQuantity(item.id, quantity - 1)} className="grid h-7 w-7 place-items-center rounded-full text-[#245843] hover:bg-white" aria-label={`Kurangi ${item.name}`}>
                   <HiMinus className="h-3.5 w-3.5" />
@@ -71,6 +76,17 @@ function ProductCard({ item, onOpen }: { item: StorefrontItem; onOpen: () => voi
                   <HiPlus className="h-3.5 w-3.5" />
                 </button>
               </div>
+            ) : quantity > 0 ? (
+              <button
+                onClick={(event) => {
+                  event.stopPropagation();
+                  setQuantity(item.id, 0);
+                }}
+                className="inline-flex h-8 flex-none items-center gap-1 rounded-full border border-[#BFD3C6] bg-[#EDF5F0] px-2.5 text-[10px] font-extrabold text-[#245843]"
+                aria-label={`Hapus ${item.name} dari daftar pilihan`}
+              >
+                <HiCheck className="h-3.5 w-3.5" /> Dipilih
+              </button>
             ) : (
               <button
                 onClick={(event) => {
@@ -78,7 +94,7 @@ function ProductCard({ item, onOpen }: { item: StorefrontItem; onOpen: () => voi
                   addItem(item.id);
                 }}
                 className="grid h-8 w-8 flex-none place-items-center rounded-full bg-[#245843] text-white shadow-sm transition hover:bg-[#173F2F] active:scale-90"
-                aria-label={`Tambah ${item.name} ke daftar pilihan`}
+                aria-label={`Pilih ${item.name}`}
               >
                 <HiPlus className="h-4 w-4" />
               </button>
@@ -101,6 +117,7 @@ export default function BusinessShowcasePage() {
   const { business, items: storefrontItems, collections: storefrontCollections, isLoading, notFound, requestedSlug } = usePublicStorefront();
   const { totalCount, totalPrice, hasUnpriced, configureCatalog } = useInquiry();
   const categories = useMemo(() => ["Semua", ...new Set(storefrontItems.map((item) => item.category))], [storefrontItems]);
+  const serviceCatalog = storefrontItems.length > 0 && storefrontItems.every((item) => item.type === "service" || item.type === "package");
 
   useEffect(() => configureCatalog(storefrontItems, business), [business, configureCatalog, storefrontItems]);
 
@@ -225,7 +242,7 @@ export default function BusinessShowcasePage() {
           <div className="flex flex-col justify-center p-5 sm:p-8">
             <p className="text-[10px] font-extrabold uppercase tracking-[0.2em] text-[#A36B3F]">Etalase resmi pemilik</p>
             <h2 className="mt-2 font-serif text-2xl font-black leading-tight text-[#193B2D]">Kenali pilihan dari {business.name}.</h2>
-            <p className="mt-3 text-xs leading-5 text-[#6E7A72]">Temukan produk terbaru dan hubungi penjual langsung melalui kanal resminya.</p>
+            <p className="mt-3 text-xs leading-5 text-[#6E7A72]">Jelajahi produk atau layanan yang tersedia, lalu hubungi bisnis langsung melalui kanal resminya.</p>
             {business.instagram && <a href={`https://instagram.com/${business.instagram}`} target="_blank" rel="noreferrer" className="mt-5 inline-flex w-fit items-center gap-2 rounded-full border border-[#D7CFC1] px-4 py-2.5 text-xs font-extrabold text-[#7C4A42] transition hover:bg-[#F6EEE8]"><FaInstagram className="h-4 w-4" /> @{business.instagram}</a>}
           </div>
         </section>
@@ -234,7 +251,7 @@ export default function BusinessShowcasePage() {
           <div className="mb-4 flex items-end justify-between gap-4">
             <div>
               <p className="text-[10px] font-extrabold uppercase tracking-[0.2em] text-[#A36B3F]">Bantu saya memilih</p>
-              <h2 className="mt-1 font-serif text-[25px] font-black tracking-tight text-[#193B2D] sm:text-3xl">Belanja sesuai kebutuhan</h2>
+              <h2 className="mt-1 font-serif text-[25px] font-black tracking-tight text-[#193B2D] sm:text-3xl">Jelajahi sesuai kebutuhan</h2>
             </div>
             {collectionId && <button onClick={() => setCollectionId(null)} className="text-xs font-bold text-[#47705D] underline underline-offset-4">Reset</button>}
           </div>
@@ -261,12 +278,12 @@ export default function BusinessShowcasePage() {
           <div className="mb-5 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div>
               <p className="text-[10px] font-extrabold uppercase tracking-[0.2em] text-[#A36B3F]">Etalase</p>
-              <h2 className="mt-1 font-serif text-[27px] font-black tracking-tight text-[#193B2D] sm:text-3xl">Temukan favoritmu</h2>
+              <h2 className="mt-1 font-serif text-[27px] font-black tracking-tight text-[#193B2D] sm:text-3xl">{serviceCatalog ? "Temukan layanan yang sesuai" : "Temukan yang kamu butuhkan"}</h2>
               <p className="mt-1 text-xs text-[#7B867F]">{filteredItems.length} pilihan tersedia untuk dilihat</p>
             </div>
             <label className="flex h-12 w-full items-center gap-2.5 rounded-full border border-[#DED8CB] bg-[#FFFEFA] px-4 shadow-sm focus-within:border-[#739380] focus-within:ring-4 focus-within:ring-[#72927F]/10 lg:w-[330px]">
               <HiMagnifyingGlass className="h-[18px] w-[18px] flex-none text-[#7B887F]" />
-              <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Cari madu, susu, camilan..." className="min-w-0 flex-1 bg-transparent text-sm font-medium text-[#294337] outline-none placeholder:text-[#A3A8A3]" />
+              <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder={serviceCatalog ? "Cari layanan..." : "Cari produk atau layanan..."} className="min-w-0 flex-1 bg-transparent text-sm font-medium text-[#294337] outline-none placeholder:text-[#A3A8A3]" />
             </label>
           </div>
 
@@ -299,8 +316,8 @@ export default function BusinessShowcasePage() {
           ) : (
             <div className="rounded-[24px] border border-dashed border-[#D7D1C4] bg-[#FFFEFA]/60 px-6 py-16 text-center">
               <HiMagnifyingGlass className="mx-auto h-8 w-8 text-[#9CA69E]" />
-              <p className="mt-3 font-bold text-[#395247]">Belum ada produk yang cocok</p>
-              <button onClick={() => { setSearch(""); setCategory("Semua"); setCollectionId(null); }} className="mt-2 text-sm font-bold text-[#A15A2B] underline underline-offset-4">Lihat semua produk</button>
+              <p className="mt-3 font-bold text-[#395247]">Belum ada pilihan yang cocok</p>
+              <button onClick={() => { setSearch(""); setCategory("Semua"); setCollectionId(null); }} className="mt-2 text-sm font-bold text-[#A15A2B] underline underline-offset-4">Lihat semua pilihan</button>
             </div>
           )}
         </section>
@@ -324,7 +341,7 @@ export default function BusinessShowcasePage() {
             </span>
             <span className="min-w-0 flex-1">
               <span className="block text-sm font-extrabold">Lihat daftar pilihan</span>
-              <span className="block text-[10px] text-white/65">Kirim dan tanyakan ketersediaan via WhatsApp</span>
+              <span className="block text-[10px] text-white/65">Kirim untuk konsultasi via WhatsApp</span>
             </span>
             <span className="text-right text-xs font-bold text-[#F0D89D]">
               {hasUnpriced

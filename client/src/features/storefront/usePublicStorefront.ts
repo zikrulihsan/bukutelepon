@@ -5,6 +5,8 @@ import { apiClient } from "../../lib/axios";
 import type { ApiResponse, ManagedBusiness } from "../../types";
 import {
   business as fallbackBusiness,
+  itemAvailabilityLabel,
+  itemTypeLabel,
   storefrontCollections as fallbackCollections,
   storefrontItems as fallbackItems,
   type StorefrontBusiness,
@@ -40,6 +42,7 @@ function adaptBusiness(value: ManagedBusiness): StorefrontBusiness {
 function adaptItems(value: ManagedBusiness): StorefrontItem[] {
   return value.items.map((item) => ({
     id: item.id,
+    type: item.type.toLowerCase() as StorefrontItem["type"],
     slug: item.slug,
     name: item.name,
     shortDescription: item.shortDescription,
@@ -50,14 +53,17 @@ function adaptItems(value: ManagedBusiness): StorefrontItem[] {
     category: item.category,
     badge: item.badge ?? undefined,
     available: item.status !== "SOLD_OUT",
-    unit: item.unit ?? "item",
-    details: [
-      { label: "Kategori", value: item.category },
-      { label: "Satuan", value: item.unit ?? "Item" },
-      { label: "Harga", value: item.priceType === "CONTACT" ? "Tanyakan admin" : "Sesuai keterangan" },
-      { label: "Ketersediaan", value: item.status === "SOLD_OUT" ? "Stok habis" : "Tersedia" },
-    ],
+    unit: item.unit ?? (item.type === "PRODUCT" ? "item" : "layanan"),
+    details: [],
     variants: [],
+  })).map((item) => ({
+    ...item,
+    details: [
+      { label: "Jenis", value: itemTypeLabel(item) },
+      { label: item.type === "product" ? "Satuan" : "Satuan layanan", value: item.unit ?? (item.type === "product" ? "Item" : "Layanan") },
+      { label: "Harga", value: item.priceType === "contact" ? "Konsultasikan" : "Sesuai keterangan" },
+      { label: "Ketersediaan", value: itemAvailabilityLabel(item) },
+    ],
   }));
 }
 
