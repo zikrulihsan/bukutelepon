@@ -1,13 +1,14 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { HiXMark, HiOutlinePlusCircle } from "react-icons/hi2";
 import { HiOutlineShare } from "react-icons/hi";
 import { useI18n } from "../../i18n/LanguageContext";
 import { useLocation } from "react-router-dom";
+import { useAuth } from "../../hooks/useAuth";
 
 const DISMISSED_KEY = "pwa_install_dismissed";
 const DISMISSED_EXPIRY_DAYS = 7;
-const VISIT_COUNT_KEY = "pwa_install_visit_count";
-const MIN_VISITS_BEFORE_PROMPT = 2;
+const VISIT_COUNT_KEY = "pwa_install_authenticated_home_visit_count_v2";
+const MIN_HOME_VISITS_BEFORE_PROMPT = 3;
 
 const IS_DEV = import.meta.env.DEV;
 
@@ -32,14 +33,12 @@ function markDismissed() {
   } catch { /* noop */ }
 }
 
-function canOfferInstall(): boolean {
-  // Keep local development easy to preview while avoiding an intrusive first-visit prompt in production.
-  if (IS_DEV) return true;
+function recordHomeVisit(): boolean {
   try {
     const visits = Number.parseInt(localStorage.getItem(VISIT_COUNT_KEY) ?? "0", 10);
     const nextVisitCount = Number.isFinite(visits) ? visits + 1 : 1;
     localStorage.setItem(VISIT_COUNT_KEY, String(nextVisitCount));
-    return nextVisitCount >= MIN_VISITS_BEFORE_PROMPT;
+    return nextVisitCount >= MIN_HOME_VISITS_BEFORE_PROMPT;
   } catch {
     return false;
   }
@@ -64,51 +63,78 @@ interface BeforeInstallPromptEvent extends Event {
 
 export function PWAInstallBanner() {
   const { t } = useI18n();
+  const { user, loading: authLoading } = useAuth();
   const location = useLocation();
   const [visible, setVisible] = useState(false);
   const [animateIn, setAnimateIn] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [showIOSHint, setShowIOSHint] = useState(false);
   const [installing, setInstalling] = useState(false);
+  const [eligibleByVisitCount, setEligibleByVisitCount] = useState(false);
+  const countedHomeVisitRef = useRef(false);
 
+  // Count only authenticated homepage visits. Route changes away from home
+  // re-arm the counter so a later return counts as another visit.
   useEffect(() => {
-    // Never show if already running as installed PWA
-    if (isInStandaloneMode()) return;
-    if (isDismissed()) return;
-    const shouldOfferInstall = canOfferInstall();
+    const isEligiblePage = location.pathname === "/" && !authLoading && Boolean(user);
+    if (!isEligiblePage) {
+      countedHomeVisitRef.current = false;
+      setEligibleByVisitCount(false);
+      return;
+    }
+    if (countedHomeVisitRef.current) return;
+    countedHomeVisitRef.current = true;
+    setEligibleByVisitCount(recordHomeVisit());
+  }, [authLoading, location.pathname, user]);
 
-    // Android/Chrome: listen for install prompt
+  // Capture Chrome's one-shot event even when the user has not yet reached the
+  // visit threshold. It can be offered later without losing the browser event.
+  useEffect(() => {
     function handleBeforeInstall(e: Event) {
       e.preventDefault();
-      if (!shouldOfferInstall) return;
       setDeferredPrompt(e as BeforeInstallPromptEvent);
-      triggerShow();
     }
     window.addEventListener("beforeinstallprompt", handleBeforeInstall);
+    return () => window.removeEventListener("beforeinstallprompt", handleBeforeInstall);
+  }, []);
 
-    // iOS: show manual instructions after a delay
-    let iosTimer: ReturnType<typeof setTimeout> | undefined;
-    if (isIOS() && shouldOfferInstall) {
-      iosTimer = setTimeout(() => {
+  useEffect(() => {
+    const canShow =
+      location.pathname === "/" &&
+      !authLoading &&
+      Boolean(user) &&
+      eligibleByVisitCount &&
+      !isInStandaloneMode() &&
+      !isDismissed();
+
+    if (!canShow) {
+      setAnimateIn(false);
+      setVisible(false);
+      setShowIOSHint(false);
+      return;
+    }
+
+    if (deferredPrompt) {
+      triggerShow();
+      return;
+    }
+
+    let revealTimer: ReturnType<typeof setTimeout> | undefined;
+    if (isIOS()) {
+      revealTimer = setTimeout(() => {
         setShowIOSHint(true);
         triggerShow();
       }, 2500);
-    }
-
-    // Dev mode / desktop fallback: always show after 2s delay for preview
-    let devTimer: ReturnType<typeof setTimeout> | undefined;
-    if (IS_DEV && !isIOS()) {
-      devTimer = setTimeout(() => {
+    } else if (IS_DEV) {
+      revealTimer = setTimeout(() => {
         triggerShow();
       }, 2000);
     }
 
     return () => {
-      window.removeEventListener("beforeinstallprompt", handleBeforeInstall);
-      if (iosTimer) clearTimeout(iosTimer);
-      if (devTimer) clearTimeout(devTimer);
+      if (revealTimer) clearTimeout(revealTimer);
     };
-  }, []);
+  }, [authLoading, deferredPrompt, eligibleByVisitCount, location.pathname, user]);
 
   function triggerShow() {
     setVisible(true);
@@ -134,8 +160,7 @@ export function PWAInstallBanner() {
     }
   }
 
-  const isStorefront = location.pathname.startsWith("/catalog");
-  if (!visible || isStorefront) return null;
+  if (!visible || location.pathname !== "/" || authLoading || !user) return null;
 
   const isIOSMode = showIOSHint && !deferredPrompt;
 

@@ -26,10 +26,9 @@ function detectLang(): Lang {
     const stored = localStorage.getItem(LS_KEY);
     if (stored === "id" || stored === "en") return stored;
   } catch {
-    // storage unavailable — fall through to browser detection
+    // Storage unavailable — use the app default below.
   }
-  // Indonesian stays the default for everyone except explicitly-English browsers.
-  return navigator.language?.toLowerCase().startsWith("en") ? "en" : "id";
+  return "id";
 }
 
 function interpolate(template: string, vars?: Vars): string {

@@ -47,6 +47,7 @@ const HOME_CRITICAL_IMAGES = [
   "/storefront/discovery-delivery.webp",
 ];
 const HOME_READY_STORAGE_KEY = "ck_home_ready_v1";
+const CITY_HINT_STORAGE_KEY = "ck_city_picker_hint_seen_v1";
 
 interface LocalizedHeroSlide {
   id: string;
@@ -187,6 +188,13 @@ export default function MainScreen() {
   const { categories, isLoading: categoriesLoading } = useCategories();
   const { categoryName, lang, t } = useI18n();
   const [showCityPicker, setShowCityPicker] = useState(false);
+  const [showCityHint, setShowCityHint] = useState(() => {
+    try {
+      return localStorage.getItem(CITY_HINT_STORAGE_KEY) !== "1";
+    } catch {
+      return true;
+    }
+  });
   const [showEmergency, setShowEmergency] = useState(false);
   const [showAllCategories, setShowAllCategories] = useState(false);
   const [query, setQuery] = useState("");
@@ -304,9 +312,17 @@ export default function MainScreen() {
   const initialDataReady = !contactsLoading && !categoriesLoading && !citiesLoading;
   const initialAssetsReady = criticalImagesReady || loaderDeadlineReached;
   const showInitialLoader = gateInitialRender && (!minimumLoaderElapsed || !initialAssetsReady || (!initialDataReady && !loaderDeadlineReached));
-  const cityPickerVisible = showCityPicker || (!citySlug && (citiesData?.data?.length ?? cities.length) > 0);
   const goToSearch = (keyword = query) => { const value = keyword.trim(); navigate(value ? `/search?q=${encodeURIComponent(value)}` : "/search"); };
   const chooseCity = (nextCity: City) => { setCity(nextCity); setShowCityPicker(false); };
+  const openCityPicker = () => {
+    setShowCityPicker(true);
+    setShowCityHint(false);
+    try {
+      localStorage.setItem(CITY_HINT_STORAGE_KEY, "1");
+    } catch {
+      // The city picker remains available when storage is unavailable.
+    }
+  };
   const discoveryTopics = [
     { id: "coffee", title: t("home.discoveryCoffeeTitle"), description: t("home.discoveryCoffeeDescription"), imageUrl: "/storefront/discovery-coffee.webp", href: "/search?q=kopi" },
     { id: "souvenirs", title: t("home.discoverySouvenirTitle"), description: t("home.discoverySouvenirDescription"), imageUrl: "/storefront/discovery-souvenir.webp", href: "/search?q=oleh-oleh" },
@@ -445,7 +461,7 @@ export default function MainScreen() {
   if (showInitialLoader) return <HomeInitialLoader label={t("common.loading")} />;
 
   return <div className="min-h-screen bg-[radial-gradient(circle_at_30%_8%,rgba(226,241,231,.62),transparent_26%),#F8FAF7] pb-[82px] text-[#08234B]">
-    {cityPickerVisible && <CityPickerOverlay cities={citiesData?.data ?? cities} onSelect={chooseCity} onClose={citySlug ? () => setShowCityPicker(false) : undefined} />}
+    {showCityPicker && <CityPickerOverlay cities={citiesData?.data ?? cities} onSelect={chooseCity} onClose={() => setShowCityPicker(false)} />}
     <div className="mx-auto max-w-md overflow-x-hidden bg-[#F8FAF7] sm:shadow-[0_0_24px_rgba(15,47,45,0.06)]">
       <section
         className="relative h-[260px] overflow-visible bg-[#E6F2E9]"
@@ -482,11 +498,19 @@ export default function MainScreen() {
 
         <div className="relative z-10 flex h-full flex-col px-4 pb-0 pt-4">
           <div className="relative z-30 flex items-center justify-between gap-2">
-            <button type="button" onClick={() => setShowCityPicker(true)} className="flex h-10 min-w-0 flex-1 items-center gap-2 rounded-[14px] border border-white/75 bg-white/72 px-3 text-left shadow-[0_2px_10px_rgba(9,60,45,.08)] backdrop-blur-sm transition active:scale-[0.98]">
-              <PinIcon className="h-[18px] w-[18px] shrink-0 text-primary-700" />
-              <span className="truncate text-[14px] font-bold leading-none tracking-[-0.035em] text-[#08234B]">{selectedCityName}</span>
-              <svg viewBox="0 0 20 20" fill="currentColor" className="ml-auto h-4 w-4 shrink-0 text-primary-700"><path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.17l3.71-3.94a.75.75 0 111.09 1.03l-4.25 4.5a.75.75 0 01-1.09 0l-4.25-4.5a.75.75 0 01.02-1.05z" clipRule="evenodd" /></svg>
-            </button>
+            <div className="relative min-w-0 flex-1">
+              <button type="button" onClick={openCityPicker} aria-describedby={showCityHint ? "city-picker-hint" : undefined} className="flex h-10 w-full min-w-0 items-center gap-2 rounded-[14px] border border-white/75 bg-white/72 px-3 text-left shadow-[0_2px_10px_rgba(9,60,45,.08)] backdrop-blur-sm transition active:scale-[0.98]">
+                <PinIcon className="h-[18px] w-[18px] shrink-0 text-primary-700" />
+                <span className="truncate text-[14px] font-bold leading-none tracking-[-0.035em] text-[#08234B]">{selectedCityName}</span>
+                <svg viewBox="0 0 20 20" fill="currentColor" className="ml-auto h-4 w-4 shrink-0 text-primary-700"><path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.17l3.71-3.94a.75.75 0 111.09 1.03l-4.25 4.5a.75.75 0 01-1.09 0l-4.25-4.5a.75.75 0 01.02-1.05z" clipRule="evenodd" /></svg>
+              </button>
+              {showCityHint && (
+                <div id="city-picker-hint" role="tooltip" className="absolute left-0 top-12 z-40 w-[230px] rounded-xl bg-[#08234B] px-3 py-2.5 text-[11px] font-semibold leading-4 text-white shadow-[0_8px_24px_rgba(8,35,75,.24)]">
+                  <span className="absolute -top-1.5 left-5 h-3 w-3 rotate-45 bg-[#08234B]" aria-hidden="true" />
+                  <span className="relative">{t("city.pickerHint", { city: selectedCityName })}</span>
+                </div>
+              )}
+            </div>
             <div className="flex shrink-0 items-center gap-2"><LanguageToggle className="shadow-[0_3px_9px_rgba(4,44,37,0.06)]" /><a href={`https://wa.me/6282338588078?text=${encodeURIComponent(t("home.helpWhatsappText"))}`} target="_blank" rel="noopener noreferrer" className="inline-flex h-10 items-center gap-1.5 rounded-full bg-white/95 px-3 text-[13px] font-extrabold text-[#08234B] shadow-[0_3px_9px_rgba(4,44,37,0.10)] transition active:scale-95"><ChatIcon className="h-[18px] w-[18px]" /><span className="hidden min-[390px]:inline">{t("home.help")}</span></a></div>
           </div>
 

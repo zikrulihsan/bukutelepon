@@ -13,13 +13,14 @@ interface CityContextValue {
 const CityContext = createContext<CityContextValue | null>(null);
 
 const STORAGE_KEY = "bukutelepon_city";
+const DEFAULT_CITY_SLUG = "sumbawa-besar";
 
 export function CityProvider({ children }: { children: ReactNode }) {
   const [citySlug, setCitySlug] = useState<string | null>(() => {
     try {
-      return localStorage.getItem(STORAGE_KEY);
+      return localStorage.getItem(STORAGE_KEY) || DEFAULT_CITY_SLUG;
     } catch {
-      return null;
+      return DEFAULT_CITY_SLUG;
     }
   });
   const [cities, setCities] = useState<City[]>([]);

@@ -141,7 +141,12 @@ const id = {
   "contact.whatsapp": "WhatsApp",
   "contact.call": "Telepon",
   "contact.copyNumber": "Salin nomor",
+  "contact.copy": "Salin",
+  "contact.copied": "Tersalin",
+  "contact.numberCopied": "Nomor telepon berhasil disalin",
   "contact.save": "Simpan kontak",
+  "contact.saveShort": "Simpan",
+  "contact.saved": "Tersimpan",
   "contact.unsave": "Hapus dari tersimpan",
   "contact.viewAria": "Lihat {name}",
 
@@ -176,6 +181,7 @@ const id = {
   // ── City picker ──
   "city.pickTitle": "Pilih Kota",
   "city.pickSubtitle": "Temukan kontak di kota kamu",
+  "city.pickerHint": "Lokasi awal diatur ke {city}. Ketuk di sini untuk mengganti kota dan mulai mencari kontak.",
 
   // ── Auth ──
   "auth.login": "Masuk",
@@ -514,7 +520,12 @@ const en: Record<TranslationKey, string> = {
   "contact.whatsapp": "WhatsApp",
   "contact.call": "Call",
   "contact.copyNumber": "Copy number",
+  "contact.copy": "Copy",
+  "contact.copied": "Copied",
+  "contact.numberCopied": "Phone number copied",
   "contact.save": "Save contact",
+  "contact.saveShort": "Save",
+  "contact.saved": "Saved",
   "contact.unsave": "Remove from saved",
   "contact.viewAria": "View {name}",
 
@@ -549,6 +560,7 @@ const en: Record<TranslationKey, string> = {
   // ── City picker ──
   "city.pickTitle": "Select City",
   "city.pickSubtitle": "Find contacts in your city",
+  "city.pickerHint": "Your starting location is {city}. Tap here to change city and start finding contacts.",
 
   // ── Auth ──
   "auth.login": "Sign In",

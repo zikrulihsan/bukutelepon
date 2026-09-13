@@ -6,8 +6,8 @@ import { CategoryIcon } from "../../components/shared/CategoryIcon";
 import { CategoryPhoto } from "../../components/shared/CategoryPhoto";
 import { isSaved, toggleSaved } from "../../lib/saved";
 import { formatWhatsAppUrl, formatTelUrl } from "../../lib/phone";
-import { HiChevronLeft, HiCheckBadge, HiMapPin, HiStar, HiBookmark, HiChevronRight, HiCheck, HiOutlineUser, HiOutlineGlobeAlt, HiArrowTopRightOnSquare, HiOutlineChatBubbleOvalLeft, HiOutlineMapPin, HiOutlineBuildingStorefront } from "react-icons/hi2";
-import { HiOutlineBookmark, HiOutlinePhone, HiOutlineClipboardCopy, HiOutlineShare } from "react-icons/hi";
+import { HiChevronLeft, HiCheckBadge, HiMapPin, HiStar, HiBookmark, HiChevronRight, HiCheck, HiOutlineUser, HiOutlineGlobeAlt, HiArrowTopRightOnSquare, HiOutlineChatBubbleOvalLeft, HiOutlineMapPin, HiOutlineBuildingStorefront, HiOutlineDocumentDuplicate } from "react-icons/hi2";
+import { HiOutlineBookmark, HiOutlinePhone, HiOutlineShare } from "react-icons/hi";
 import { FaWhatsapp } from "react-icons/fa";
 import { useI18n } from "../../i18n/LanguageContext";
 import type { TranslationKey } from "../../i18n/translations";
@@ -41,6 +41,15 @@ export default function ContactDetailPage() {
   const { data, isLoading } = useContact(id!);
   const [copied, setCopied] = useState(false);
   const [saved, setSaved] = useState(() => (id ? isSaved(id) : false));
+
+  function handleBack() {
+    const routerHistoryIndex = window.history.state?.idx;
+    if (typeof routerHistoryIndex === "number" && routerHistoryIndex > 0) {
+      navigate(-1);
+      return;
+    }
+    navigate("/", { replace: true });
+  }
 
   function handleCopy() {
     if (!contact) return;
@@ -110,7 +119,7 @@ export default function ContactDetailPage() {
           <HiOutlineUser className="h-8 w-8 text-gray-300" />
         </div>
         <p className="text-gray-500 font-medium">{t("detail.notFound")}</p>
-        <button onClick={() => navigate(-1)} className="mt-4 text-sm text-primary-600 font-semibold">
+        <button onClick={handleBack} className="mt-4 text-sm text-primary-600 font-semibold">
           ← {t("common.back")}
         </button>
       </div>
@@ -132,7 +141,7 @@ export default function ContactDetailPage() {
 
         {/* Back button */}
         <button
-          onClick={() => navigate(-1)}
+          onClick={handleBack}
           className="relative z-10 flex items-center gap-1.5 text-white/70 hover:text-white transition-colors mb-6 -ml-0.5"
         >
           <HiChevronLeft className="h-5 w-5" />
@@ -196,59 +205,74 @@ export default function ContactDetailPage() {
       {/* ─── Action Buttons (floating over hero edge) ─── */}
       <div className="px-5 -mt-10 relative z-10">
         <div className="bg-white rounded-2xl shadow-[0_8px_30px_rgba(0,0,0,0.08)] border border-gray-100/60 p-4">
-          <div className="flex items-center gap-2.5">
+          <div className="grid grid-cols-4 gap-2">
             {/* WhatsApp */}
             <a
               href={formatWhatsAppUrl(contact.phone)}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex-1 h-12 rounded-xl bg-primary-700 hover:bg-primary-600 shadow-sm flex items-center justify-center gap-2.5 active:scale-[0.97] transition-all"
+              className="flex h-14 min-w-0 flex-col items-center justify-center gap-1 rounded-xl bg-primary-700 shadow-sm transition-all hover:bg-primary-600 active:scale-[0.97]"
             >
               <FaWhatsapp className="w-[18px] h-[18px] text-white" />
-              <span className="text-sm font-semibold text-white">{t("contact.whatsapp")}</span>
+              <span className="text-[10px] font-bold text-white">{t("contact.whatsapp")}</span>
             </a>
 
             {/* Telepon */}
             <a
               href={formatTelUrl(contact.phone)}
-              className="h-12 w-14 rounded-xl border border-gray-200 bg-gray-50 flex items-center justify-center text-gray-600 hover:text-gray-900 hover:bg-gray-100 active:scale-95 transition-all"
+              className="flex h-14 min-w-0 flex-col items-center justify-center gap-1 rounded-xl border border-gray-200 bg-gray-50 text-gray-600 transition-all hover:bg-gray-100 hover:text-gray-900 active:scale-95"
               title={t("contact.call")}
+              aria-label={t("contact.call")}
             >
               <HiOutlinePhone className="h-5 w-5" />
+              <span className="text-[10px] font-bold">{t("contact.call")}</span>
             </a>
 
             {/* Copy */}
             <button
               onClick={handleCopy}
-              className="h-12 w-14 rounded-xl border border-gray-200 bg-gray-50 flex items-center justify-center text-gray-600 hover:text-gray-900 hover:bg-gray-100 active:scale-95 transition-all relative"
+              className={`flex h-14 min-w-0 flex-col items-center justify-center gap-1 rounded-xl border transition-all active:scale-95 ${copied ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-gray-200 bg-gray-50 text-gray-600 hover:bg-gray-100 hover:text-gray-900"}`}
               title={t("contact.copyNumber")}
+              aria-label={t("contact.copyNumber")}
             >
               {copied ? (
                 <HiCheck className="h-5 w-5 text-emerald-500" />
               ) : (
-                <HiOutlineClipboardCopy className="h-5 w-5" />
+                <HiOutlineDocumentDuplicate className="h-5 w-5" />
               )}
+              <span className="text-[10px] font-bold">{copied ? t("contact.copied") : t("contact.copy")}</span>
             </button>
 
             {/* Save */}
             <button
               onClick={handleSave}
-              className={`h-12 w-14 rounded-xl border flex items-center justify-center active:scale-95 transition-all ${
+              className={`flex h-14 min-w-0 flex-col items-center justify-center gap-1 rounded-xl border transition-all active:scale-95 ${
                 saved
                   ? "bg-primary-50 border-primary-200 text-primary-700"
                   : "border-gray-200 bg-gray-50 text-gray-600 hover:text-gray-900 hover:bg-gray-100"
               }`}
               title={saved ? t("contact.unsave") : t("contact.save")}
+              aria-label={saved ? t("contact.unsave") : t("contact.save")}
             >
               {saved ? (
                 <HiBookmark className="h-5 w-5" />
               ) : (
                 <HiOutlineBookmark className="h-5 w-5" />
               )}
+              <span className="text-[10px] font-bold">{saved ? t("contact.saved") : t("contact.saveShort")}</span>
             </button>
           </div>
         </div>
       </div>
+
+      {copied && (
+        <div className="fixed inset-x-0 bottom-24 z-50 flex justify-center px-4" role="status" aria-live="polite">
+          <div className="flex items-center gap-2 rounded-full bg-[#08234B] px-4 py-2.5 text-xs font-bold text-white shadow-xl">
+            <HiCheck className="h-4 w-4 text-emerald-300" />
+            {t("contact.numberCopied")}
+          </div>
+        </div>
+      )}
 
       {/* ─── Contact Info Cards ─── */}
       <div className="px-5 mt-5 space-y-3">
