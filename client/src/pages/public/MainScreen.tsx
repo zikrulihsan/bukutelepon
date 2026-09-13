@@ -11,6 +11,7 @@ import { CityPickerOverlay } from "../../components/shared/CityPickerOverlay";
 import { AllCategoriesSheet } from "../../components/shared/AllCategoriesSheet";
 import { CategoryPhoto } from "../../components/shared/CategoryPhoto";
 import { CategoryTile } from "../../components/shared/CategoryTile";
+import { preloadAllCategoryIcons } from "../../components/shared/CategoryIcon";
 import { ContactCard } from "../../components/shared/ContactCard";
 import { LanguageToggle } from "../../components/shared/LanguageToggle";
 import { isSaved, toggleSaved } from "../../lib/saved";
@@ -225,6 +226,12 @@ export default function MainScreen() {
       if (active) setCriticalImagesReady(true);
     });
     return () => { active = false; };
+  }, []);
+
+  // Warm every category artwork while the user is still on the homepage.
+  // Contact cards reuse these same local URLs when a category is opened.
+  useEffect(() => {
+    void preloadAllCategoryIcons();
   }, []);
 
   useEffect(() => {
@@ -543,13 +550,6 @@ export default function MainScreen() {
         {showEmergency && <div className="mt-2 grid grid-cols-2 gap-2 rounded-xl bg-white p-2 shadow-[0_3px_9px_rgba(15,47,45,0.07)]">{[{ label: t("emergency.emergency"), query: "darurat" }, { label: t("emergency.fire"), query: "damkar" }, { label: t("emergency.ambulance"), query: "ambulans" }, { label: t("emergency.police"), query: "polisi" }].map((item) => <button key={item.query} type="button" onClick={() => navigate(`/search?q=${encodeURIComponent(item.query)}`)} className="rounded-[10px] bg-[#F7F9F5] px-3 py-3 text-center text-[13px] font-bold text-[#08234B] transition hover:bg-[#EEF6F0] active:scale-[0.98]">{item.label}</button>)}</div>}
       </section>
 
-      <section className="mt-5">
-        <button type="button" onClick={() => navigate("/jastip-kontak")} className="relative flex min-h-[112px] w-full items-center overflow-hidden rounded-2xl bg-[radial-gradient(circle_at_95%_0%,rgba(160,220,255,.7),transparent_36%),linear-gradient(120deg,#EAF4FF,#E8F8F0)] px-4 py-4 text-left shadow-[0_5px_13px_rgba(16,67,91,.08)] active:scale-[.99]">
-          <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-white/85 text-primary-700 shadow-[0_5px_12px_rgba(16,67,91,.10)]"><SearchIcon className="h-6 w-6" /></span>
-          <span className="ml-3 min-w-0 flex-1"><span className="block text-[16px] font-extrabold leading-5 tracking-[-.04em] text-[#08234B]">{t("home.conciergeTitle")}</span><span className="mt-1 block text-[11.5px] font-medium leading-4 text-[#667990]">{t("home.conciergeDescription")}</span><span className="mt-2 inline-flex items-center gap-1 text-[12px] font-extrabold text-primary-700">{t("home.conciergeAction")} <ArrowIcon className="h-3.5 w-3.5" /></span></span>
-        </button>
-      </section>
-
       <section className="mt-7">
         <SectionHeading title={t("home.whatsInCity", { city: selectedCityName })} />
         <div className="-mr-4 flex snap-x snap-mandatory gap-2.5 overflow-x-auto pb-3 pr-4 scrollbar-hide">{discoveryTopics.map((topic) => <DiscoveryPoster key={topic.id} title={topic.title} description={topic.description} imageUrl={topic.imageUrl} imagePosition={topic.imagePosition} onOpen={() => navigate(topic.href)} />)}</div>
@@ -559,6 +559,13 @@ export default function MainScreen() {
         <SectionHeading title={t("home.carikontakRecommendations")} onMore={() => navigate("/search?all=1")} />
         <div className="-mr-4 flex snap-x snap-mandatory gap-2.5 overflow-x-auto pb-2 pr-4 scrollbar-hide">{recommendedContacts.map((contact) => <ChoiceCard key={contact.id} contact={contact} categoryLabel={categoryName(contact.category)} cityName={selectedCityName} viewLabel={t("home.view")} onOpen={() => navigate(`/kontak/${contact.id}`)} />)}</div>
       </section>}
+
+      <section className="mt-5">
+        <button type="button" onClick={() => navigate("/jastip-kontak")} className="relative flex min-h-[112px] w-full items-center overflow-hidden rounded-2xl bg-[radial-gradient(circle_at_95%_0%,rgba(160,220,255,.7),transparent_36%),linear-gradient(120deg,#EAF4FF,#E8F8F0)] px-4 py-4 text-left shadow-[0_5px_13px_rgba(16,67,91,.08)] active:scale-[.99]">
+          <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-white/85 text-primary-700 shadow-[0_5px_12px_rgba(16,67,91,.10)]"><SearchIcon className="h-6 w-6" /></span>
+          <span className="ml-3 min-w-0 flex-1"><span className="block text-[16px] font-extrabold leading-5 tracking-[-.04em] text-[#08234B]">{t("home.conciergeTitle")}</span><span className="mt-1 block text-[11.5px] font-medium leading-4 text-[#667990]">{t("home.conciergeDescription")}</span><span className="mt-2 inline-flex items-center gap-1 text-[12px] font-extrabold text-primary-700">{t("home.conciergeAction")} <ArrowIcon className="h-3.5 w-3.5" /></span></span>
+        </button>
+      </section>
 
       <section className="mt-8">
         <SectionHeading title={t("home.latestInCariKontak")} onMore={() => navigate("/search?all=1")} />

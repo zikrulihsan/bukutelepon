@@ -97,6 +97,53 @@ export function getCategoryVisual(slug?: string | null): CategoryVisual | null {
   return CATEGORY_VISUALS[key] ?? null;
 }
 
+// Keep one warm-up request per asset. Every category surface (home tiles,
+// search chips, and contact-card fallbacks) uses the exact same URL, so the
+// browser can reuse the decoded image instead of starting another fetch.
+const categoryImageCache = new Map<string, Promise<void>>();
+
+export function preloadCategoryIcon(slug?: string | null): Promise<void> {
+  const source = getCategoryVisual(slug)?.src;
+  if (!source || typeof Image === "undefined") return Promise.resolve();
+
+  const cached = categoryImageCache.get(source);
+  if (cached) return cached;
+
+  const pending = new Promise<void>((resolve) => {
+    const image = new Image();
+    let settled = false;
+    const finish = () => {
+      if (settled) return;
+      settled = true;
+      resolve();
+    };
+    const decodeAndFinish = () => {
+      if (typeof image.decode === "function") {
+        void image.decode().catch(() => undefined).finally(finish);
+      } else {
+        finish();
+      }
+    };
+
+    image.decoding = "async";
+    image.onload = decodeAndFinish;
+    image.onerror = finish;
+    image.src = source;
+    if (image.complete) decodeAndFinish();
+  });
+
+  categoryImageCache.set(source, pending);
+  return pending;
+}
+
+export function preloadCategoryIcons(slugs: Array<string | null | undefined>): Promise<void[]> {
+  return Promise.all(slugs.map(preloadCategoryIcon));
+}
+
+export function preloadAllCategoryIcons(): Promise<void[]> {
+  return preloadCategoryIcons(Object.keys(CATEGORY_VISUALS));
+}
+
 interface CategoryIconProps {
   slug: string;
   className?: string;

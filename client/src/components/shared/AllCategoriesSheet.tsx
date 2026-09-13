@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { createPortal } from "react-dom";
 import { HiEllipsisHorizontal, HiXMark } from "react-icons/hi2";
 import { useI18n } from "../../i18n/LanguageContext";
-import { CategoryIcon, getCategoryVisual } from "./CategoryIcon";
+import { CategoryIcon, getCategoryVisual, preloadCategoryIcon } from "./CategoryIcon";
 
 interface AllCategoriesSheetProps {
   open: boolean;
@@ -91,7 +91,15 @@ export function AllCategoriesSheet({ open, onClose, onSelect }: AllCategoriesShe
                 {group.items.map((category) => {
                   const visual = getCategoryVisual(category.slug);
                   return (
-                    <button key={category.slug} type="button" onClick={() => onSelect(category.slug)} className="flex min-w-0 flex-col items-center gap-1.5 text-center active:scale-[.97]">
+                    <button
+                      key={category.slug}
+                      type="button"
+                      onPointerEnter={() => { void preloadCategoryIcon(category.slug); }}
+                      onPointerDown={() => { void preloadCategoryIcon(category.slug); }}
+                      onFocus={() => { void preloadCategoryIcon(category.slug); }}
+                      onClick={() => onSelect(category.slug)}
+                      className="flex min-w-0 flex-col items-center gap-1.5 text-center active:scale-[.97]"
+                    >
                       <span className={`grid h-14 w-14 place-items-center overflow-hidden rounded-full bg-gradient-to-br ${visual?.tileBackground ?? "from-[#F6F7F9] to-[#E8EBEF]"}`}>
                         {category.slug === "lainnya" ? (
                           <HiEllipsisHorizontal className="h-7 w-7 text-[#344054]" aria-hidden="true" />

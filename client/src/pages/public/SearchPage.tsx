@@ -95,18 +95,6 @@ export default function SearchPage() {
     setCityFromLink("");
   }, [cityFromLink, cities, citiesData, citiesFetched, citiesError, setCities, setCity]);
 
-  // The page owns the full viewport and scrolls its results internally, so the
-  // document itself must not scroll: a second scroller behind this one is what
-  // makes the browser chrome collapse and expand mid-gesture, dragging the
-  // header and the bottom bar with it.
-  useLayoutEffect(() => {
-    const previous = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = previous;
-    };
-  }, []);
-
   // Close filter menu on outside click
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -212,16 +200,32 @@ export default function SearchPage() {
   // The document-level route reset intentionally does not touch this element.
   useLayoutEffect(() => {
     if (restoredScrollKey.current === scrollStorageKey) return;
-    if (!savedScrollSnapshot || initialLoading || isLoading) {
+    if (!savedScrollSnapshot) {
       restoredScrollKey.current = scrollStorageKey;
       return;
     }
+    if (initialLoading || isLoading) return;
 
     restoredScrollKey.current = scrollStorageKey;
     requestAnimationFrame(() => {
       resultsRef.current?.scrollTo({ top: savedScrollSnapshot.top, behavior: "auto" });
     });
   }, [scrollStorageKey, savedScrollSnapshot, initialLoading, isLoading, allContacts.length]);
+
+  // A category selected on the homepage can be outside the initially visible
+  // chip row. Reveal it after the categories paint without scrolling the page.
+  useLayoutEffect(() => {
+    if (!activeCategory || categoriesLoading || categories.length === 0) return;
+    const frame = window.requestAnimationFrame(() => {
+      const container = chipScrollRef.current;
+      const chip = Array.from(container?.querySelectorAll<HTMLElement>("[data-slug]") ?? [])
+        .find((item) => item.dataset.slug === activeCategory);
+      if (!container || !chip) return;
+      const centeredLeft = chip.offsetLeft - (container.clientWidth - chip.offsetWidth) / 2;
+      container.scrollTo({ left: Math.max(0, centeredLeft), behavior: "auto" });
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [activeCategory, categories, categoriesLoading]);
 
   // URL sync
   useEffect(() => {
@@ -234,7 +238,7 @@ export default function SearchPage() {
     // Skip no-op history writes; each one re-renders the whole route.
     if (params.toString() === searchParams.toString()) return;
     setSearchParams(params, { replace: true });
-  }, [searchQuery, activeCategory, verifiedFilter, citySlug, searchParams, setSearchParams]);
+  }, [searchQuery, activeCategory, verifiedFilter, showAll, citySlug, searchParams, setSearchParams]);
 
   function handleSearch(e: React.FormEvent) {
     e.preventDefault();
@@ -294,7 +298,7 @@ export default function SearchPage() {
   }
 
   return (
-    <div className="h-viewport flex flex-col overflow-hidden bg-white max-w-md mx-auto">
+    <div className="fixed inset-0 mx-auto flex max-w-md flex-col overflow-hidden bg-white">
       {/* Search header — outside the scroller, so it never repaints on scroll */}
       <div className="flex-shrink-0 bg-white px-4 pt-4 pb-3 border-b border-black/5 z-20">
         <div className="flex items-center gap-2">

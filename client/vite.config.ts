@@ -57,7 +57,7 @@ export default defineConfig({
         ],
       },
       workbox: {
-        globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
+        globPatterns: ["**/*.{js,css,html,ico,png,svg,webp,woff2}"],
         runtimeCaching: [
           {
             // Network-first for API calls
@@ -81,6 +81,20 @@ export default defineConfig({
               cacheName: "google-fonts-cache",
               expiration: {
                 maxEntries: 10,
+                maxAgeSeconds: 60 * 60 * 24 * 365, // 1 year
+              },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
+          {
+            // Category artwork is immutable within a release and reused by
+            // home tiles, search chips, and contact-card fallbacks.
+            urlPattern: /\/category-icons\/.*\.(?:webp|png|svg)$/i,
+            handler: "CacheFirst",
+            options: {
+              cacheName: "category-icons-cache",
+              expiration: {
+                maxEntries: 30,
                 maxAgeSeconds: 60 * 60 * 24 * 365, // 1 year
               },
               cacheableResponse: { statuses: [0, 200] },

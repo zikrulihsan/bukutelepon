@@ -1,4 +1,4 @@
-import { CategoryIcon, getCategoryVisual } from "./CategoryIcon";
+import { CategoryIcon, getCategoryVisual, preloadCategoryIcon } from "./CategoryIcon";
 
 interface CategoryTileProps {
   slug: string;
@@ -25,6 +25,9 @@ export function CategoryTile({ slug, name, onClick }: CategoryTileProps) {
     <button
       type="button"
       onClick={onClick}
+      onPointerEnter={() => { void preloadCategoryIcon(slug); }}
+      onPointerDown={() => { void preloadCategoryIcon(slug); }}
+      onFocus={() => { void preloadCategoryIcon(slug); }}
       className={`relative flex h-[86px] min-w-0 flex-col items-center justify-start overflow-hidden rounded-[16px] bg-gradient-to-br ${background} px-1.5 pt-2.5 shadow-[0_4px_10px_rgba(11,49,45,0.08)] ring-1 ring-white/70 transition-transform active:scale-[0.98]`}
     >
       <span className="relative z-10 block w-full truncate text-[11.5px] font-extrabold leading-4 tracking-[-0.035em] text-[#08234B]">
