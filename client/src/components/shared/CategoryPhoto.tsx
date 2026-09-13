@@ -11,6 +11,7 @@ import {
   HiArchiveBox,
 } from "react-icons/hi2";
 import { LuUtensils } from "react-icons/lu";
+import { getCategoryVisual } from "./CategoryIcon";
 
 interface PhotoStyle {
   bg: string;
@@ -50,15 +51,26 @@ export function CategoryPhoto({
   className = "w-full h-full",
   iconClassName = "w-1/2 h-1/2",
 }: CategoryPhotoProps) {
+  const visual = getCategoryVisual(slug);
   const style = (slug && STYLES[slug]) || FALLBACK;
   const { Icon } = style;
 
   return (
     <div
-      className={`${className} ${style.bg} bg-gradient-to-br flex items-center justify-center`}
+      className={`${className} ${visual?.tileBackground ?? style.bg} bg-gradient-to-br flex items-center justify-center`}
       aria-hidden="true"
     >
-      <Icon className={`${style.fg} ${iconClassName}`} />
+      {visual ? (
+        <img
+          src={visual.src}
+          alt=""
+          decoding="async"
+          draggable={false}
+          className={`${iconClassName} object-contain drop-shadow-[0_5px_7px_rgba(24,39,58,0.18)]`}
+        />
+      ) : (
+        <Icon className={`${style.fg} ${iconClassName}`} />
+      )}
     </div>
   );
 }

@@ -8,8 +8,8 @@ import { useCategories } from "../../context/CategoriesContext";
 import { useContactsData } from "../../context/ContactsContext";
 import { filterContacts } from "../../lib/localContacts";
 import { CityPickerOverlay } from "../../components/shared/CityPickerOverlay";
-import { CategoryIcon } from "../../components/shared/CategoryIcon";
 import { CategoryPhoto } from "../../components/shared/CategoryPhoto";
+import { CategoryTile } from "../../components/shared/CategoryTile";
 import { ContactCard } from "../../components/shared/ContactCard";
 import { LanguageToggle } from "../../components/shared/LanguageToggle";
 import { isSaved, toggleSaved } from "../../lib/saved";
@@ -20,7 +20,7 @@ const CATEGORY_FALLBACK = [
   { slug: "jasa", name: "Jasa" },
   { slug: "kesehatan", name: "Kesehatan" },
   { slug: "kuliner", name: "Kuliner" },
-  { slug: "pemerintah", name: "Pemerintah" },
+  { slug: "penginapan", name: "Penginapan" },
   { slug: "pendidikan", name: "Pendidikan" },
   { slug: "wisata", name: "Wisata" },
   { slug: "transportasi", name: "Transportasi" },
@@ -242,16 +242,11 @@ export default function MainScreen() {
     ...contactsWithoutPhotos.filter((contact) => contact.isVerified),
     ...contactsWithoutPhotos.filter((contact) => !contact.isVerified),
   ].slice(0, 6);
-  const displayCategories = categories.length
-    ? [...categories]
-      .sort((a, b) => {
-        const aIndex = HOME_CATEGORY_ORDER.indexOf(a.slug);
-        const bIndex = HOME_CATEGORY_ORDER.indexOf(b.slug);
-        return (aIndex < 0 ? 99 : aIndex) - (bIndex < 0 ? 99 : bIndex);
-      })
-      .slice(0, 8)
-      .map((category) => ({ slug: category.slug, name: categoryName(category) }))
-    : CATEGORY_FALLBACK;
+  const displayCategories = HOME_CATEGORY_ORDER.map((slug) => {
+    const category = categories.find((item) => item.slug === slug)
+      ?? CATEGORY_FALLBACK.find((item) => item.slug === slug);
+    return { slug, name: categoryName(category) };
+  });
   const categoryTiles = [
     ...displayCategories.slice(0, 7),
     { slug: "all", name: t("home.seeAll") },
@@ -511,10 +506,11 @@ export default function MainScreen() {
                 </div>
               </div>)}
             </div>
-            {heroSlides.length > 1 && <div className="absolute bottom-1 left-1/2 z-20 flex -translate-x-1/2 items-center gap-1" role="group" aria-label={t("home.heroCarouselLabel")}>
-              {heroSlides.map((slide, index) => <button key={slide.id} type="button" onClick={() => goToHeroSlide(index)} aria-label={t("home.heroGoToSlide", { number: index + 1 })} aria-current={index === activeHeroSlide ? "true" : undefined} className={`h-1.5 rounded-full ${reduceMotion ? "" : "transition-all"} ${index === activeHeroSlide ? "w-4 bg-primary-700" : "w-1.5 bg-[#8CA99B]/65 hover:bg-[#668B79]"}`} />)}
-            </div>}
           </div>
+
+          {heroSlides.length > 1 && <div className="absolute bottom-[50px] left-1/2 z-20 flex -translate-x-1/2 items-center gap-1" role="group" aria-label={t("home.heroCarouselLabel")}>
+            {heroSlides.map((slide, index) => <button key={slide.id} type="button" onClick={() => goToHeroSlide(index)} aria-label={t("home.heroGoToSlide", { number: index + 1 })} aria-current={index === activeHeroSlide ? "true" : undefined} className={`h-1.5 rounded-full ${reduceMotion ? "" : "transition-all"} ${index === activeHeroSlide ? "w-4 bg-primary-700" : "w-1.5 bg-[#8CA99B]/65 hover:bg-[#668B79]"}`} />)}
+          </div>}
 
           <form onSubmit={(event) => { event.preventDefault(); goToSearch(); }} className="relative z-30 mt-auto flex h-14 translate-y-1/2 items-center rounded-[18px] bg-white p-1 shadow-[0_5px_14px_rgba(21,66,53,0.13)]">
             <SearchIcon className="ml-3 h-6 w-6 shrink-0 text-[#8998B1]" />
@@ -527,7 +523,7 @@ export default function MainScreen() {
       <div className="px-4 pt-7">
 
       <section className="mt-6">
-        <div className="grid grid-cols-4 gap-2.5">{categoriesLoading ? Array.from({ length: 8 }).map((_, index) => <div key={index} className="h-[84px] rounded-2xl shimmer" />) : categoryTiles.map((category) => <button key={category.slug} type="button" onClick={() => navigate(category.slug === "all" ? "/search?all=1" : `/search?category=${encodeURIComponent(category.slug)}`)} className="flex h-[84px] min-w-0 flex-col items-center justify-center gap-2 rounded-2xl bg-white px-1.5 shadow-[0_4px_10px_rgba(11,49,45,0.07)] transition hover:-translate-y-0.5 active:scale-95">{category.slug === "all" ? <ArrowIcon className="h-8 w-8 text-[#08234B]" /> : <CategoryIcon slug={category.slug} className="h-8 w-8 text-[#08234B]" />}<span className="w-full truncate text-[12px] font-bold tracking-[-0.035em] text-[#08234B]">{category.name}</span></button>)}</div>
+        <div className="grid grid-cols-4 gap-2.5">{categoriesLoading ? Array.from({ length: 8 }).map((_, index) => <div key={index} className="h-[86px] rounded-[16px] shimmer" />) : categoryTiles.map((category) => <CategoryTile key={category.slug} slug={category.slug} name={category.name} onClick={() => navigate(category.slug === "all" ? "/search?all=1" : `/search?category=${encodeURIComponent(category.slug)}`)} />)}</div>
       </section>
 
       <section className="mt-5">
