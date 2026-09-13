@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { HiBookmark, HiOutlineBookmark } from "react-icons/hi2";
 import { apiClient } from "../../lib/axios";
@@ -8,6 +8,7 @@ import { useCategories } from "../../context/CategoriesContext";
 import { useContactsData } from "../../context/ContactsContext";
 import { filterContacts } from "../../lib/localContacts";
 import { CityPickerOverlay } from "../../components/shared/CityPickerOverlay";
+import { AllCategoriesSheet } from "../../components/shared/AllCategoriesSheet";
 import { CategoryPhoto } from "../../components/shared/CategoryPhoto";
 import { CategoryTile } from "../../components/shared/CategoryTile";
 import { ContactCard } from "../../components/shared/ContactCard";
@@ -28,8 +29,18 @@ const CATEGORY_FALLBACK = [
 ];
 
 const HOME_CATEGORY_ORDER = CATEGORY_FALLBACK.map((category) => category.slug);
+const HOME_CATEGORY_IMAGES = [
+  "/category-icons/service.webp",
+  "/category-icons/health.webp",
+  "/category-icons/kuliner.webp",
+  "/category-icons/lodging.webp",
+  "/category-icons/education.webp",
+  "/category-icons/vacation.webp",
+  "/category-icons/transport.webp",
+];
 const HOME_CRITICAL_IMAGES = [
   "/hero-sumbawa-v2.webp",
+  ...HOME_CATEGORY_IMAGES,
   "/storefront/discovery-coffee.webp",
   "/storefront/discovery-souvenir.webp",
   "/storefront/discovery-delivery.webp",
@@ -176,6 +187,7 @@ export default function MainScreen() {
   const { categoryName, lang, t } = useI18n();
   const [showCityPicker, setShowCityPicker] = useState(false);
   const [showEmergency, setShowEmergency] = useState(false);
+  const [showAllCategories, setShowAllCategories] = useState(false);
   const [query, setQuery] = useState("");
   const [activeHeroSlide, setActiveHeroSlide] = useState(0);
   const [carouselHovered, setCarouselHovered] = useState(false);
@@ -523,12 +535,19 @@ export default function MainScreen() {
       <div className="px-4 pt-7">
 
       <section className="mt-6">
-        <div className="grid grid-cols-4 gap-2.5">{categoriesLoading ? Array.from({ length: 8 }).map((_, index) => <div key={index} className="h-[86px] rounded-[16px] shimmer" />) : categoryTiles.map((category) => <CategoryTile key={category.slug} slug={category.slug} name={category.name} onClick={() => navigate(category.slug === "all" ? "/search?all=1" : `/search?category=${encodeURIComponent(category.slug)}`)} />)}</div>
+        <div className="grid grid-cols-4 gap-2.5">{categoriesLoading ? Array.from({ length: 8 }).map((_, index) => <div key={index} className="h-[86px] rounded-[16px] shimmer" />) : categoryTiles.map((category) => <CategoryTile key={category.slug} slug={category.slug} name={category.name} onClick={() => category.slug === "all" ? setShowAllCategories(true) : navigate(`/search?category=${encodeURIComponent(category.slug)}`)} />)}</div>
       </section>
 
       <section className="mt-5">
         <button type="button" onClick={() => setShowEmergency((value) => !value)} className="flex h-16 w-full items-center justify-between rounded-2xl bg-[linear-gradient(105deg,#fff7f7,#fff2f5)] px-3 text-left shadow-[0_3px_9px_rgba(126,52,67,0.07)] transition active:scale-[0.99]"><span className="flex items-center gap-3"><span className="grid h-10 w-10 place-items-center rounded-xl bg-[#FFE0E0]"><SirenIcon className="h-7 w-7" /></span><span><span className="block text-[15px] font-extrabold leading-5 tracking-[-0.035em] text-[#08234B]">{t("home.emergencyTitle")}</span><span className="block text-[12px] font-medium leading-4 text-[#8190AA]">{t("home.emergencySubtitle")}</span></span></span><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round" className={`h-5 w-5 text-[#95A0B8] transition-transform ${showEmergency ? "rotate-180" : ""}`} aria-hidden="true"><path d="m5 7.5 5 5 5-5" /></svg></button>
         {showEmergency && <div className="mt-2 grid grid-cols-2 gap-2 rounded-xl bg-white p-2 shadow-[0_3px_9px_rgba(15,47,45,0.07)]">{[{ label: t("emergency.emergency"), query: "darurat" }, { label: t("emergency.fire"), query: "damkar" }, { label: t("emergency.ambulance"), query: "ambulans" }, { label: t("emergency.police"), query: "polisi" }].map((item) => <button key={item.query} type="button" onClick={() => navigate(`/search?q=${encodeURIComponent(item.query)}`)} className="rounded-[10px] bg-[#F7F9F5] px-3 py-3 text-center text-[13px] font-bold text-[#08234B] transition hover:bg-[#EEF6F0] active:scale-[0.98]">{item.label}</button>)}</div>}
+      </section>
+
+      <section className="mt-5">
+        <button type="button" onClick={() => navigate("/jastip-kontak")} className="relative flex min-h-[112px] w-full items-center overflow-hidden rounded-2xl bg-[radial-gradient(circle_at_95%_0%,rgba(160,220,255,.7),transparent_36%),linear-gradient(120deg,#EAF4FF,#E8F8F0)] px-4 py-4 text-left shadow-[0_5px_13px_rgba(16,67,91,.08)] active:scale-[.99]">
+          <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-white/85 text-primary-700 shadow-[0_5px_12px_rgba(16,67,91,.10)]"><SearchIcon className="h-6 w-6" /></span>
+          <span className="ml-3 min-w-0 flex-1"><span className="block text-[16px] font-extrabold leading-5 tracking-[-.04em] text-[#08234B]">{t("home.conciergeTitle")}</span><span className="mt-1 block text-[11.5px] font-medium leading-4 text-[#667990]">{t("home.conciergeDescription")}</span><span className="mt-2 inline-flex items-center gap-1 text-[12px] font-extrabold text-primary-700">{t("home.conciergeAction")} <ArrowIcon className="h-3.5 w-3.5" /></span></span>
+        </button>
       </section>
 
       <section className="mt-7">
@@ -541,13 +560,14 @@ export default function MainScreen() {
         <div className="-mr-4 flex snap-x snap-mandatory gap-2.5 overflow-x-auto pb-2 pr-4 scrollbar-hide">{recommendedContacts.map((contact) => <ChoiceCard key={contact.id} contact={contact} categoryLabel={categoryName(contact.category)} cityName={selectedCityName} viewLabel={t("home.view")} onOpen={() => navigate(`/kontak/${contact.id}`)} />)}</div>
       </section>}
 
-      <section className="relative mt-8 min-h-[170px] overflow-hidden rounded-2xl bg-[radial-gradient(circle_at_92%_12%,#15795c,transparent_32%),linear-gradient(120deg,#003f32,#007352)] px-4 py-4 text-white shadow-[0_6px_13px_rgba(0,91,69,0.20)]"><div className="relative z-10 max-w-[235px]"><h2 className="text-[20px] font-extrabold leading-6 tracking-[-0.045em]">{t("home.businessPromoTitle", { city: selectedCityName })}</h2><p className="mt-1 text-[13px] leading-[18px] text-white/90">{t("home.businessPromoDescription")}</p><button type="button" onClick={() => navigate("/submit")} className="mt-3 h-10 min-w-[150px] rounded-xl bg-white px-4 text-[13px] font-extrabold text-primary-700 transition active:scale-95">{t("home.businessPromoAction")}</button></div><StoreIllustration /></section>
-
-      <section className="mb-5 mt-8">
+      <section className="mt-8">
         <SectionHeading title={t("home.latestInCariKontak")} onMore={() => navigate("/search?all=1")} />
         {contactsLoading ? <div className="space-y-3"><div className="h-[160px] rounded-2xl shimmer" /><div className="h-[160px] rounded-2xl shimmer" /></div> : contacts.length ? <div className="space-y-3">{contacts.slice(0, 3).map((contact) => <ContactCard key={contact.id} contact={contact} />)}</div> : <div className="grid h-[144px] place-items-center rounded-2xl bg-white p-5 text-center text-[14px] text-[#71809B]">{t("home.noContactsInCity", { city: selectedCityName })}</div>}
       </section>
+
+      <section className="mb-5 mt-8 relative min-h-[170px] overflow-hidden rounded-2xl bg-[radial-gradient(circle_at_92%_12%,#15795c,transparent_32%),linear-gradient(120deg,#003f32,#007352)] px-4 py-4 text-white shadow-[0_6px_13px_rgba(0,91,69,0.20)]"><div className="relative z-10 max-w-[235px]"><h2 className="text-[20px] font-extrabold leading-6 tracking-[-0.045em]">{t("home.businessPromoTitle", { city: selectedCityName })}</h2><p className="mt-1 text-[13px] leading-[18px] text-white/90">{t("home.businessPromoDescription")}</p><Link to="/buat-katalog" className="mt-3 inline-flex h-10 min-w-[150px] items-center justify-center rounded-xl bg-white px-4 text-[13px] font-extrabold text-primary-700 transition active:scale-95">{t("home.businessPromoAction")}</Link></div><StoreIllustration /></section>
       </div>
+      <AllCategoriesSheet open={showAllCategories} onClose={() => setShowAllCategories(false)} onSelect={(slug) => { setShowAllCategories(false); navigate(`/search?category=${encodeURIComponent(slug)}`); }} />
     </div>
   </div>;
 }

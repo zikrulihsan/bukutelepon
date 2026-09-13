@@ -56,6 +56,18 @@ const id = {
   "category.transportasi": "Transportasi",
   "category.wisata": "Wisata",
   "category.penginapan": "Penginapan",
+  "category.toko-retail": "Toko & Retail",
+  "category.properti": "Properti",
+  "category.keuangan": "Keuangan",
+  "category.elektronik": "Elektronik",
+  "category.lainnya": "Lainnya",
+
+  "categories.allTitle": "Semua kategori",
+  "categories.allSubtitle": "Temukan kontak berdasarkan kebutuhanmu",
+  "categories.groupPlaces": "Tempat & belanja",
+  "categories.groupServices": "Layanan",
+  "categories.groupBusiness": "Bisnis & kebutuhan",
+  "categories.groupPublic": "Layanan publik",
 
   // ── Home / MainScreen ──
   "home.help": "Bantuan",
@@ -100,6 +112,9 @@ const id = {
   "home.businessPromoTitle": "Punya usaha di {city}?",
   "home.businessPromoDescription": "Jangan cuma bagikan nomor WhatsApp. Buat halaman usaha dengan katalog, lokasi, dan lainnya.",
   "home.businessPromoAction": "Daftarkan Usaha",
+  "home.conciergeTitle": "Tidak menemukan yang Anda cari?",
+  "home.conciergeDescription": "Ceritakan kontak yang dibutuhkan. Tim CariKontak akan membantu mencarikannya.",
+  "home.conciergeAction": "Minta kami carikan",
 
   // ── Emergency numbers ──
   "emergency.emergency": "Darurat",
@@ -414,6 +429,18 @@ const en: Record<TranslationKey, string> = {
   "category.transportasi": "Transport",
   "category.wisata": "Tourism",
   "category.penginapan": "Lodging",
+  "category.toko-retail": "Shop & Retail",
+  "category.properti": "Property",
+  "category.keuangan": "Finance",
+  "category.elektronik": "Electronics",
+  "category.lainnya": "Other",
+
+  "categories.allTitle": "All categories",
+  "categories.allSubtitle": "Find contacts based on what you need",
+  "categories.groupPlaces": "Places & shopping",
+  "categories.groupServices": "Services",
+  "categories.groupBusiness": "Business & essentials",
+  "categories.groupPublic": "Public services",
 
   // ── Home / MainScreen ──
   "home.help": "Help",
@@ -458,6 +485,9 @@ const en: Record<TranslationKey, string> = {
   "home.businessPromoTitle": "Own a business in {city}?",
   "home.businessPromoDescription": "Don't just share a WhatsApp number. Create a business page with a catalog, location, and more.",
   "home.businessPromoAction": "List Your Business",
+  "home.conciergeTitle": "Can't find what you're looking for?",
+  "home.conciergeDescription": "Tell us which contact you need. The CariKontak team will help find it.",
+  "home.conciergeAction": "Ask us to find it",
 
   // ── Emergency numbers ──
   "emergency.emergency": "Emergency",

@@ -26,6 +26,7 @@ import ProductDetailPage from "./pages/public/ProductDetailPage";
 import { InquiryProvider } from "./features/storefront/InquiryContext";
 import ProDashboardPage from "./pages/pro/ProDashboardPage";
 import CatalogPlansPage from "./pages/public/CatalogPlansPage";
+import ContactConciergePage from "./pages/public/ContactConciergePage";
 import AdminHeroPromotions from "./pages/admin/HeroPromotions";
 
 export default function App() {
@@ -52,6 +53,7 @@ export default function App() {
                     <Route path="/account" element={<AccountPage />} />
                     <Route path="/pro" element={<ProDashboardPage />} />
                     <Route path="/buat-katalog" element={<CatalogPlansPage />} />
+                    <Route path="/jastip-kontak" element={<ContactConciergePage />} />
                     <Route path="/kontak/:id" element={<ContactDetailPage />} />
                     <Route path="/submit" element={<SubmitPage />} />
                     <Route path="/login" element={<LoginPage />} />

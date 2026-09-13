@@ -73,6 +73,12 @@ async function main() {
     { name: "Darurat",     slug: "darurat",     icon: "🚨" },
     { name: "Transportasi",slug: "transportasi",icon: "🚗" },
     { name: "Wisata",      slug: "wisata",      icon: "🗺️" },
+    { name: "Penginapan",  slug: "penginapan",  icon: "🏨" },
+    { name: "Toko & Retail", slug: "toko-retail", icon: "🛍️" },
+    { name: "Properti",    slug: "properti",    icon: "🏠" },
+    { name: "Keuangan",    slug: "keuangan",    icon: "💳" },
+    { name: "Elektronik",  slug: "elektronik",  icon: "🎧" },
+    { name: "Lainnya",     slug: "lainnya",     icon: "•••" },
   ];
 
   const cats: Record<string, string> = {};

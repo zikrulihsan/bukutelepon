@@ -22,6 +22,19 @@
   path = "/search"
   function = "search-preview"
 
+# Contact and storefront links use their own photo, title, and description.
+[[edge_functions]]
+  path = "/kontak/*"
+  function = "detail-preview"
+
+[[edge_functions]]
+  path = "/catalog"
+  function = "detail-preview"
+
+[[edge_functions]]
+  path = "/catalog/*"
+  function = "detail-preview"
+
 # Keep client calls on the existing /api/* contract.
 [[redirects]]
   from = "/api/*"

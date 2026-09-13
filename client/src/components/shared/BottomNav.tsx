@@ -13,7 +13,7 @@ import {
 import { useI18n } from "../../i18n/LanguageContext";
 import { useKeyboardOpen } from "../../hooks/useKeyboardOpen";
 
-const HIDDEN_ROUTES = ["/login", "/register", "/admin", "/kontak", "/catalog", "/buat-katalog"];
+const HIDDEN_ROUTES = ["/login", "/register", "/admin", "/kontak", "/catalog", "/buat-katalog", "/jastip-kontak"];
 
 export function BottomNav() {
   const location = useLocation();

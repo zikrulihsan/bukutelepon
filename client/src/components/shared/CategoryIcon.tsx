@@ -34,6 +34,10 @@ const CATEGORY_VISUALS: Record<string, CategoryVisual> = {
     src: "/category-icons/health.webp",
     tileBackground: "from-[#F2FFF8] to-[#DDF5E9]",
   },
+  lodging: {
+    src: "/category-icons/lodging.webp",
+    tileBackground: "from-[#FFF8EC] to-[#FFE7BE]",
+  },
   property: {
     src: "/category-icons/property.webp",
     tileBackground: "from-[#FFFAEC] to-[#FFEBC6]",
@@ -45,6 +49,18 @@ const CATEGORY_VISUALS: Record<string, CategoryVisual> = {
   finance: {
     src: "/category-icons/finance.webp",
     tileBackground: "from-[#FFF5F5] to-[#FFDCDD]",
+  },
+  government: {
+    src: "/category-icons/government.webp",
+    tileBackground: "from-[#F6F8FF] to-[#E2E8F7]",
+  },
+  emergency: {
+    src: "/category-icons/emergency.webp",
+    tileBackground: "from-[#FFF5F5] to-[#FFDCDD]",
+  },
+  electronics: {
+    src: "/category-icons/electronics.webp",
+    tileBackground: "from-[#F3F5FF] to-[#DDE4FF]",
   },
 };
 
@@ -64,11 +80,14 @@ const CATEGORY_VISUAL_ALIASES: Record<string, keyof typeof CATEGORY_VISUALS> = {
   pendidikan: "education",
   transportasi: "transport",
   kesehatan: "health",
+  penginapan: "lodging",
   properti: "property",
-  penginapan: "property",
   wisata: "vacation",
   liburan: "vacation",
   keuangan: "finance",
+  pemerintah: "government",
+  darurat: "emergency",
+  elektronik: "electronics",
 };
 
 export function getCategoryVisual(slug?: string | null): CategoryVisual | null {

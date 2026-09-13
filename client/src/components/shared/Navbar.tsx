@@ -3,7 +3,7 @@ import { HiChevronLeft } from "react-icons/hi2";
 import { useI18n } from "../../i18n/LanguageContext";
 
 // Pages that have their own header or don't need the navbar
-const HIDDEN_ROUTES = ["/", "/search", "/saved", "/account", "/submit", "/kontak", "/catalog", "/buat-katalog"];
+const HIDDEN_ROUTES = ["/", "/search", "/saved", "/account", "/submit", "/kontak", "/catalog", "/buat-katalog", "/jastip-kontak"];
 
 export function Navbar() {
   const location = useLocation();
