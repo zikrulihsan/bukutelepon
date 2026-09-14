@@ -69,7 +69,7 @@ function ProductCard({ item, whatsapp, onOpen }: { item: StorefrontItem; whatsap
       <div className="flex flex-1 flex-col p-3.5 sm:p-4">
         <p className="mb-1 text-[9px] font-extrabold uppercase tracking-[0.16em] text-[#A6784F]">{itemTypeLabel(item)} · {item.category}</p>
         <h3 className="text-[14px] font-extrabold leading-snug text-[#1D382C] sm:text-base">{item.name}</h3>
-        <p className="mt-1.5 line-clamp-2 text-[11px] leading-relaxed text-[#7B857E] sm:text-xs">{item.shortDescription}</p>
+        {item.shortDescription && <p className="mt-1.5 line-clamp-2 text-[11px] leading-relaxed text-[#7B857E] sm:text-xs">{item.shortDescription}</p>}
         <div className="mt-auto flex items-end justify-between gap-2 pt-3">
           <p className="text-[12px] font-extrabold text-[#A45A22] sm:text-sm">{formatPrice(item)}</p>
           {item.available && (

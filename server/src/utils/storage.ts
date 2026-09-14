@@ -65,8 +65,27 @@ function storageObjectPath(url: string | null | undefined, bucket: string): stri
   const prefix = `/storage/v1/object/public/${bucket}/`;
   if (!parsed.pathname.startsWith(prefix)) return null;
 
-  const path = decodeURIComponent(parsed.pathname.slice(prefix.length));
-  return path.length > 0 ? path : null;
+  try {
+    const path = decodeURIComponent(parsed.pathname.slice(prefix.length));
+    return path.length > 0 ? path : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Returns the object path when the URL belongs to our catalog bucket. */
+export function catalogImagePath(url: string | null | undefined): string | null {
+  return storageObjectPath(url, CATALOG_IMAGE_BUCKET);
+}
+
+/** Ensures a public catalog URL points at the authenticated owner's folder. */
+export function isOwnedCatalogImage(
+  url: string | null | undefined,
+  ownerId: string
+): boolean {
+  if (!process.env.SUPABASE_URL) return false;
+  const path = catalogImagePath(url);
+  return Boolean(path && path.split("/")[0] === ownerId);
 }
 
 /** Best-effort cleanup for replaced or deleted Pro catalog images. */
@@ -74,7 +93,7 @@ export async function deleteCatalogImage(
   url: string | null | undefined,
   expectedOwnerId?: string
 ): Promise<void> {
-  const path = storageObjectPath(url, CATALOG_IMAGE_BUCKET);
+  const path = catalogImagePath(url);
   if (!path) return;
   if (expectedOwnerId && path.split("/")[0] !== expectedOwnerId) return;
 

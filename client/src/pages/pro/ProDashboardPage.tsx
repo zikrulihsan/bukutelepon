@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AxiosError } from "axios";
 import { Link, Navigate } from "react-router-dom";
 import {
+  HiArrowUpTray,
   HiArrowTopRightOnSquare,
   HiCheckCircle,
   HiOutlineBuildingStorefront,
@@ -18,6 +19,7 @@ import {
 import { apiClient } from "../../lib/axios";
 import { uploadCatalogImage } from "../../lib/uploadImage";
 import { useAuth } from "../../hooks/useAuth";
+import { BulkItemUploadModal } from "../../components/pro/BulkItemUploadModal";
 import type {
   ApiResponse,
   BusinessStatus,
@@ -144,6 +146,7 @@ export default function ProDashboardPage() {
   const [tab, setTab] = useState<"business" | "items">("business");
   const [businessForm, setBusinessForm] = useState<BusinessDraft>(emptyBusiness);
   const [itemForm, setItemForm] = useState<ItemDraft | null>(null);
+  const [bulkUploadOpen, setBulkUploadOpen] = useState(false);
   const [uploading, setUploading] = useState<"logo" | "cover" | "item" | null>(null);
   const [contactSearch, setContactSearch] = useState("");
   const [notice, setNotice] = useState("");
@@ -336,9 +339,12 @@ export default function ProDashboardPage() {
           </form>
         ) : (
           <section className="mt-5">
-            <div className="mb-4 flex items-center justify-between gap-3">
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
               <div><h2 className="text-lg font-bold text-gray-900">Isi etalase</h2><p className="text-xs text-gray-500">Produk, jasa, paket, atau promo.</p></div>
-              <button onClick={() => setItemForm(itemDraft())} disabled={!managedBusiness} className="inline-flex items-center gap-2 rounded-xl bg-primary-700 px-4 py-2.5 text-sm font-bold text-white disabled:opacity-40"><HiOutlinePlus className="h-4 w-4" /> Tambah item</button>
+              <div className="flex gap-2">
+                <button onClick={() => setBulkUploadOpen(true)} disabled={!managedBusiness} className="inline-flex items-center gap-2 rounded-xl border border-primary-200 bg-white px-4 py-2.5 text-sm font-bold text-primary-700 disabled:opacity-40"><HiArrowUpTray className="h-4 w-4" /> Upload banyak</button>
+                <button onClick={() => setItemForm(itemDraft())} disabled={!managedBusiness} className="inline-flex items-center gap-2 rounded-xl bg-primary-700 px-4 py-2.5 text-sm font-bold text-white disabled:opacity-40"><HiOutlinePlus className="h-4 w-4" /> Tambah item</button>
+              </div>
             </div>
             {!managedBusiness ? (
               <div className="rounded-2xl border border-dashed border-gray-300 bg-white px-5 py-12 text-center text-sm text-gray-500">Simpan profil bisnis lebih dulu, lalu tambahkan isi etalase.</div>
@@ -349,7 +355,7 @@ export default function ProDashboardPage() {
                 {managedBusiness.items.map((item) => (
                   <article key={item.id} className="flex gap-3 rounded-2xl border border-gray-200 bg-white p-3 shadow-sm">
                     <div className="h-24 w-24 flex-none overflow-hidden rounded-xl bg-gray-100">{item.imageUrl ? <img src={item.imageUrl} alt="" className="h-full w-full object-cover" /> : <div className="grid h-full place-items-center text-gray-300"><HiOutlineCamera className="h-7 w-7" /></div>}</div>
-                    <div className="min-w-0 flex-1 py-0.5"><div className="flex items-start justify-between gap-2"><div className="min-w-0"><p className="truncate text-sm font-bold text-gray-900">{item.name}</p><p className="mt-0.5 text-[11px] text-gray-500">{item.category} · {item.type}</p></div>{item.status === "ACTIVE" ? <HiOutlineEye className="h-4 w-4 flex-none text-green-600" /> : <HiOutlineEyeSlash className="h-4 w-4 flex-none text-gray-400" />}</div><p className="mt-2 line-clamp-2 text-xs leading-5 text-gray-500">{item.shortDescription}</p><div className="mt-2 flex gap-2"><button onClick={() => setItemForm(itemDraft(item))} className="inline-flex items-center gap-1 text-xs font-semibold text-primary-700"><HiOutlinePencilSquare className="h-4 w-4" /> Edit</button><button onClick={() => window.confirm(`Hapus ${item.name}?`) && deleteItem.mutate(item.id)} className="inline-flex items-center gap-1 text-xs font-semibold text-red-600"><HiOutlineTrash className="h-4 w-4" /> Hapus</button></div></div>
+                    <div className="min-w-0 flex-1 py-0.5"><div className="flex items-start justify-between gap-2"><div className="min-w-0"><p className="truncate text-sm font-bold text-gray-900">{item.name}</p><p className="mt-0.5 text-[11px] text-gray-500">{item.category} · {item.type}</p></div>{item.status === "ACTIVE" ? <HiOutlineEye className="h-4 w-4 flex-none text-green-600" /> : <HiOutlineEyeSlash className="h-4 w-4 flex-none text-gray-400" />}</div>{item.shortDescription && <p className="mt-2 line-clamp-2 text-xs leading-5 text-gray-500">{item.shortDescription}</p>}<div className="mt-2 flex gap-2"><button onClick={() => setItemForm(itemDraft(item))} className="inline-flex items-center gap-1 text-xs font-semibold text-primary-700"><HiOutlinePencilSquare className="h-4 w-4" /> Edit</button><button onClick={() => window.confirm(`Hapus ${item.name}?`) && deleteItem.mutate(item.id)} className="inline-flex items-center gap-1 text-xs font-semibold text-red-600"><HiOutlineTrash className="h-4 w-4" /> Hapus</button></div></div>
                   </article>
                 ))}
               </div>
@@ -369,8 +375,8 @@ export default function ProDashboardPage() {
               <label className={labelClass}>Slug<input value={itemForm.slug} onChange={(e) => setItemForm({ ...itemForm, slug: e.target.value })} className={inputClass} placeholder="otomatis-dari-nama" /></label>
               <label className={labelClass}>Kategori *<input required value={itemForm.category} onChange={(e) => setItemForm({ ...itemForm, category: e.target.value })} className={inputClass} placeholder="Madu, Camilan, Jasa…" /></label>
             </div>
-            <label className={`${labelClass} mt-4`}>Ringkasan *<input required maxLength={240} value={itemForm.shortDescription} onChange={(e) => setItemForm({ ...itemForm, shortDescription: e.target.value })} className={inputClass} /></label>
-            <label className={`${labelClass} mt-4`}>Deskripsi *<textarea required maxLength={2000} value={itemForm.description} onChange={(e) => setItemForm({ ...itemForm, description: e.target.value })} className={`${inputClass} min-h-24 resize-y`} /></label>
+            <label className={`${labelClass} mt-4`}>Ringkasan (opsional)<input maxLength={240} value={itemForm.shortDescription} onChange={(e) => setItemForm({ ...itemForm, shortDescription: e.target.value })} className={inputClass} /></label>
+            <label className={`${labelClass} mt-4`}>Deskripsi (opsional)<textarea maxLength={2000} value={itemForm.description} onChange={(e) => setItemForm({ ...itemForm, description: e.target.value })} className={`${inputClass} min-h-24 resize-y`} /></label>
             <div className="mt-4 grid gap-4 sm:grid-cols-3">
               <label className={labelClass}>Tipe harga<select value={itemForm.priceType} onChange={(e) => setItemForm({ ...itemForm, priceType: e.target.value as StorefrontPriceType })} className={inputClass}><option value="CONTACT">Tanya harga</option><option value="FIXED">Harga tetap</option><option value="STARTING_FROM">Mulai dari</option><option value="FREE">Gratis</option></select></label>
               <label className={labelClass}>Harga (Rp)<input type="number" min={0} value={itemForm.price} onChange={(e) => setItemForm({ ...itemForm, price: Number(e.target.value) })} disabled={itemForm.priceType === "CONTACT" || itemForm.priceType === "FREE"} className={inputClass} /></label>
@@ -383,6 +389,19 @@ export default function ProDashboardPage() {
             <div className="mt-6 flex gap-3 border-t border-gray-100 pt-5"><button type="button" onClick={() => setItemForm(null)} className="flex-1 rounded-xl border border-gray-200 px-5 py-3 text-sm font-bold text-gray-600">Batal</button><button disabled={saveItem.isPending || Boolean(uploading)} className="flex-1 rounded-xl bg-primary-700 px-5 py-3 text-sm font-bold text-white disabled:opacity-50">{saveItem.isPending ? "Menyimpan…" : "Simpan item"}</button></div>
           </form>
         </div>
+      )}
+
+      {bulkUploadOpen && user && (
+        <BulkItemUploadModal
+          userId={user.id}
+          nextSortOrder={(managedBusiness?.items ?? []).reduce((maximum, item) => Math.max(maximum, item.sortOrder), -1) + 1}
+          onClose={() => setBulkUploadOpen(false)}
+          onSaved={(count) => {
+            queryClient.invalidateQueries({ queryKey: ["pro", "business"] });
+            setNotice(`${count} produk berhasil ditambahkan.`);
+            setFailure("");
+          }}
+        />
       )}
     </div>
   );

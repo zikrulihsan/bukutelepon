@@ -118,7 +118,7 @@ export default function ProductDetailPage() {
             </div>
             <h1 className="mt-3 font-serif text-[33px] font-black leading-[1.1] tracking-[-0.025em] text-[#193B2D] sm:text-4xl lg:text-[42px]">{item.name}</h1>
             <p className="mt-3 text-xl font-black text-[#A25824]">{formatPrice(item)}</p>
-            <p className="mt-5 text-[13px] leading-6 text-[#657269] sm:text-sm">{item.description}</p>
+            {item.description && <p className="mt-5 text-[13px] leading-6 text-[#657269] sm:text-sm">{item.description}</p>}
 
             {item.variants.length > 0 && (
               <div className="mt-7">

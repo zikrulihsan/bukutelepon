@@ -5,7 +5,7 @@ import { authenticate, AuthenticatedRequest } from "../../middleware/authenticat
 import { requirePro } from "../../middleware/requirePro";
 import { AppError } from "../../middleware/errorHandler";
 import { prisma } from "../../utils/prisma";
-import { deleteCatalogImage } from "../../utils/storage";
+import { deleteCatalogImage, isOwnedCatalogImage } from "../../utils/storage";
 import { toSlug } from "../../utils/slug";
 
 const router = Router();
@@ -35,8 +35,8 @@ const itemSchema = z.object({
   type: z.enum(["PRODUCT", "SERVICE", "PACKAGE", "PROMO"]).default("PRODUCT"),
   name: z.string().trim().min(2).max(140),
   slug: z.string().trim().min(2).max(80).optional(),
-  shortDescription: z.string().trim().min(3).max(240),
-  description: z.string().trim().min(3).max(2000),
+  shortDescription: z.string().trim().max(240).default(""),
+  description: z.string().trim().max(2000).default(""),
   category: z.string().trim().min(2).max(80),
   price: z.coerce.number().int().min(0).max(2_000_000_000).default(0),
   priceType: z.enum(["FIXED", "STARTING_FROM", "CONTACT", "FREE"]).default("CONTACT"),
@@ -45,6 +45,31 @@ const itemSchema = z.object({
   badge: optionalText(40),
   status: z.enum(["ACTIVE", "HIDDEN", "SOLD_OUT"]).default("ACTIVE"),
   sortOrder: z.coerce.number().int().min(0).max(10_000).default(0),
+});
+
+const bulkEnvelopeSchema = z.object({
+  items: z.array(z.unknown()).min(1).max(20),
+});
+
+const bulkItemSchema = itemSchema
+  .omit({ slug: true })
+  .extend({
+    clientId: z.string().trim().min(1).max(100),
+    imageUrl: z.string().url().max(1000),
+    priceType: z.enum(["CONTACT", "FIXED"]),
+  })
+  .superRefine((value, context) => {
+    if (value.priceType === "FIXED" && value.price <= 0) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["price"],
+        message: "Harga harus lebih dari 0",
+      });
+    }
+  });
+
+const cleanupImageSchema = z.object({
+  imageUrl: z.string().url().max(1000),
 });
 
 const catalogLinkSchema = z.object({
@@ -74,6 +99,39 @@ function handleUniqueError(err: unknown): never {
     throw new AppError(409, "Slug sudah digunakan. Silakan pilih alamat etalase lain.");
   }
   throw err;
+}
+
+function validationMessage(error: z.ZodError): string {
+  return error.errors[0]?.message || "Data produk tidak valid";
+}
+
+function databaseMessage(error: unknown): string {
+  if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+    return "Nama produk menghasilkan alamat yang sudah digunakan";
+  }
+  return "Produk gagal disimpan. Silakan coba lagi.";
+}
+
+function nextAvailableSlug(name: string, usedSlugs: Set<string>): string {
+  const base = toSlug(name);
+  if (base.length < 2) throw new AppError(400, "Nama produk tidak dapat dijadikan slug");
+  if (!usedSlugs.has(base)) {
+    usedSlugs.add(base);
+    return base;
+  }
+
+  let suffix = 2;
+  while (suffix < 10_000) {
+    const suffixText = `-${suffix}`;
+    const candidate = `${base.slice(0, 80 - suffixText.length).replace(/-+$/, "")}${suffixText}`;
+    if (!usedSlugs.has(candidate)) {
+      usedSlugs.add(candidate);
+      return candidate;
+    }
+    suffix += 1;
+  }
+
+  throw new AppError(409, "Tidak dapat membuat slug produk yang unik");
 }
 
 // GET /api/pro/business
@@ -217,6 +275,103 @@ router.post("/items", async (req: AuthenticatedRequest, res, next) => {
     res.status(201).json({ success: true, data: item });
   } catch (err) {
     try { handleUniqueError(err); } catch (handled) { next(handled); }
+  }
+});
+
+// POST /api/pro/items/bulk — creates up to 20 independently validated catalog items.
+router.post("/items/bulk", async (req: AuthenticatedRequest, res, next) => {
+  try {
+    const { items } = bulkEnvelopeSchema.parse(req.body);
+    const business = await ownedBusiness(req.userId!);
+    const existingItems = await prisma.storefrontItem.findMany({
+      where: { businessId: business.id },
+      select: { slug: true },
+    });
+    const usedSlugs = new Set(existingItems.map((item) => item.slug));
+
+    const created: Array<{ clientId: string; item: unknown }> = [];
+    const failed: Array<{ clientId: string; message: string }> = [];
+
+    for (let index = 0; index < items.length; index += 1) {
+      const raw = items[index];
+      const fallbackClientId = typeof raw === "object" && raw !== null && "clientId" in raw
+        ? String((raw as { clientId?: unknown }).clientId ?? `item-${index + 1}`)
+        : `item-${index + 1}`;
+      const parsed = bulkItemSchema.safeParse(raw);
+      if (!parsed.success) {
+        failed.push({ clientId: fallbackClientId, message: validationMessage(parsed.error) });
+        continue;
+      }
+
+      const input = parsed.data;
+      if (!isOwnedCatalogImage(input.imageUrl, req.userId!)) {
+        failed.push({ clientId: input.clientId, message: "Foto bukan milik akun yang sedang login" });
+        continue;
+      }
+
+      let slug: string;
+      try {
+        slug = nextAvailableSlug(input.name, usedSlugs);
+      } catch (error) {
+        failed.push({
+          clientId: input.clientId,
+          message: error instanceof Error ? error.message : "Slug produk tidak valid",
+        });
+        continue;
+      }
+
+      try {
+        const { clientId, ...data } = input;
+        const item = await prisma.storefrontItem.create({
+          data: {
+            ...data,
+            slug,
+            businessId: business.id,
+            unit: nullable(data.unit),
+            imageUrl: data.imageUrl,
+            badge: nullable(data.badge),
+          },
+        });
+        created.push({ clientId, item });
+      } catch (error) {
+        usedSlugs.delete(slug);
+        failed.push({ clientId: input.clientId, message: databaseMessage(error) });
+      }
+    }
+
+    res.status(failed.length === 0 ? 201 : 200).json({
+      success: failed.length === 0,
+      data: { created, failed },
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// DELETE /api/pro/images — removes an owner-scoped upload that was not saved.
+router.delete("/images", async (req: AuthenticatedRequest, res, next) => {
+  try {
+    const { imageUrl } = cleanupImageSchema.parse(req.body);
+    if (!isOwnedCatalogImage(imageUrl, req.userId!)) {
+      throw new AppError(403, "Foto bukan milik akun yang sedang login");
+    }
+    const business = await prisma.business.findUnique({
+      where: { ownerId: req.userId! },
+      select: { id: true, logoUrl: true, coverUrl: true },
+    });
+    const referencedItem = business
+      ? await prisma.storefrontItem.findFirst({
+        where: { businessId: business.id, imageUrl },
+        select: { id: true },
+      })
+      : null;
+    if (business?.logoUrl === imageUrl || business?.coverUrl === imageUrl || referencedItem) {
+      throw new AppError(409, "Foto masih digunakan oleh etalase");
+    }
+    await deleteCatalogImage(imageUrl, req.userId!);
+    res.json({ success: true, data: { imageUrl } });
+  } catch (err) {
+    next(err);
   }
 });
 

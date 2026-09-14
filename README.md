@@ -183,6 +183,8 @@ This starts:
 | `PATCH` | `/api/admin/reviews/:id/approve` | 🔒 Admin | Approve a review |
 | `PATCH` | `/api/admin/reviews/:id/reject` | 🔒 Admin | Reject a review |
 | `GET` | `/api/admin/users` | 🔒 Admin | List all users |
+| `POST` | `/api/pro/items/bulk` | ✅ Pro | Create up to 20 storefront items with per-item results |
+| `DELETE` | `/api/pro/images` | ✅ Pro | Remove an unused owner-scoped catalog upload |
 
 > **Auth**: `✅` = requires Bearer token, `🔒 Admin` = requires admin role
 
