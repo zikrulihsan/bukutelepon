@@ -11,13 +11,13 @@ import {
   HiCube,
   HiLink,
   HiMapPin,
-  HiPhone,
   HiPhoto,
   HiQrCode,
   HiSparkles,
   HiXMark,
 } from "react-icons/hi2";
 import { useAuth } from "../../hooks/useAuth";
+import { BrandLogo } from "../../components/shared/BrandLogo";
 
 type BusinessKind = "shop" | "cafe" | "service";
 
@@ -121,9 +121,7 @@ const faqs = [
 function BrandMark() {
   return (
     <span className="inline-flex items-center gap-2.5">
-      <span className="grid h-9 w-9 place-items-center rounded-xl bg-[#09634e] text-white">
-        <HiPhone className="h-[18px] w-[18px]" />
-      </span>
+      <BrandLogo decorative className="h-10 w-10" />
       <span className="text-[18px] font-extrabold tracking-[-0.035em] text-[#102a43]">
         CariKontak
       </span>

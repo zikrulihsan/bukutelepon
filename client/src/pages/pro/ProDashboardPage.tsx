@@ -19,6 +19,7 @@ import {
 import { apiClient } from "../../lib/axios";
 import { uploadCatalogImage } from "../../lib/uploadImage";
 import { useAuth } from "../../hooks/useAuth";
+import { BrandLoadingScreen } from "../../components/shared/BrandLoadingScreen";
 import { BulkItemUploadModal } from "../../components/pro/BulkItemUploadModal";
 import type {
   ApiResponse,
@@ -241,7 +242,7 @@ export default function ProDashboardPage() {
     if (itemForm) saveItem.mutate(itemForm);
   }
 
-  if (loading) return <div className="mx-auto min-h-screen max-w-5xl px-4 py-12"><div className="h-40 animate-pulse rounded-3xl bg-gray-100" /></div>;
+  if (loading) return <BrandLoadingScreen label="Memuat dasbor..." />;
   if (!user) return <Navigate to="/login" replace />;
 
   if (!canManage) {

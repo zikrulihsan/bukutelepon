@@ -14,6 +14,7 @@ import { CategoryTile } from "../../components/shared/CategoryTile";
 import { preloadAllCategoryIcons } from "../../components/shared/CategoryIcon";
 import { ContactCard } from "../../components/shared/ContactCard";
 import { LanguageToggle } from "../../components/shared/LanguageToggle";
+import { BrandLoadingScreen } from "../../components/shared/BrandLoadingScreen";
 import { isSaved, toggleSaved } from "../../lib/saved";
 import { useI18n } from "../../i18n/LanguageContext";
 import type { ApiResponse, City, Contact, HeroPromotion } from "../../types";
@@ -46,7 +47,6 @@ const HOME_CRITICAL_IMAGES = [
   "/storefront/discovery-souvenir.webp",
   "/storefront/discovery-delivery.webp",
 ];
-const HOME_READY_STORAGE_KEY = "ck_home_ready_v1";
 const CITY_HINT_STORAGE_KEY = "ck_city_picker_hint_seen_v1";
 
 interface LocalizedHeroSlide {
@@ -89,21 +89,6 @@ function preloadImage(source: string): Promise<void> {
 
 function PinIcon({ className = "" }: { className?: string }) {
   return <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden="true"><path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" /></svg>;
-}
-
-function HomeInitialLoader({ label }: { label: string }) {
-  return <div className="fixed inset-0 z-[100] grid min-h-[100dvh] place-items-center bg-[radial-gradient(circle_at_50%_38%,rgba(218,240,226,.95),transparent_34%),#F8FAF7] px-6" role="status" aria-live="polite" aria-label={label}>
-    <div className="flex flex-col items-center text-center">
-      <div className="grid h-16 w-16 place-items-center rounded-[22px] bg-primary-700 text-white shadow-[0_10px_24px_rgba(0,105,75,.22)]">
-        <PinIcon className="h-8 w-8" />
-      </div>
-      <p className="mt-4 text-[25px] font-extrabold tracking-[-0.055em] text-[#08234B]">CariKontak</p>
-      <div className="mt-4 h-1.5 w-28 overflow-hidden rounded-full bg-[#DDEBE2]">
-        <div className="h-full w-2/3 animate-pulse rounded-full bg-primary-700" />
-      </div>
-      <p className="mt-3 text-[13px] font-semibold text-[#71809B]">{label}</p>
-    </div>
-  </div>;
 }
 
 function ArrowIcon({ className = "" }: { className?: string }) {
@@ -210,15 +195,8 @@ export default function MainScreen() {
   const swipeStartRef = useRef<{ x: number; y: number; startedAt: number; moved: boolean } | null>(null);
   const suppressHeroClickRef = useRef(false);
   const carouselPaused = carouselHovered || carouselFocused || carouselPointerActive;
-  const [gateInitialRender] = useState(() => {
-    try {
-      return sessionStorage.getItem(HOME_READY_STORAGE_KEY) !== "1";
-    } catch {
-      return true;
-    }
-  });
   const [criticalImagesReady, setCriticalImagesReady] = useState(false);
-  const [minimumLoaderElapsed, setMinimumLoaderElapsed] = useState(!gateInitialRender);
+  const [minimumLoaderElapsed, setMinimumLoaderElapsed] = useState(false);
   const [loaderDeadlineReached, setLoaderDeadlineReached] = useState(false);
   const { data: citiesData, isLoading: citiesLoading } = useQuery<{ success: boolean; data: City[] }>({ queryKey: ["cities"], queryFn: async () => (await apiClient.get("/cities")).data });
   const { data: heroPromotionsData } = useQuery<ApiResponse<HeroPromotion[]>>({
@@ -243,14 +221,13 @@ export default function MainScreen() {
   }, []);
 
   useEffect(() => {
-    if (!gateInitialRender) return;
     const minimumTimer = window.setTimeout(() => setMinimumLoaderElapsed(true), 450);
     const deadlineTimer = window.setTimeout(() => setLoaderDeadlineReached(true), 8000);
     return () => {
       window.clearTimeout(minimumTimer);
       window.clearTimeout(deadlineTimer);
     };
-  }, [gateInitialRender]);
+  }, []);
 
   useEffect(() => { if (citiesData?.data) setCities(citiesData.data); }, [citiesData, setCities]);
   const { contacts: allContacts, isLoading: contactsLoading } = useContactsData();
@@ -311,7 +288,13 @@ export default function MainScreen() {
   const heroTrackTransform = `translate3d(calc(-${heroTrackPosition * 100}% + ${heroDragOffset}px), 0, 0)`;
   const initialDataReady = !contactsLoading && !categoriesLoading && !citiesLoading;
   const initialAssetsReady = criticalImagesReady || loaderDeadlineReached;
-  const showInitialLoader = gateInitialRender && (!minimumLoaderElapsed || !initialAssetsReady || (!initialDataReady && !loaderDeadlineReached));
+  const showInitialLoader = !loaderDeadlineReached && (!minimumLoaderElapsed || !initialAssetsReady || !initialDataReady);
+  const loadingProgress = (
+    Number(!contactsLoading)
+    + Number(!categoriesLoading)
+    + Number(!citiesLoading)
+    + Number(criticalImagesReady)
+  ) / 4 * 100;
   const goToSearch = (keyword = query) => { const value = keyword.trim(); navigate(value ? `/search?q=${encodeURIComponent(value)}` : "/search"); };
   const chooseCity = (nextCity: City) => { setCity(nextCity); setShowCityPicker(false); };
   const openCityPicker = () => {
@@ -449,16 +432,7 @@ export default function MainScreen() {
     setHeroDragOffset(0);
   };
 
-  useEffect(() => {
-    if (showInitialLoader) return;
-    try {
-      sessionStorage.setItem(HOME_READY_STORAGE_KEY, "1");
-    } catch {
-      // The loader still works when session storage is unavailable.
-    }
-  }, [showInitialLoader]);
-
-  if (showInitialLoader) return <HomeInitialLoader label={t("common.loading")} />;
+  if (showInitialLoader) return <BrandLoadingScreen label={t("common.loading")} progress={loadingProgress} fixed />;
 
   return <div className="min-h-screen bg-[radial-gradient(circle_at_30%_8%,rgba(226,241,231,.62),transparent_26%),#F8FAF7] pb-[82px] text-[#08234B]">
     {showCityPicker && <CityPickerOverlay cities={citiesData?.data ?? cities} onSelect={chooseCity} onClose={() => setShowCityPicker(false)} />}

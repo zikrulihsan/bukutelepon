@@ -15,6 +15,7 @@ import { trackStorefrontEvent, useInquiry } from "../../features/storefront/Inqu
 import { StorefrontImage } from "../../features/storefront/StorefrontImage";
 import { formatPrice, itemAvailabilityLabel, itemSupportsQuantity, itemTypeLabel } from "../../features/storefront/storefrontData";
 import { usePublicStorefront } from "../../features/storefront/usePublicStorefront";
+import { BrandLoadingScreen } from "../../components/shared/BrandLoadingScreen";
 
 export default function ProductDetailPage() {
   const { itemSlug } = useParams();
@@ -38,7 +39,7 @@ export default function ProductDetailPage() {
   }, [item]);
 
   if ((isLoading && requestedSlug !== "toko-evi") || (isLoading && !item)) {
-    return <div className="min-h-screen animate-pulse bg-[#F4F0E7]" />;
+    return <BrandLoadingScreen label="Memuat produk..." />;
   }
 
   if (notFound || !item) {

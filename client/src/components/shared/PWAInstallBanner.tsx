@@ -179,7 +179,7 @@ export function PWAInstallBanner() {
             {/* App icon */}
             <div className="flex-shrink-0">
               <img
-                src="/pwa-192.png"
+                src="/pwa-192-v2.png"
                 alt="CariKontak"
                 className="w-11 h-11 rounded-[13px] shadow-md"
                 onError={(e) => {

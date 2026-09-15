@@ -13,6 +13,7 @@ import {
 import { FaWhatsapp } from "react-icons/fa";
 import { useCity } from "../../context/CityContext";
 import { useI18n } from "../../i18n/LanguageContext";
+import { BrandLogo } from "../../components/shared/BrandLogo";
 
 const WHATSAPP_NUMBER = "6282338588078";
 
@@ -98,7 +99,7 @@ export default function ContactConciergePage() {
           <button type="button" onClick={() => navigate(-1)} className="inline-flex items-center gap-2 text-[13px] font-extrabold text-[#53667F] active:scale-95">
             <HiArrowLeft className="h-5 w-5" /> {copy.back}
           </button>
-          <span className="text-[16px] font-extrabold tracking-[-.04em] text-primary-700">CariKontak</span>
+          <span className="inline-flex items-center gap-1.5 text-[16px] font-extrabold tracking-[-.04em] text-primary-700"><BrandLogo decorative className="h-7 w-7" />CariKontak</span>
         </div>
       </header>
 

@@ -16,6 +16,8 @@ import { FaInstagram, FaWhatsapp } from "react-icons/fa";
 import { InquiryDrawer } from "../../features/storefront/InquiryDrawer";
 import { trackStorefrontEvent, useInquiry } from "../../features/storefront/InquiryContext";
 import { StorefrontImage } from "../../features/storefront/StorefrontImage";
+import { BrandLogo } from "../../components/shared/BrandLogo";
+import { BrandLoadingScreen } from "../../components/shared/BrandLoadingScreen";
 import {
   formatPrice,
   itemAvailabilityLabel,
@@ -185,7 +187,7 @@ export default function BusinessShowcasePage() {
   const directWhatsapp = `https://wa.me/${business.whatsapp}?text=${encodeURIComponent(`Halo, saya melihat etalase ${business.name} di CariKontak.`)}`;
 
   if (isLoading && requestedSlug !== "toko-evi") {
-    return <div className="min-h-screen animate-pulse bg-[#F4F0E7]" />;
+    return <BrandLoadingScreen label="Memuat katalog..." />;
   }
 
   if (notFound) {
@@ -199,7 +201,7 @@ export default function BusinessShowcasePage() {
         <div className="absolute inset-0 bg-gradient-to-b from-[#10251A]/65 via-transparent to-[#10251A]/65" />
         <div className="absolute inset-x-0 top-0 mx-auto flex max-w-6xl items-center justify-between px-4 py-4 sm:px-7 sm:py-6">
           <button onClick={() => navigate("/")} className="flex items-center gap-2 rounded-full border border-white/25 bg-[#142A20]/55 px-3 py-2 text-white shadow-sm backdrop-blur-md transition hover:bg-[#142A20]/75">
-            <span className="grid h-6 w-6 place-items-center rounded-full bg-white text-[10px] font-black text-[#245843]">CK</span>
+            <span className="grid h-7 w-7 place-items-center rounded-full bg-white/95 p-0.5"><BrandLogo decorative className="h-full w-full" /></span>
             <span className="text-xs font-extrabold tracking-tight">CariKontak</span>
           </button>
           <button onClick={shareStore} className="grid h-10 w-10 place-items-center rounded-full border border-white/25 bg-[#142A20]/55 text-white backdrop-blur-md transition hover:bg-[#142A20]/75" aria-label="Bagikan etalase">

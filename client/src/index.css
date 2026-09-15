@@ -4,6 +4,45 @@
 @tailwind components;
 @tailwind utilities;
 
+@keyframes brand-loader-orbit {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes brand-loader-float {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-3px) scale(1.035); }
+}
+
+@keyframes brand-loader-slide {
+  0% { transform: translateX(-120%); }
+  100% { transform: translateX(350%); }
+}
+
+.brand-loader-orbit {
+  animation: brand-loader-orbit 1.15s linear infinite;
+}
+
+.brand-loading-screen {
+  isolation: isolate;
+  transform: translate3d(0, 0, 1px);
+}
+
+.brand-loader-logo {
+  animation: brand-loader-float 1.4s ease-in-out infinite;
+}
+
+.brand-loader-indeterminate {
+  animation: brand-loader-slide 1.05s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .brand-loader-orbit,
+  .brand-loader-logo,
+  .brand-loader-indeterminate {
+    animation: none;
+  }
+}
+
 @layer base {
   html {
     scroll-behavior: auto;

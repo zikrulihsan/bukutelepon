@@ -8,7 +8,7 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: "autoUpdate",
-      includeAssets: ["logo.svg", "pwa-192.png", "pwa-512.png", "apple-touch-icon.png"],
+      includeAssets: ["brand-logo.png", "favicon.png", "pwa-192-v2.png", "pwa-512-v2.png", "apple-touch-icon-v2.png"],
       manifest: {
         name: "CariKontak – Direktori Kontak Kota",
         short_name: "CariKontak",
@@ -22,17 +22,17 @@ export default defineConfig({
         lang: "id",
         icons: [
           {
-            src: "/pwa-192.png",
+            src: "/pwa-192-v2.png",
             sizes: "192x192",
             type: "image/png",
           },
           {
-            src: "/pwa-512.png",
+            src: "/pwa-512-v2.png",
             sizes: "512x512",
             type: "image/png",
           },
           {
-            src: "/pwa-512.png",
+            src: "/pwa-512-v2.png",
             sizes: "512x512",
             type: "image/png",
             purpose: "maskable",
@@ -45,14 +45,14 @@ export default defineConfig({
             short_name: "Cari",
             description: "Cari kontak di direktori",
             url: "/search",
-            icons: [{ src: "/pwa-192.png", sizes: "192x192" }],
+            icons: [{ src: "/pwa-192-v2.png", sizes: "192x192" }],
           },
           {
             name: "Tambah Kontak",
             short_name: "Kontribusi",
             description: "Tambahkan kontak baru",
             url: "/submit",
-            icons: [{ src: "/pwa-192.png", sizes: "192x192" }],
+            icons: [{ src: "/pwa-192-v2.png", sizes: "192x192" }],
           },
         ],
       },

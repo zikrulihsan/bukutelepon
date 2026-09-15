@@ -17,7 +17,7 @@ const id = {
   "nav.saved": "Tersimpan",
   "nav.contribute": "Kontribusi",
   "nav.account": "Akun",
-  "nav.brand": "Buku Telepon",
+  "nav.brand": "CariKontak",
 
   // ── Common ──
   "common.back": "Kembali",
@@ -396,7 +396,7 @@ const en: Record<TranslationKey, string> = {
   "nav.saved": "Saved",
   "nav.contribute": "Contribute",
   "nav.account": "Account",
-  "nav.brand": "Phone Book",
+  "nav.brand": "CariKontak",
 
   // ── Common ──
   "common.back": "Back",

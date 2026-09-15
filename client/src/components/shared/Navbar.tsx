@@ -1,6 +1,7 @@
 import { Link, useLocation } from "react-router-dom";
 import { HiChevronLeft } from "react-icons/hi2";
 import { useI18n } from "../../i18n/LanguageContext";
+import { BrandLogo } from "./BrandLogo";
 
 // Pages that have their own header or don't need the navbar
 const HIDDEN_ROUTES = ["/", "/search", "/saved", "/account", "/submit", "/kontak", "/catalog", "/buat-katalog", "/jastip-kontak"];
@@ -19,6 +20,7 @@ export function Navbar() {
         <div className="flex items-center h-12">
           <Link to="/" className="flex items-center gap-2">
             <HiChevronLeft className="h-4 w-4 text-gray-500" />
+            <BrandLogo decorative className="h-7 w-7" />
             <span className="text-sm font-bold text-primary-700">{t("nav.brand")}</span>
           </Link>
         </div>
