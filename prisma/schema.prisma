@@ -241,6 +241,18 @@ model CollectionVersion {
   @@map("collection_versions")
 }
 
+/// Latest public sync operation for each contact. This is an internal outbox
+/// consumed by the Express API; it is not exposed directly to browser clients.
+model ContactSyncEntry {
+  contactId String   @id
+  revision  Int
+  operation String
+  changedAt DateTime @default(now())
+
+  @@index([revision, contactId])
+  @@map("contact_sync_entries")
+}
+
 model Review {
   id              String       @id @default(uuid())
   rating          Int

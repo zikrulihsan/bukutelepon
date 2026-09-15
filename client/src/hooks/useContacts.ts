@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { apiClient } from "../lib/axios";
 import { useContactsData } from "../context/ContactsContext";
 import { filterContacts, type ContactFilter } from "../lib/localContacts";
@@ -19,14 +19,14 @@ interface UseContactsOptions extends ContactFilter {
  */
 export function useContacts(options: UseContactsOptions = {}) {
   const { page = 1, limit = PAGE_SIZE, city, category, search, verified } = options;
-  const { contacts, isLoading } = useContactsData();
+  const { contacts, isCacheReady } = useContactsData();
 
   const filtered = useMemo(
     () => filterContacts(contacts, { city, category, search, verified }),
     [contacts, city, category, search, verified]
   );
 
-  const data = useMemo<PaginatedResponse<Contact>>(() => {
+  const localData = useMemo<PaginatedResponse<Contact>>(() => {
     const total = filtered.length;
     const start = (page - 1) * limit;
     const pageItems = filtered.slice(start, start + limit);
@@ -43,7 +43,32 @@ export function useContacts(options: UseContactsOptions = {}) {
     };
   }, [filtered, page, limit]);
 
-  return { data, isLoading };
+  const networkQuery = useQuery<PaginatedResponse<Contact>>({
+    queryKey: ["contacts", "hybrid", { page, limit, city, category, search, verified }],
+    queryFn: async () => {
+      const { data } = await apiClient.get("/contacts", {
+        params: { page, limit, city, category, search, verified },
+      });
+      return data;
+    },
+    enabled: !isCacheReady,
+  });
+
+  const usePartialFallback = networkQuery.isError && contacts.length > 0;
+
+  return isCacheReady || usePartialFallback
+    ? {
+        data: localData,
+        isLoading: false,
+        isFetching: false,
+        isPartial: usePartialFallback,
+      }
+    : {
+        data: networkQuery.data,
+        isLoading: networkQuery.isLoading,
+        isFetching: networkQuery.isFetching,
+        isPartial: false,
+      };
 }
 
 interface UseInfiniteContactsOptions extends ContactFilter {
@@ -58,7 +83,7 @@ interface UseInfiniteContactsOptions extends ContactFilter {
  */
 export function useInfiniteContacts(options: UseInfiniteContactsOptions = {}) {
   const { city, category, search, verified, enabled = true, initialPageCount = 1 } = options;
-  const { contacts, isLoading } = useContactsData();
+  const { contacts, isCacheReady } = useContactsData();
 
   const [pageCount, setPageCount] = useState(() => Math.max(1, initialPageCount));
 
@@ -77,7 +102,7 @@ export function useInfiniteContacts(options: UseInfiniteContactsOptions = {}) {
     [contacts, city, category, search, verified]
   );
 
-  const result = useMemo(() => {
+  const localResult = useMemo(() => {
     const total = filtered.length;
     const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
@@ -104,14 +129,51 @@ export function useInfiniteContacts(options: UseInfiniteContactsOptions = {}) {
   // Stable identity: consumers put this in effect deps to drive an
   // IntersectionObserver, and a new function each render would tear the
   // observer down and rebuild it, re-firing the intersection every time.
-  const fetchNextPage = useCallback(() => setPageCount((c) => c + 1), []);
+  const fetchNextLocalPage = useCallback(() => setPageCount((count) => count + 1), []);
+
+  const networkQuery = useInfiniteQuery<PaginatedResponse<Contact>>({
+    queryKey: ["contacts", "hybrid-infinite", { city, category, search, verified }],
+    queryFn: async ({ pageParam }) => {
+      const { data } = await apiClient.get("/contacts", {
+        params: {
+          page: pageParam,
+          limit: PAGE_SIZE,
+          city,
+          category,
+          search,
+          verified,
+        },
+      });
+      return data;
+    },
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) =>
+      lastPage.meta.page < lastPage.meta.totalPages ? lastPage.meta.page + 1 : undefined,
+    enabled: enabled && !isCacheReady,
+  });
+
+  const usePartialFallback = networkQuery.isError && contacts.length > 0;
+
+  if (!isCacheReady && !usePartialFallback) {
+    return {
+      data: networkQuery.data ?? { pages: [] },
+      fetchNextPage: networkQuery.fetchNextPage,
+      hasNextPage: networkQuery.hasNextPage ?? false,
+      isFetchingNextPage: networkQuery.isFetchingNextPage,
+      isFetching: networkQuery.isFetching,
+      isLoading: enabled ? networkQuery.isLoading : false,
+      isPartial: false,
+    };
+  }
 
   return {
-    data: { pages: result.pages },
-    fetchNextPage,
-    hasNextPage: result.hasNextPage,
+    data: { pages: localResult.pages },
+    fetchNextPage: fetchNextLocalPage,
+    hasNextPage: localResult.hasNextPage,
     isFetchingNextPage: false,
-    isLoading: enabled ? isLoading : false,
+    isFetching: false,
+    isLoading: false,
+    isPartial: usePartialFallback,
   };
 }
 

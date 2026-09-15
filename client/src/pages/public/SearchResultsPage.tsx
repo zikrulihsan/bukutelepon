@@ -5,6 +5,7 @@ import { apiClient } from "../../lib/axios";
 import { useCategories } from "../../context/CategoriesContext";
 import { useContacts } from "../../hooks/useContacts";
 import { ContactCard } from "../../components/shared/ContactCard";
+import { SearchResultsShimmer } from "../../components/shared/Shimmer";
 import type { Category, City } from "../../types";
 
 export default function SearchResultsPage() {
@@ -66,6 +67,7 @@ export default function SearchResultsPage() {
   const {
     data: contactsData,
     isLoading,
+    isFetching,
   } = useContacts({
     page,
     search: querySearch || undefined,
@@ -348,24 +350,8 @@ export default function SearchResultsPage() {
         </p>
 
         {/* Contact list */}
-        {isLoading ? (
-          <div className="space-y-3">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <div
-                key={i}
-                className="bg-white rounded-xl border border-gray-200 p-5 animate-pulse"
-              >
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="h-5 bg-gray-200 rounded w-48 mb-2" />
-                    <div className="h-4 bg-gray-100 rounded w-32 mb-3" />
-                    <div className="h-3 bg-gray-100 rounded w-64" />
-                  </div>
-                  <div className="h-9 w-24 bg-gray-200 rounded-lg" />
-                </div>
-              </div>
-            ))}
-          </div>
+        {isLoading || isFetching ? (
+          <SearchResultsShimmer label="Mencarikan kontak yang pas di sekitarmu…" />
         ) : (
           <>
             <div className="space-y-3">

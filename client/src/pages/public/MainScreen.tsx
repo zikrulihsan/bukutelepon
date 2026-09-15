@@ -17,7 +17,7 @@ import { LanguageToggle } from "../../components/shared/LanguageToggle";
 import { BrandLoadingScreen } from "../../components/shared/BrandLoadingScreen";
 import { isSaved, toggleSaved } from "../../lib/saved";
 import { useI18n } from "../../i18n/LanguageContext";
-import type { ApiResponse, City, Contact, HeroPromotion } from "../../types";
+import type { ApiResponse, City, Contact, HeroPromotion, PaginatedResponse } from "../../types";
 
 const CATEGORY_FALLBACK = [
   { slug: "jasa", name: "Jasa" },
@@ -229,12 +229,41 @@ export default function MainScreen() {
     };
   }, []);
 
+  // Show the city hint only once, briefly, on the first homepage visit. Mark
+  // it as seen when rendered rather than waiting for the user to open it.
+  useEffect(() => {
+    if (!showCityHint) return;
+    try {
+      localStorage.setItem(CITY_HINT_STORAGE_KEY, "1");
+    } catch {
+      // The hint still auto-dismisses if storage is unavailable.
+    }
+    const timer = window.setTimeout(() => setShowCityHint(false), 4500);
+    return () => window.clearTimeout(timer);
+  }, [showCityHint]);
+
   useEffect(() => { if (citiesData?.data) setCities(citiesData.data); }, [citiesData, setCities]);
-  const { contacts: allContacts, isLoading: contactsLoading } = useContactsData();
-  const contacts = useMemo(
+  const { contacts: allContacts, isCacheReady } = useContactsData();
+  const {
+    data: homeContactsData,
+    isLoading: homeContactsLoading,
+    isError: homeContactsError,
+  } = useQuery<PaginatedResponse<Contact>>({
+    queryKey: ["contacts", "home", citySlug],
+    queryFn: async () => (
+      await apiClient.get("/contacts", { params: { city: citySlug, page: 1, limit: 50 } })
+    ).data,
+    enabled: !isCacheReady,
+  });
+  const cachedCityContacts = useMemo(
     () => filterContacts(allContacts, { city: citySlug || undefined }),
     [allContacts, citySlug]
   );
+  // During the first IndexedDB bootstrap, use one small city-scoped request so
+  // the homepage never waits for the complete global collection.
+  const useCachedContacts = isCacheReady || (homeContactsError && cachedCityContacts.length > 0);
+  const contacts = useCachedContacts ? cachedCityContacts : (homeContactsData?.data ?? []);
+  const contactsLoading = !useCachedContacts && homeContactsLoading;
   const contactsWithPhotos = contacts.filter((contact) => Boolean(contact.imageUrl?.trim()));
   const contactsWithoutPhotos = contacts.filter((contact) => !contact.imageUrl?.trim());
   // Use the whole city's collection before selecting six cards. Photos make the
@@ -286,15 +315,9 @@ export default function MainScreen() {
     ];
   }, [heroSlides]);
   const heroTrackTransform = `translate3d(calc(-${heroTrackPosition * 100}% + ${heroDragOffset}px), 0, 0)`;
-  const initialDataReady = !contactsLoading && !categoriesLoading && !citiesLoading;
+  const initialDataReady = !categoriesLoading && !citiesLoading;
   const initialAssetsReady = criticalImagesReady || loaderDeadlineReached;
   const showInitialLoader = !loaderDeadlineReached && (!minimumLoaderElapsed || !initialAssetsReady || !initialDataReady);
-  const loadingProgress = (
-    Number(!contactsLoading)
-    + Number(!categoriesLoading)
-    + Number(!citiesLoading)
-    + Number(criticalImagesReady)
-  ) / 4 * 100;
   const goToSearch = (keyword = query) => { const value = keyword.trim(); navigate(value ? `/search?q=${encodeURIComponent(value)}` : "/search"); };
   const chooseCity = (nextCity: City) => { setCity(nextCity); setShowCityPicker(false); };
   const openCityPicker = () => {
@@ -432,7 +455,7 @@ export default function MainScreen() {
     setHeroDragOffset(0);
   };
 
-  if (showInitialLoader) return <BrandLoadingScreen label={t("common.loading")} progress={loadingProgress} fixed />;
+  if (showInitialLoader) return <BrandLoadingScreen label={t("home.loadingMessage")} fixed />;
 
   return <div className="min-h-screen bg-[radial-gradient(circle_at_30%_8%,rgba(226,241,231,.62),transparent_26%),#F8FAF7] pb-[82px] text-[#08234B]">
     {showCityPicker && <CityPickerOverlay cities={citiesData?.data ?? cities} onSelect={chooseCity} onClose={() => setShowCityPicker(false)} />}

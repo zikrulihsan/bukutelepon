@@ -9,7 +9,7 @@ import { useContactsData } from "../../context/ContactsContext";
 import { useInfiniteContacts } from "../../hooks/useContacts";
 import { ContactCard } from "../../components/shared/ContactCard";
 import { CategoryIcon } from "../../components/shared/CategoryIcon";
-import { ContactListShimmer, CategoryChipsShimmer } from "../../components/shared/Shimmer";
+import { CategoryChipsShimmer, SearchResultsShimmer } from "../../components/shared/Shimmer";
 import { HiChevronLeft, HiMagnifyingGlass, HiXMark, HiCheckBadge, HiCheck } from "react-icons/hi2";
 import { HiFilter, HiOutlineShare } from "react-icons/hi";
 import { useI18n } from "../../i18n/LanguageContext";
@@ -143,6 +143,9 @@ export default function SearchPage() {
     fetchNextPage,
     hasNextPage,
     isLoading,
+    isFetching,
+    isFetchingNextPage,
+    isPartial,
   } = useInfiniteContacts({
     city: citySlug || undefined,
     category: activeCategory || undefined,
@@ -171,6 +174,8 @@ export default function SearchPage() {
 
   const allContacts = infiniteData?.pages.flatMap((p) => p.data) ?? [];
   const total = infiniteData?.pages[0]?.meta.total ?? 0;
+  const isDebouncing = search.trim() !== searchQuery;
+  const isSearchProcessing = isDebouncing || isLoading || (isFetching && !isFetchingNextPage);
 
   const persistResultsScroll = useCallback(() => {
     const top = resultsRef.current?.scrollTop;
@@ -407,7 +412,9 @@ export default function SearchPage() {
         className="flex-1 min-h-0 overflow-y-auto scroll-region px-4 pt-4 pb-28"
       >
         {initialLoading ? (
-          <ContactListShimmer count={4} />
+          <SearchResultsShimmer label={t("search.loadingHint")} />
+        ) : isSearchProcessing && (hasFilter || Boolean(search.trim())) ? (
+          <SearchResultsShimmer label={t("search.loadingHint")} />
         ) : !hasFilter ? (
           <div className="text-center py-16">
             <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
@@ -418,10 +425,13 @@ export default function SearchPage() {
               {t("search.emptyHint")}{city ? ` ${t("common.inCity", { city: city.name })}` : ""}
             </p>
           </div>
-        ) : isLoading ? (
-          <ContactListShimmer count={4} />
         ) : (
           <>
+            {isPartial && (
+              <div className="mb-3 rounded-xl bg-amber-50 px-3 py-2 text-xs font-medium text-amber-800">
+                {t("search.partialOffline")}
+              </div>
+            )}
             <div className="flex items-center justify-between gap-2 mb-3">
               <p className="text-xs text-gray-500">
                 {searchQuery
@@ -459,7 +469,11 @@ export default function SearchPage() {
 
             {/* Fixed-height sentinel: a placeholder that grows and shrinks here
                 would shift the list under the reader's thumb mid-scroll. */}
-            {hasNextPage && <div ref={setLoadMoreNode} className="h-12" aria-hidden="true" />}
+            {isFetchingNextPage ? (
+              <div className="mt-3"><SearchResultsShimmer count={1} /></div>
+            ) : hasNextPage ? (
+              <div ref={setLoadMoreNode} className="h-12" aria-hidden="true" />
+            ) : null}
           </>
         )}
       </div>

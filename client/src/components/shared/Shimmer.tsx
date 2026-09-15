@@ -81,6 +81,36 @@ export function ContactListShimmer({ count = 4 }: { count?: number }) {
   );
 }
 
+export function SearchResultsShimmer({
+  count = 2,
+  label,
+}: {
+  count?: number;
+  label?: string;
+}) {
+  return (
+    <div role="status" aria-live="polite" aria-label={label}>
+      {label && (
+        <p className="mb-3 text-center text-[13px] font-semibold text-[#71809B]">
+          {label}
+        </p>
+      )}
+      <div className="space-y-2.5" aria-hidden="true">
+        {Array.from({ length: count }).map((_, index) => (
+          <div key={index} className="flex items-center gap-3 rounded-2xl bg-white p-3 shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
+            <div className="h-14 w-14 shrink-0 rounded-xl shimmer" />
+            <div className="min-w-0 flex-1">
+              <div className="h-3.5 w-3/5 rounded shimmer" />
+              <div className="mt-2 h-2.5 w-2/5 rounded shimmer" />
+              <div className="mt-2 h-2.5 w-4/5 rounded shimmer" />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export function CategoryChipsShimmer({ count = 5 }: { count?: number }) {
   return (
     <div className="flex items-center gap-2 overflow-hidden">
