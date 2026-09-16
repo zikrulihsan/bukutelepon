@@ -474,7 +474,7 @@ export default function CatalogPlansPage() {
               <Eyebrow>Contoh yang bisa dibuka</Eyebrow>
               <h2 className="mt-4 text-[34px] font-extrabold leading-[1.12] tracking-[-0.042em] sm:text-[48px]">Lihat pengalaman pelanggan secara langsung.</h2>
               <p className="mt-5 text-[15px] font-medium leading-7 text-[#66798b]">Buka contoh katalog Toko Evi untuk melihat bagaimana produk, harga, dan kontak disusun dalam satu halaman.</p>
-              <a href="/catalog?store=toko-evi" className="mt-7 inline-flex min-h-11 items-center gap-2 text-[13px] font-extrabold text-[#08745a]">Buka Contoh Katalog <HiArrowRight className="h-4 w-4" /></a>
+              <a href="/katalog" className="mt-7 inline-flex min-h-11 items-center gap-2 text-[13px] font-extrabold text-[#08745a]">Buka Contoh Katalog <HiArrowRight className="h-4 w-4" /></a>
             </div>
             <div className="overflow-hidden rounded-[28px] border border-[#dee7e1] bg-[#f6f4ed] shadow-[0_22px_55px_rgba(16,42,67,.1)]">
               <img src="/storefront/toko-evi-poster.jpg" alt="Tampilan katalog Toko Evi" className="h-72 w-full object-cover sm:h-96" />

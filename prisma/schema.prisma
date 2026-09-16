@@ -25,6 +25,30 @@ enum BusinessStatus {
   HIDDEN
 }
 
+enum CatalogPreset {
+  RESTAURANT
+  SERVICE
+  RETAIL
+  ACTIVITY
+}
+
+enum CatalogLayout {
+  ROW
+  CARD
+}
+
+enum CatalogSectionType {
+  ITEM_GROUP
+  PROMOTION
+  ACTIVITY
+  INFORMATION
+}
+
+enum CatalogSectionStatus {
+  ACTIVE
+  HIDDEN
+}
+
 enum StorefrontItemType {
   PRODUCT
   SERVICE
@@ -106,17 +130,46 @@ model Business {
   openingHours      String?
   logoUrl           String?
   coverUrl          String?
+  catalogPreset     CatalogPreset  @default(RETAIL)
+  defaultItemLayout CatalogLayout  @default(CARD)
   status            BusinessStatus @default(DRAFT)
   createdAt         DateTime       @default(now())
   updatedAt         DateTime       @updatedAt
 
   owner              Profile             @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   items              StorefrontItem[]
+  sections           CatalogSection[]
   contact            Contact?            @relation("CatalogContact")
   catalogLinkRequest CatalogLinkRequest?
 
   @@index([status])
   @@map("businesses")
+}
+
+model CatalogSection {
+  id            String               @id @default(uuid())
+  businessId    String
+  type          CatalogSectionType
+  title         String               @db.VarChar(160)
+  subtitle      String?              @db.VarChar(500)
+  category      String?              @db.VarChar(80)
+  layout        CatalogLayout        @default(CARD)
+  imageUrl      String?
+  badge         String?              @db.VarChar(40)
+  ctaLabel      String?              @db.VarChar(80)
+  ctaUrl        String?              @db.VarChar(1000)
+  scheduleLabel String?              @db.VarChar(120)
+  startsAt      DateTime?
+  endsAt        DateTime?
+  status        CatalogSectionStatus @default(ACTIVE)
+  sortOrder     Int                  @default(0)
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@index([businessId, status, sortOrder])
+  @@map("catalog_sections")
 }
 
 model StorefrontItem {
@@ -203,13 +256,13 @@ model Contact {
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
 
-  city        City     @relation(fields: [cityId], references: [id])
-  category    Category @relation(fields: [categoryId], references: [id])
-  submittedBy Profile  @relation("SubmittedContacts", fields: [submittedById], references: [id])
-  claimedBy   Profile? @relation("ClaimedContacts", fields: [claimedById], references: [id])
-  business    Business? @relation("CatalogContact", fields: [businessId], references: [id], onDelete: SetNull)
+  city                City                 @relation(fields: [cityId], references: [id])
+  category            Category             @relation(fields: [categoryId], references: [id])
+  submittedBy         Profile              @relation("SubmittedContacts", fields: [submittedById], references: [id])
+  claimedBy           Profile?             @relation("ClaimedContacts", fields: [claimedById], references: [id])
+  business            Business?            @relation("CatalogContact", fields: [businessId], references: [id], onDelete: SetNull)
   catalogLinkRequests CatalogLinkRequest[]
-  reviews     Review[]
+  reviews             Review[]
 
   @@index([cityId])
   @@index([categoryId])
@@ -218,12 +271,12 @@ model Contact {
 }
 
 model CatalogLinkRequest {
-  id        String            @id @default(uuid())
+  id         String            @id @default(uuid())
   businessId String            @unique
-  contactId String
-  status    CatalogLinkStatus @default(PENDING)
-  createdAt DateTime          @default(now())
-  updatedAt DateTime          @updatedAt
+  contactId  String
+  status     CatalogLinkStatus @default(PENDING)
+  createdAt  DateTime          @default(now())
+  updatedAt  DateTime          @updatedAt
 
   business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
   contact  Contact  @relation(fields: [contactId], references: [id], onDelete: Cascade)

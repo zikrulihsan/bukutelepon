@@ -28,7 +28,44 @@ const businessSchema = z.object({
   openingHours: optionalText(160),
   logoUrl: optionalUrl,
   coverUrl: optionalUrl,
+  catalogPreset: z.enum(["RESTAURANT", "SERVICE", "RETAIL", "ACTIVITY"]).default("RETAIL"),
+  defaultItemLayout: z.enum(["ROW", "CARD"]).default("CARD"),
   status: z.enum(["DRAFT", "ACTIVE", "HIDDEN"]).default("DRAFT"),
+});
+
+const presentationSchema = z.object({
+  catalogPreset: z.enum(["RESTAURANT", "SERVICE", "RETAIL", "ACTIVITY"]),
+  defaultItemLayout: z.enum(["ROW", "CARD"]),
+});
+
+const optionalDate = z.string().datetime().optional().nullable().or(z.literal(""));
+
+const sectionSchema = z.object({
+  type: z.enum(["ITEM_GROUP", "PROMOTION", "ACTIVITY", "INFORMATION"]),
+  title: z.string().trim().min(2).max(160),
+  subtitle: optionalText(500),
+  category: optionalText(80),
+  layout: z.enum(["ROW", "CARD"]).default("CARD"),
+  imageUrl: optionalUrl,
+  badge: optionalText(40),
+  ctaLabel: optionalText(80),
+  ctaUrl: optionalUrl,
+  scheduleLabel: optionalText(120),
+  startsAt: optionalDate,
+  endsAt: optionalDate,
+  status: z.enum(["ACTIVE", "HIDDEN"]).default("ACTIVE"),
+  sortOrder: z.coerce.number().int().min(0).max(10_000).default(0),
+}).superRefine((value, context) => {
+  if (value.type === "ITEM_GROUP" && !value.category?.trim()) {
+    context.addIssue({ code: z.ZodIssueCode.custom, path: ["category"], message: "Kategori wajib dipilih untuk section grup" });
+  }
+  if (value.startsAt && value.endsAt && new Date(value.startsAt) > new Date(value.endsAt)) {
+    context.addIssue({ code: z.ZodIssueCode.custom, path: ["endsAt"], message: "Tanggal selesai harus setelah tanggal mulai" });
+  }
+});
+
+const sectionReorderSchema = z.object({
+  orderedIds: z.array(z.string().uuid()).max(100),
 });
 
 const itemSchema = z.object({
@@ -141,6 +178,28 @@ router.get("/business", async (req: AuthenticatedRequest, res, next) => {
       where: { ownerId: req.userId! },
       include: {
         items: { orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }] },
+        sections: { orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }] },
+        contact: { include: { city: true, category: true } },
+        catalogLinkRequest: { include: { contact: { include: { city: true, category: true } } } },
+      },
+    });
+    res.json({ success: true, data: business });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// PUT /api/pro/business/presentation — updates catalog defaults without resubmitting the full profile form.
+router.put("/business/presentation", async (req: AuthenticatedRequest, res, next) => {
+  try {
+    const input = presentationSchema.parse(req.body);
+    const owned = await ownedBusiness(req.userId!);
+    const business = await prisma.business.update({
+      where: { id: owned.id },
+      data: input,
+      include: {
+        items: { orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }] },
+        sections: { orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }] },
         contact: { include: { city: true, category: true } },
         catalogLinkRequest: { include: { contact: { include: { city: true, category: true } } } },
       },
@@ -229,6 +288,8 @@ router.put("/business", async (req: AuthenticatedRequest, res, next) => {
       openingHours: nullable(input.openingHours),
       logoUrl: nullable(input.logoUrl),
       coverUrl: nullable(input.coverUrl),
+      catalogPreset: input.catalogPreset,
+      defaultItemLayout: input.defaultItemLayout,
       status: input.status,
     };
 
@@ -238,6 +299,7 @@ router.put("/business", async (req: AuthenticatedRequest, res, next) => {
       update: data,
       include: {
         items: { orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }] },
+        sections: { orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }] },
         contact: { include: { city: true, category: true } },
         catalogLinkRequest: { include: { contact: { include: { city: true, category: true } } } },
       },
@@ -348,6 +410,95 @@ router.post("/items/bulk", async (req: AuthenticatedRequest, res, next) => {
   }
 });
 
+// POST /api/pro/sections — adds an ordered module to the public catalog.
+router.post("/sections", async (req: AuthenticatedRequest, res, next) => {
+  try {
+    const input = sectionSchema.parse(req.body);
+    const business = await ownedBusiness(req.userId!);
+    const section = await prisma.catalogSection.create({
+      data: {
+        ...input,
+        businessId: business.id,
+        subtitle: nullable(input.subtitle),
+        category: nullable(input.category),
+        imageUrl: nullable(input.imageUrl),
+        badge: nullable(input.badge),
+        ctaLabel: nullable(input.ctaLabel),
+        ctaUrl: nullable(input.ctaUrl),
+        scheduleLabel: nullable(input.scheduleLabel),
+        startsAt: input.startsAt ? new Date(input.startsAt) : null,
+        endsAt: input.endsAt ? new Date(input.endsAt) : null,
+      },
+    });
+    res.status(201).json({ success: true, data: section });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// PUT /api/pro/sections/reorder — persists the dashboard order atomically.
+router.put("/sections/reorder", async (req: AuthenticatedRequest, res, next) => {
+  try {
+    const { orderedIds } = sectionReorderSchema.parse(req.body);
+    const business = await ownedBusiness(req.userId!);
+    const ownedSections = await prisma.catalogSection.findMany({
+      where: { businessId: business.id, id: { in: orderedIds } },
+      select: { id: true },
+    });
+    if (ownedSections.length !== orderedIds.length) throw new AppError(403, "Urutan section tidak valid");
+    await prisma.$transaction(orderedIds.map((id, index) => prisma.catalogSection.update({ where: { id }, data: { sortOrder: index } })));
+    const sections = await prisma.catalogSection.findMany({ where: { businessId: business.id }, orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }] });
+    res.json({ success: true, data: sections });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// PUT /api/pro/sections/:id
+router.put("/sections/:id", async (req: AuthenticatedRequest, res, next) => {
+  try {
+    const input = sectionSchema.parse(req.body);
+    const business = await ownedBusiness(req.userId!);
+    const id = req.params.id as string;
+    const existing = await prisma.catalogSection.findFirst({ where: { id, businessId: business.id } });
+    if (!existing) throw new AppError(404, "Section katalog tidak ditemukan");
+    const section = await prisma.catalogSection.update({
+      where: { id },
+      data: {
+        ...input,
+        subtitle: nullable(input.subtitle),
+        category: nullable(input.category),
+        imageUrl: nullable(input.imageUrl),
+        badge: nullable(input.badge),
+        ctaLabel: nullable(input.ctaLabel),
+        ctaUrl: nullable(input.ctaUrl),
+        scheduleLabel: nullable(input.scheduleLabel),
+        startsAt: input.startsAt ? new Date(input.startsAt) : null,
+        endsAt: input.endsAt ? new Date(input.endsAt) : null,
+      },
+    });
+    if (existing.imageUrl && existing.imageUrl !== section.imageUrl) await deleteCatalogImage(existing.imageUrl, req.userId!);
+    res.json({ success: true, data: section });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// DELETE /api/pro/sections/:id
+router.delete("/sections/:id", async (req: AuthenticatedRequest, res, next) => {
+  try {
+    const business = await ownedBusiness(req.userId!);
+    const id = req.params.id as string;
+    const existing = await prisma.catalogSection.findFirst({ where: { id, businessId: business.id } });
+    if (!existing) throw new AppError(404, "Section katalog tidak ditemukan");
+    await prisma.catalogSection.delete({ where: { id } });
+    await deleteCatalogImage(existing.imageUrl, req.userId!);
+    res.json({ success: true, data: { id } });
+  } catch (err) {
+    next(err);
+  }
+});
+
 // DELETE /api/pro/images — removes an owner-scoped upload that was not saved.
 router.delete("/images", async (req: AuthenticatedRequest, res, next) => {
   try {
@@ -365,7 +516,13 @@ router.delete("/images", async (req: AuthenticatedRequest, res, next) => {
         select: { id: true },
       })
       : null;
-    if (business?.logoUrl === imageUrl || business?.coverUrl === imageUrl || referencedItem) {
+    const referencedSection = business
+      ? await prisma.catalogSection.findFirst({
+        where: { businessId: business.id, imageUrl },
+        select: { id: true },
+      })
+      : null;
+    if (business?.logoUrl === imageUrl || business?.coverUrl === imageUrl || referencedItem || referencedSection) {
       throw new AppError(409, "Foto masih digunakan oleh etalase");
     }
     await deleteCatalogImage(imageUrl, req.userId!);

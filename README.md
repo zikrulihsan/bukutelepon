@@ -185,6 +185,10 @@ This starts:
 | `GET` | `/api/admin/users` | 🔒 Admin | List all users |
 | `POST` | `/api/pro/items/bulk` | ✅ Pro | Create up to 20 storefront items with per-item results |
 | `DELETE` | `/api/pro/images` | ✅ Pro | Remove an unused owner-scoped catalog upload |
+| `POST` | `/api/pro/sections` | ✅ Pro | Add a catalog group, promotion, activity, or information section |
+| `PUT` | `/api/pro/sections/reorder` | ✅ Pro | Reorder modular catalog sections |
+| `PUT` | `/api/pro/sections/:id` | ✅ Pro | Update a modular catalog section |
+| `DELETE` | `/api/pro/sections/:id` | ✅ Pro | Delete a modular catalog section |
 
 > **Auth**: `✅` = requires Bearer token, `🔒 Admin` = requires admin role
 

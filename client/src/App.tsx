@@ -28,6 +28,7 @@ import ProDashboardPage from "./pages/pro/ProDashboardPage";
 import CatalogPlansPage from "./pages/public/CatalogPlansPage";
 import ContactConciergePage from "./pages/public/ContactConciergePage";
 import AdminHeroPromotions from "./pages/admin/HeroPromotions";
+import ModularCatalogPage from "./pages/public/ModularCatalogPage";
 
 export default function App() {
   return (
@@ -48,6 +49,7 @@ export default function App() {
                     <Route path="/" element={<MainScreen />} />
                     <Route path="/catalog" element={<BusinessShowcasePage />} />
                     <Route path="/catalog/:itemSlug" element={<ProductDetailPage />} />
+                    <Route path="/katalog" element={<ModularCatalogPage />} />
                     <Route path="/search" element={<SearchPage />} />
                     <Route path="/saved" element={<SavedPage />} />
                     <Route path="/account" element={<AccountPage />} />

@@ -15,6 +15,10 @@ export type CatalogLinkStatus = "PENDING" | "APPROVED" | "REJECTED";
 export type StorefrontItemStatus = "ACTIVE" | "HIDDEN" | "SOLD_OUT";
 export type StorefrontPriceType = "FIXED" | "STARTING_FROM" | "CONTACT" | "FREE";
 export type StorefrontItemType = "PRODUCT" | "SERVICE" | "PACKAGE" | "PROMO";
+export type CatalogPreset = "RESTAURANT" | "SERVICE" | "RETAIL" | "ACTIVITY";
+export type CatalogLayout = "ROW" | "CARD";
+export type CatalogSectionType = "ITEM_GROUP" | "PROMOTION" | "ACTIVITY" | "INFORMATION";
+export type CatalogSectionStatus = "ACTIVE" | "HIDDEN";
 
 export interface HeroPromotion {
   id: string;
@@ -52,6 +56,27 @@ export interface ManagedStorefrontItem {
   updatedAt: string;
 }
 
+export interface ManagedCatalogSection {
+  id: string;
+  businessId: string;
+  type: CatalogSectionType;
+  title: string;
+  subtitle: string | null;
+  category: string | null;
+  layout: CatalogLayout;
+  imageUrl: string | null;
+  badge: string | null;
+  ctaLabel: string | null;
+  ctaUrl: string | null;
+  scheduleLabel: string | null;
+  startsAt: string | null;
+  endsAt: string | null;
+  status: CatalogSectionStatus;
+  sortOrder: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface ManagedBusiness {
   id: string;
   ownerId: string;
@@ -66,10 +91,13 @@ export interface ManagedBusiness {
   openingHours: string | null;
   logoUrl: string | null;
   coverUrl: string | null;
+  catalogPreset: CatalogPreset;
+  defaultItemLayout: CatalogLayout;
   status: BusinessStatus;
   createdAt: string;
   updatedAt: string;
   items: ManagedStorefrontItem[];
+  sections: ManagedCatalogSection[];
   contact?: Contact | null;
   catalogLinkRequest?: CatalogLinkRequest | null;
 }

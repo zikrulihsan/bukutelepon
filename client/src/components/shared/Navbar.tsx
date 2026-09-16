@@ -4,7 +4,7 @@ import { useI18n } from "../../i18n/LanguageContext";
 import { BrandLogo } from "./BrandLogo";
 
 // Pages that have their own header or don't need the navbar
-const HIDDEN_ROUTES = ["/", "/search", "/saved", "/account", "/submit", "/kontak", "/catalog", "/buat-katalog", "/jastip-kontak"];
+const HIDDEN_ROUTES = ["/", "/search", "/saved", "/account", "/submit", "/kontak", "/catalog", "/katalog", "/buat-katalog", "/jastip-kontak"];
 
 export function Navbar() {
   const location = useLocation();

@@ -12,6 +12,7 @@ import {
   type StorefrontBusiness,
   type StorefrontCollection,
   type StorefrontItem,
+  type StorefrontSection,
 } from "./storefrontData";
 
 function displayPhone(phone: string): string {
@@ -36,6 +37,8 @@ function adaptBusiness(value: ManagedBusiness): StorefrontBusiness {
     cover: value.coverUrl ?? fallbackBusiness.cover,
     poster: value.coverUrl ?? fallbackBusiness.poster,
     logo: value.logoUrl ?? undefined,
+    catalogPreset: value.catalogPreset.toLowerCase() as StorefrontBusiness["catalogPreset"],
+    defaultItemLayout: value.defaultItemLayout.toLowerCase() as StorefrontBusiness["defaultItemLayout"],
   };
 }
 
@@ -81,12 +84,47 @@ function collectionsFor(items: StorefrontItem[]): StorefrontCollection[] {
   }));
 }
 
-export function usePublicStorefront() {
+function sectionsFor(value: ManagedBusiness, items: StorefrontItem[]): StorefrontSection[] {
+  if (value.sections?.length) {
+    return value.sections.map((section) => ({
+      id: section.id,
+      type: section.type.toLowerCase() as StorefrontSection["type"],
+      title: section.title,
+      subtitle: section.subtitle ?? "",
+      category: section.category ?? "",
+      layout: section.layout.toLowerCase() as StorefrontSection["layout"],
+      image: section.imageUrl ?? value.coverUrl ?? fallbackBusiness.cover,
+      badge: section.badge ?? "",
+      ctaLabel: section.ctaLabel ?? "",
+      ctaUrl: section.ctaUrl ?? "",
+      scheduleLabel: section.scheduleLabel ?? "",
+      sortOrder: section.sortOrder,
+    }));
+  }
+
+  return collectionsFor(items).map((collection, index) => ({
+    id: `generated-${collection.id}`,
+    type: "item_group",
+    title: collection.title,
+    subtitle: collection.description,
+    category: collection.title,
+    layout: value.defaultItemLayout.toLowerCase() as StorefrontSection["layout"],
+    image: collection.image,
+    badge: "",
+    ctaLabel: "",
+    ctaUrl: "",
+    scheduleLabel: "",
+    sortOrder: index,
+  }));
+}
+
+export function usePublicStorefront(enabled = true) {
   const [searchParams] = useSearchParams();
   const requestedSlug = searchParams.get("store") || fallbackBusiness.slug;
   const query = useQuery<ApiResponse<ManagedBusiness>>({
     queryKey: ["storefront", requestedSlug],
     queryFn: async () => (await apiClient.get(`/storefront/${requestedSlug}`)).data,
+    enabled,
     retry: false,
     staleTime: 60_000,
   });
@@ -98,8 +136,22 @@ export function usePublicStorefront() {
         business: fallbackBusiness,
         items: fallbackItems,
         collections: fallbackCollections,
+        sections: fallbackCollections.map((collection, index) => ({
+          id: `fallback-${collection.id}`,
+          type: "item_group" as const,
+          title: collection.title,
+          subtitle: collection.description,
+          category: collection.title,
+          layout: fallbackBusiness.defaultItemLayout,
+          image: collection.image,
+          badge: "",
+          ctaLabel: "",
+          ctaUrl: "",
+          scheduleLabel: "",
+          sortOrder: index,
+        })),
         isManaged: false,
-        isLoading: query.isLoading,
+        isLoading: enabled && query.isLoading,
         notFound: requestedSlug !== fallbackBusiness.slug && query.isError,
         requestedSlug,
       };
@@ -109,10 +161,11 @@ export function usePublicStorefront() {
       business: adaptBusiness(remote),
       items,
       collections: collectionsFor(items),
+      sections: sectionsFor(remote, items),
       isManaged: true,
       isLoading: false,
       notFound: false,
       requestedSlug,
     };
-  }, [query.data, query.isError, query.isLoading, requestedSlug]);
+  }, [enabled, query.data, query.isError, query.isLoading, requestedSlug]);
 }

@@ -35,6 +35,23 @@ export interface StorefrontBusiness {
   cover: string;
   poster: string;
   logo?: string;
+  catalogPreset: "restaurant" | "service" | "retail" | "activity";
+  defaultItemLayout: "row" | "card";
+}
+
+export interface StorefrontSection {
+  id: string;
+  type: "item_group" | "promotion" | "activity" | "information";
+  title: string;
+  subtitle: string;
+  category: string;
+  layout: "row" | "card";
+  image: string;
+  badge: string;
+  ctaLabel: string;
+  ctaUrl: string;
+  scheduleLabel: string;
+  sortOrder: number;
 }
 
 export interface StorefrontCollection {
@@ -61,6 +78,8 @@ export const business: StorefrontBusiness = {
   openingHours: "Konfirmasi via WhatsApp",
   cover: "/storefront/store-cover.jpg",
   poster: "/storefront/toko-evi-poster.jpg",
+  catalogPreset: "retail",
+  defaultItemLayout: "card",
 };
 
 export const storefrontItems: StorefrontItem[] = [

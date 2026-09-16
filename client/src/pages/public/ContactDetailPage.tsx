@@ -349,7 +349,7 @@ export default function ContactDetailPage() {
         {/* Catalog — only present after an administrator has approved the link. */}
         {contact.business && (
           <button
-            onClick={() => navigate(`/catalog?store=${encodeURIComponent(contact.business!.slug)}`)}
+            onClick={() => navigate(`/katalog?store=${encodeURIComponent(contact.business!.slug)}`)}
             className="w-full rounded-2xl border border-amber-100 bg-amber-50/60 px-5 py-4 text-left shadow-[0_2px_12px_rgba(0,0,0,0.03)] transition-colors hover:bg-amber-50"
           >
             <span className="flex items-center gap-4">

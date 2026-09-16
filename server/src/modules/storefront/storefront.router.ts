@@ -6,12 +6,23 @@ const router = Router();
 // GET /api/storefront/:slug — public, published storefront data only.
 router.get("/:slug", async (req, res, next) => {
   try {
+    const now = new Date();
     const business = await prisma.business.findFirst({
       where: { slug: req.params.slug as string, status: "ACTIVE" },
       include: {
         items: {
           where: { status: { not: "HIDDEN" } },
           orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],
+        },
+        sections: {
+          where: {
+            status: "ACTIVE",
+            AND: [
+              { OR: [{ startsAt: null }, { startsAt: { lte: now } }] },
+              { OR: [{ endsAt: null }, { endsAt: { gte: now } }] },
+            ],
+          },
+          orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
         },
       },
     });

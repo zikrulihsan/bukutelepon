@@ -75,7 +75,7 @@ export const MAX_HERO_IMAGE_BYTES = 5 * 1024 * 1024;
 export async function uploadCatalogImage(
   file: File,
   userId: string,
-  kind: "logo" | "cover" | "item"
+  kind: "logo" | "cover" | "item" | "section"
 ): Promise<string> {
   if (!CATALOG_MIME_TYPES.has(file.type)) {
     throw new Error("Gunakan gambar JPG, PNG, WebP, atau AVIF.");

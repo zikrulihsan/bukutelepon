@@ -21,9 +21,12 @@ import { uploadCatalogImage } from "../../lib/uploadImage";
 import { useAuth } from "../../hooks/useAuth";
 import { BrandLoadingScreen } from "../../components/shared/BrandLoadingScreen";
 import { BulkItemUploadModal } from "../../components/pro/BulkItemUploadModal";
+import { CatalogStructureEditor } from "../../components/pro/CatalogStructureEditor";
 import type {
   ApiResponse,
   BusinessStatus,
+  CatalogLayout,
+  CatalogPreset,
   Contact,
   ManagedBusiness,
   ManagedStorefrontItem,
@@ -44,6 +47,8 @@ type BusinessDraft = {
   openingHours: string;
   logoUrl: string;
   coverUrl: string;
+  catalogPreset: CatalogPreset;
+  defaultItemLayout: CatalogLayout;
   status: BusinessStatus;
 };
 
@@ -76,6 +81,8 @@ const emptyBusiness: BusinessDraft = {
   openingHours: "",
   logoUrl: "",
   coverUrl: "",
+  catalogPreset: "RETAIL",
+  defaultItemLayout: "CARD",
   status: "DRAFT",
 };
 
@@ -114,6 +121,8 @@ function businessDraft(value: ManagedBusiness | null | undefined): BusinessDraft
     openingHours: value.openingHours ?? "",
     logoUrl: value.logoUrl ?? "",
     coverUrl: value.coverUrl ?? "",
+    catalogPreset: value.catalogPreset,
+    defaultItemLayout: value.defaultItemLayout,
     status: value.status,
   };
 }
@@ -144,7 +153,7 @@ const labelClass = "block text-xs font-semibold text-gray-700";
 export default function ProDashboardPage() {
   const { user, profile, loading } = useAuth();
   const queryClient = useQueryClient();
-  const [tab, setTab] = useState<"business" | "items">("business");
+  const [tab, setTab] = useState<"business" | "items" | "sections">("business");
   const [businessForm, setBusinessForm] = useState<BusinessDraft>(emptyBusiness);
   const [itemForm, setItemForm] = useState<ItemDraft | null>(null);
   const [bulkUploadOpen, setBulkUploadOpen] = useState(false);
@@ -267,7 +276,7 @@ export default function ProDashboardPage() {
               <p className="mt-1 max-w-xl text-sm text-emerald-50/80">Perbarui informasi bisnis, produk, dan layanan tanpa mengubah kode website.</p>
             </div>
             {managedBusiness?.status === "ACTIVE" && (
-              <a href={`/catalog?store=${encodeURIComponent(managedBusiness.slug)}`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-xl bg-white/10 px-4 py-2.5 text-xs font-bold ring-1 ring-white/20 hover:bg-white/20">
+              <a href={`/katalog?store=${encodeURIComponent(managedBusiness.slug)}`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-xl bg-white/10 px-4 py-2.5 text-xs font-bold ring-1 ring-white/20 hover:bg-white/20">
                 Lihat etalase <HiArrowTopRightOnSquare className="h-4 w-4" />
               </a>
             )}
@@ -277,6 +286,7 @@ export default function ProDashboardPage() {
         <div className="mt-5 flex gap-1 rounded-2xl border border-gray-200 bg-white p-1.5 shadow-sm">
           <button onClick={() => setTab("business")} className={`flex-1 rounded-xl px-4 py-3 text-sm font-bold ${tab === "business" ? "bg-primary-700 text-white" : "text-gray-500 hover:bg-gray-50"}`}>Profil bisnis</button>
           <button onClick={() => setTab("items")} className={`flex-1 rounded-xl px-4 py-3 text-sm font-bold ${tab === "items" ? "bg-primary-700 text-white" : "text-gray-500 hover:bg-gray-50"}`}>Produk & jasa ({managedBusiness?.items.length ?? 0})</button>
+          <button onClick={() => setTab("sections")} className={`flex-1 rounded-xl px-4 py-3 text-sm font-bold ${tab === "sections" ? "bg-primary-700 text-white" : "text-gray-500 hover:bg-gray-50"}`}>Susunan katalog</button>
         </div>
 
         {(notice || failure) && (
@@ -338,7 +348,7 @@ export default function ProDashboardPage() {
               <button disabled={saveBusiness.isPending || Boolean(uploading)} className="rounded-xl bg-primary-700 px-6 py-3 text-sm font-bold text-white shadow-sm hover:bg-primary-800 disabled:opacity-50">{saveBusiness.isPending ? "Menyimpan…" : managedBusiness ? "Simpan perubahan" : "Buat etalase"}</button>
             </div>
           </form>
-        ) : (
+        ) : tab === "items" ? (
           <section className="mt-5">
             <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
               <div><h2 className="text-lg font-bold text-gray-900">Isi etalase</h2><p className="text-xs text-gray-500">Produk, jasa, paket, atau promo.</p></div>
@@ -362,6 +372,10 @@ export default function ProDashboardPage() {
               </div>
             )}
           </section>
+        ) : managedBusiness && user ? (
+          <CatalogStructureEditor business={managedBusiness} userId={user.id} />
+        ) : (
+          <div className="mt-5 rounded-2xl border border-dashed border-gray-300 bg-white px-5 py-12 text-center text-sm text-gray-500">Simpan profil bisnis lebih dulu untuk mengatur susunan katalog.</div>
         )}
       </div>
 
