@@ -169,13 +169,22 @@ export default function ModularCatalogPage() {
         {groupSections.length > 0 && (
           <section className="mt-8">
             <p className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-[var(--catalog-muted)]">Jelajahi katalog</p>
-            <div className="mt-3 flex snap-x gap-2.5 overflow-x-auto pb-2 scrollbar-hide">
+            <div className={business.catalogNavigationStyle === "grid" ? "mt-3 grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-4" : "mt-3 flex snap-x snap-mandatory gap-2.5 overflow-x-auto pb-2 scrollbar-hide"}>
               {groupSections.map((section) => (
-                <button key={section.id} type="button" onClick={() => goToSection(section.id)} className="catalog-surface flex h-[70px] w-[220px] flex-none snap-start items-center gap-3 border p-2 text-left transition-colors hover:border-[var(--catalog-accent)]">
-                  <img src={section.image || business.cover} alt="" className="h-[52px] w-[52px] flex-none rounded-xl object-cover" />
-                  <span className="min-w-0 flex-1"><strong className="catalog-heading block truncate text-sm font-bold text-[var(--catalog-text)]">{section.title}</strong><small className="mt-1 block truncate text-[10px] text-[var(--catalog-muted)]">{section.subtitle}</small></span>
-                  <span className="grid h-8 w-8 flex-none place-items-center rounded-xl bg-[var(--catalog-soft)] text-[var(--catalog-accent)]"><HiChevronRight className="h-4 w-4" /></span>
-                </button>
+                business.catalogNavigationStyle === "poster_slider" ? (
+                  <button key={section.id} type="button" onClick={() => goToSection(section.id)} className="group relative h-[224px] w-[172px] flex-none snap-start overflow-hidden rounded-[var(--catalog-radius-lg)] bg-[var(--catalog-dark)] text-left shadow-[0_6px_16px_rgba(16,46,70,.12)] sm:h-[236px] sm:w-[184px]">
+                    <img src={section.image || business.cover} alt="" className="absolute inset-0 h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]" />
+                    <span className="absolute inset-0 bg-[linear-gradient(180deg,rgba(8,35,75,.03)_20%,rgba(8,35,75,.20)_52%,rgba(8,35,75,.92)_100%)]" />
+                    <span className="absolute right-3 top-3 grid h-8 w-8 place-items-center rounded-xl border border-white/50 bg-white/90 text-[var(--catalog-accent)] shadow-sm"><HiChevronRight className="h-4 w-4" /></span>
+                    <span className="absolute inset-x-0 bottom-0 z-10 block p-4 text-white"><strong className="catalog-heading block text-[17px] font-extrabold leading-5 tracking-[-0.04em]">{section.title}</strong><small className="mt-1 block line-clamp-2 text-[11px] font-medium leading-[15px] text-white/80">{section.subtitle}</small></span>
+                  </button>
+                ) : (
+                  <button key={section.id} type="button" onClick={() => goToSection(section.id)} className={`catalog-surface flex items-center gap-3 border text-left transition-colors hover:border-[var(--catalog-accent)] ${business.catalogNavigationStyle === "grid" ? "min-h-[76px] w-full p-2" : "h-[70px] w-[220px] flex-none snap-start p-2"}`}>
+                    <img src={section.image || business.cover} alt="" className="h-[52px] w-[52px] flex-none rounded-xl object-cover" />
+                    <span className="min-w-0 flex-1"><strong className="catalog-heading block truncate text-sm font-bold text-[var(--catalog-text)]">{section.title}</strong><small className="mt-1 block truncate text-[10px] text-[var(--catalog-muted)]">{section.subtitle}</small></span>
+                    <span className="grid h-8 w-8 flex-none place-items-center rounded-xl bg-[var(--catalog-soft)] text-[var(--catalog-accent)]"><HiChevronRight className="h-4 w-4" /></span>
+                  </button>
+                )
               ))}
             </div>
           </section>
@@ -183,6 +192,17 @@ export default function ModularCatalogPage() {
 
         <div className="mt-6 space-y-8">
           {sections.map((section) => {
+            if (section.type === "banner") return (
+              <section key={section.id} className="relative min-h-[220px] overflow-hidden rounded-[var(--catalog-radius-lg)] border border-[var(--catalog-border)] bg-[var(--catalog-highlight)] shadow-[0_4px_14px_rgba(16,46,70,.06)] sm:min-h-[250px]">
+                {section.image && <img src={section.image} alt="" className="absolute inset-0 h-full w-full object-cover" />}
+                <span className="absolute inset-0 bg-[linear-gradient(90deg,rgba(248,250,247,.98)_0%,rgba(248,250,247,.94)_42%,rgba(248,250,247,.22)_100%)]" />
+                <div className="relative flex min-h-[220px] max-w-[82%] flex-col justify-center p-6 sm:min-h-[250px] sm:max-w-[62%] sm:p-8">
+                  <h2 className="catalog-heading text-[27px] font-extrabold leading-[33px] tracking-[-0.055em] text-[#08234B] sm:text-[34px] sm:leading-[40px]">{section.title}</h2>
+                  {section.subtitle && <p className="mt-3 max-w-xl text-[13px] font-medium leading-5 tracking-[-0.02em] text-[#586A82] sm:text-sm sm:leading-6">{section.subtitle}</p>}
+                </div>
+              </section>
+            );
+
             if (section.type === "promotion") return (
               <section key={section.id} style={{ background: "var(--catalog-promo-gradient)" }} className="relative overflow-hidden rounded-[var(--catalog-radius-lg)] border border-[var(--catalog-border)] p-5 text-[var(--catalog-text)] shadow-[0_3px_12px_rgba(16,46,70,.05)] sm:p-6">
                 {section.image && <img src={section.image} alt="" className="absolute inset-y-0 right-0 h-full w-1/3 object-cover opacity-15" />}

@@ -33,6 +33,7 @@ const businessSchema = z.object({
   defaultItemLayout: z.enum(["ROW", "CARD"]).default("CARD"),
   catalogTheme: z.enum(["MODERN", "WARM", "MINIMAL", "BOLD"]).default("MODERN"),
   catalogAccent: catalogAccent.default("#0F766E"),
+  catalogNavigationStyle: z.enum(["COMPACT_SLIDER", "POSTER_SLIDER", "GRID"]).default("COMPACT_SLIDER"),
   status: z.enum(["DRAFT", "ACTIVE", "HIDDEN"]).default("DRAFT"),
 });
 
@@ -41,12 +42,13 @@ const presentationSchema = z.object({
   defaultItemLayout: z.enum(["ROW", "CARD"]),
   catalogTheme: z.enum(["MODERN", "WARM", "MINIMAL", "BOLD"]),
   catalogAccent,
+  catalogNavigationStyle: z.enum(["COMPACT_SLIDER", "POSTER_SLIDER", "GRID"]),
 });
 
 const optionalDate = z.string().datetime().optional().nullable().or(z.literal(""));
 
 const sectionSchema = z.object({
-  type: z.enum(["ITEM_GROUP", "PROMOTION", "ACTIVITY", "INFORMATION"]),
+  type: z.enum(["ITEM_GROUP", "PROMOTION", "ACTIVITY", "INFORMATION", "BANNER"]),
   title: z.string().trim().min(2).max(160),
   subtitle: optionalText(500),
   category: optionalText(80),
@@ -297,6 +299,7 @@ router.put("/business", async (req: AuthenticatedRequest, res, next) => {
       defaultItemLayout: input.defaultItemLayout,
       catalogTheme: input.catalogTheme,
       catalogAccent: input.catalogAccent.toUpperCase(),
+      catalogNavigationStyle: input.catalogNavigationStyle,
       status: input.status,
     };
 

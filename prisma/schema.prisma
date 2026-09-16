@@ -44,11 +44,18 @@ enum CatalogTheme {
   BOLD
 }
 
+enum CatalogNavigationStyle {
+  COMPACT_SLIDER
+  POSTER_SLIDER
+  GRID
+}
+
 enum CatalogSectionType {
   ITEM_GROUP
   PROMOTION
   ACTIVITY
   INFORMATION
+  BANNER
 }
 
 enum CatalogSectionStatus {
@@ -124,26 +131,27 @@ model Profile {
 }
 
 model Business {
-  id                String         @id @default(uuid())
-  ownerId           String         @unique
-  name              String
-  slug              String         @unique
-  description       String         @db.VarChar(1000)
-  whatsapp          String
-  alternateWhatsapp String?
-  instagram         String?
-  address           String?        @db.VarChar(500)
-  mapsUrl           String?
-  openingHours      String?
-  logoUrl           String?
-  coverUrl          String?
-  catalogPreset     CatalogPreset  @default(RETAIL)
-  defaultItemLayout CatalogLayout  @default(CARD)
-  catalogTheme      CatalogTheme   @default(MODERN)
-  catalogAccent     String         @default("#0F766E") @db.VarChar(7)
-  status            BusinessStatus @default(DRAFT)
-  createdAt         DateTime       @default(now())
-  updatedAt         DateTime       @updatedAt
+  id                     String                 @id @default(uuid())
+  ownerId                String                 @unique
+  name                   String
+  slug                   String                 @unique
+  description            String                 @db.VarChar(1000)
+  whatsapp               String
+  alternateWhatsapp      String?
+  instagram              String?
+  address                String?                @db.VarChar(500)
+  mapsUrl                String?
+  openingHours           String?
+  logoUrl                String?
+  coverUrl               String?
+  catalogPreset          CatalogPreset          @default(RETAIL)
+  defaultItemLayout      CatalogLayout          @default(CARD)
+  catalogTheme           CatalogTheme           @default(MODERN)
+  catalogAccent          String                 @default("#0F766E") @db.VarChar(7)
+  catalogNavigationStyle CatalogNavigationStyle @default(COMPACT_SLIDER)
+  status                 BusinessStatus         @default(DRAFT)
+  createdAt              DateTime               @default(now())
+  updatedAt              DateTime               @updatedAt
 
   owner              Profile             @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   items              StorefrontItem[]

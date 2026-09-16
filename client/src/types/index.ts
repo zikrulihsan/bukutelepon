@@ -18,7 +18,8 @@ export type StorefrontItemType = "PRODUCT" | "SERVICE" | "PACKAGE" | "PROMO";
 export type CatalogPreset = "RESTAURANT" | "SERVICE" | "RETAIL" | "ACTIVITY";
 export type CatalogLayout = "ROW" | "CARD";
 export type CatalogTheme = "MODERN" | "WARM" | "MINIMAL" | "BOLD";
-export type CatalogSectionType = "ITEM_GROUP" | "PROMOTION" | "ACTIVITY" | "INFORMATION";
+export type CatalogNavigationStyle = "COMPACT_SLIDER" | "POSTER_SLIDER" | "GRID";
+export type CatalogSectionType = "ITEM_GROUP" | "PROMOTION" | "ACTIVITY" | "INFORMATION" | "BANNER";
 export type CatalogSectionStatus = "ACTIVE" | "HIDDEN";
 
 export interface HeroPromotion {
@@ -96,6 +97,7 @@ export interface ManagedBusiness {
   defaultItemLayout: CatalogLayout;
   catalogTheme: CatalogTheme;
   catalogAccent: string;
+  catalogNavigationStyle: CatalogNavigationStyle;
   status: BusinessStatus;
   createdAt: string;
   updatedAt: string;

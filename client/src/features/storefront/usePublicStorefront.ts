@@ -41,6 +41,7 @@ function adaptBusiness(value: ManagedBusiness): StorefrontBusiness {
     defaultItemLayout: value.defaultItemLayout.toLowerCase() as StorefrontBusiness["defaultItemLayout"],
     catalogTheme: value.catalogTheme.toLowerCase() as StorefrontBusiness["catalogTheme"],
     catalogAccent: value.catalogAccent,
+    catalogNavigationStyle: (value.catalogNavigationStyle ?? "COMPACT_SLIDER").toLowerCase() as StorefrontBusiness["catalogNavigationStyle"],
   };
 }
 

@@ -39,11 +39,12 @@ export interface StorefrontBusiness {
   defaultItemLayout: "row" | "card";
   catalogTheme: "modern" | "warm" | "minimal" | "bold" | "retro";
   catalogAccent: string;
+  catalogNavigationStyle: "compact_slider" | "poster_slider" | "grid";
 }
 
 export interface StorefrontSection {
   id: string;
-  type: "item_group" | "promotion" | "activity" | "information";
+  type: "item_group" | "promotion" | "activity" | "information" | "banner";
   title: string;
   subtitle: string;
   category: string;
@@ -84,6 +85,7 @@ export const business: StorefrontBusiness = {
   defaultItemLayout: "card",
   catalogTheme: "warm",
   catalogAccent: "#245843",
+  catalogNavigationStyle: "compact_slider",
 };
 
 export const storefrontItems: StorefrontItem[] = [

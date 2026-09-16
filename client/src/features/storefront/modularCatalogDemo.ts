@@ -18,6 +18,7 @@ export const modularDemoBusiness: StorefrontBusiness = {
   defaultItemLayout: "row",
   catalogTheme: "modern",
   catalogAccent: "#0F8B8D",
+  catalogNavigationStyle: "compact_slider",
 };
 
 function demoItem(value: Partial<StorefrontItem> & Pick<StorefrontItem, "id" | "slug" | "name" | "category">): StorefrontItem {
@@ -112,6 +113,7 @@ const serviceBusiness: StorefrontBusiness = {
   defaultItemLayout: "card",
   catalogTheme: "minimal",
   catalogAccent: "#111827",
+  catalogNavigationStyle: "grid",
 };
 
 const serviceItems: StorefrontItem[] = [
@@ -148,6 +150,7 @@ const retailBusiness: StorefrontBusiness = {
   defaultItemLayout: "card",
   catalogTheme: "warm",
   catalogAccent: "#B45309",
+  catalogNavigationStyle: "compact_slider",
 };
 
 const retailItems: StorefrontItem[] = [
@@ -185,6 +188,7 @@ const activityBusiness: StorefrontBusiness = {
   defaultItemLayout: "row",
   catalogTheme: "bold",
   catalogAccent: "#F05A28",
+  catalogNavigationStyle: "poster_slider",
 };
 
 const activityItems: StorefrontItem[] = [
@@ -222,6 +226,7 @@ const ramyaBusiness: StorefrontBusiness = {
   defaultItemLayout: "row",
   catalogTheme: "retro",
   catalogAccent: "#77345E",
+  catalogNavigationStyle: "poster_slider",
 };
 
 type RamyaMenuRow = {
@@ -278,7 +283,7 @@ const ramyaItems: StorefrontItem[] = ramyaMenuRows.map((item) => demoItem({
 }));
 
 const ramyaSections: StorefrontSection[] = [
-  { id: "ramya-tagline", type: "promotion", title: "Start your day with a smile", subtitle: "…and a cup of coffee.", category: "", layout: "card", image: "/storefront/discovery-coffee.webp", badge: "RAMYA COFFEE", ctaLabel: "Lihat signature", ctaUrl: "", scheduleLabel: "", sortOrder: 0 },
+  { id: "ramya-tagline", type: "banner", title: "Temukan favoritmu di Ramya", subtitle: "Signature coffee, espresso classics, dan minuman non-coffee untuk menemani harimu.", category: "", layout: "card", image: "/storefront/discovery-coffee.webp", badge: "", ctaLabel: "", ctaUrl: "", scheduleLabel: "", sortOrder: 0 },
   { id: "ramya-signature", type: "item_group", title: "Signature", subtitle: "Tujuh racikan khas yang menjadi karakter Ramya.", category: "Signature", layout: "card", image: "/storefront/discovery-coffee.webp", badge: "", ctaLabel: "", ctaUrl: "", scheduleLabel: "", sortOrder: 1 },
   { id: "ramya-espresso-based", type: "item_group", title: "Espresso Based", subtitle: "Pilihan klasik berbasis espresso.", category: "Espresso Based", layout: "row", image: "/storefront/kopi-tambora.jpg", badge: "", ctaLabel: "", ctaUrl: "", scheduleLabel: "", sortOrder: 2 },
   { id: "ramya-flavored-coffee", type: "item_group", title: "Flavored Coffee", subtitle: "Kopi dengan pilihan rasa yang familiar.", category: "Flavored Coffee", layout: "row", image: "/storefront/discovery-coffee.webp", badge: "", ctaLabel: "", ctaUrl: "", scheduleLabel: "", sortOrder: 3 },

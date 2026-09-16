@@ -26,6 +26,7 @@ import type {
   ApiResponse,
   BusinessStatus,
   CatalogLayout,
+  CatalogNavigationStyle,
   CatalogPreset,
   CatalogTheme,
   Contact,
@@ -52,6 +53,7 @@ type BusinessDraft = {
   defaultItemLayout: CatalogLayout;
   catalogTheme: CatalogTheme;
   catalogAccent: string;
+  catalogNavigationStyle: CatalogNavigationStyle;
   status: BusinessStatus;
 };
 
@@ -88,6 +90,7 @@ const emptyBusiness: BusinessDraft = {
   defaultItemLayout: "CARD",
   catalogTheme: "MODERN",
   catalogAccent: "#0F766E",
+  catalogNavigationStyle: "COMPACT_SLIDER",
   status: "DRAFT",
 };
 
@@ -130,6 +133,7 @@ function businessDraft(value: ManagedBusiness | null | undefined): BusinessDraft
     defaultItemLayout: value.defaultItemLayout,
     catalogTheme: value.catalogTheme,
     catalogAccent: value.catalogAccent,
+    catalogNavigationStyle: value.catalogNavigationStyle ?? "COMPACT_SLIDER",
     status: value.status,
   };
 }
