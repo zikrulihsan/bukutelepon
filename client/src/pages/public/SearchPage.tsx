@@ -316,7 +316,7 @@ export default function SearchPage() {
             <HiChevronLeft className="h-6 w-6" />
           </button>
 
-          <form onSubmit={handleSearch} className="flex-1 flex items-center bg-white border border-gray-200 rounded-full p-1 shadow-sm focus-within:ring-4 focus-within:ring-green-500/10 focus-within:border-green-500 transition-all">
+          <form onSubmit={handleSearch} className="flex-1 flex items-center bg-white border border-gray-200 rounded-full p-1 focus-within:ring-4 focus-within:ring-green-500/10 focus-within:border-green-500 transition-all">
             <div className="pl-4 text-gray-400">
               <HiMagnifyingGlass className="h-5 w-5" />
             </div>
@@ -392,8 +392,8 @@ export default function SearchPage() {
                   onClick={() => handleCategoryClick(cat.slug)}
                   className={`flex-shrink-0 inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors ${
                     activeCategory === cat.slug
-                      ? "bg-primary-700 text-white shadow-sm"
-                      : "bg-white text-primary-700 shadow-sm border border-gray-100"
+                      ? "bg-primary-700 text-white border border-primary-700"
+                      : "bg-white text-primary-700 border border-gray-200"
                   }`}
                 >
                   <CategoryIcon slug={cat.slug} className="w-3.5 h-3.5" />

@@ -66,7 +66,7 @@ export function CategoryPhoto({
           alt=""
           decoding="async"
           draggable={false}
-          className={`${iconClassName} object-contain drop-shadow-[0_5px_7px_rgba(24,39,58,0.18)]`}
+          className={`${iconClassName} object-contain`}
         />
       ) : (
         <Icon className={`${style.fg} ${iconClassName}`} />

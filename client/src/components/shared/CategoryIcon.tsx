@@ -160,7 +160,7 @@ export function CategoryIcon({ slug, className = "w-7 h-7" }: CategoryIconProps)
         aria-hidden="true"
         decoding="async"
         draggable={false}
-        className={`${className} shrink-0 object-contain drop-shadow-[0_4px_5px_rgba(24,39,58,0.16)] ${visual.imageClassName ?? ""}`}
+        className={`${className} shrink-0 object-contain ${visual.imageClassName ?? ""}`}
       />
     );
   }

@@ -121,7 +121,7 @@ function StoreIllustration() {
       <rect x="233" y="39" width="59" height="5" rx="2.5" fill="#A8EFC7" />
       <path d="m311 71 13-8m-11 20 16-1m-19 12 12 7" stroke="#D5F23E" strokeWidth="5" strokeLinecap="round" />
     </svg>
-    <div className="absolute right-2.5 top-1.5 rounded-[9px] bg-white px-2 py-1 text-center text-[7px] font-extrabold leading-[9px] text-primary-700 shadow-sm">Lebih mudah<br />ditemukan!</div>
+    <div className="absolute right-2.5 top-1.5 rounded-[9px] border border-white/80 bg-white px-2 py-1 text-center text-[7px] font-extrabold leading-[9px] text-primary-700">Lebih mudah<br />ditemukan!</div>
   </div>;
 }
 
@@ -139,7 +139,7 @@ function ContactImage({ contact, className = "" }: { contact: Contact; className
 }
 
 function ChoiceCard({ contact, categoryLabel, cityName, viewLabel, onOpen }: { contact: Contact; categoryLabel: string; cityName: string; viewLabel: string; onOpen: () => void }) {
-  return <article onClick={onOpen} className="relative flex h-[238px] w-[174px] shrink-0 snap-start cursor-pointer flex-col overflow-hidden rounded-2xl bg-white p-2 shadow-[0_4px_12px_rgba(16,46,70,0.09)] transition active:scale-[0.98]">
+  return <article onClick={onOpen} className="relative flex h-[238px] w-[174px] shrink-0 snap-start cursor-pointer flex-col overflow-hidden rounded-2xl border border-[#E1E8E3] bg-white p-2 transition active:scale-[0.98]">
     <div className="relative h-[116px] shrink-0 overflow-hidden rounded-xl bg-[#E8F0E8]"><ContactImage contact={contact} className="h-full w-full" /><BookmarkButton contactId={contact.id} compact /></div>
     <h3 className="mt-2 line-clamp-2 min-h-10 text-[15px] font-extrabold leading-5 tracking-[-0.035em] text-[#08234B]">{contact.name}</h3>
     <p className="mt-1 flex items-center gap-1 truncate text-[11px] font-semibold leading-4 text-[#7988A2]"><PinIcon className="h-3.5 w-3.5 shrink-0 text-primary-700" />{categoryLabel} <span>·</span> {contact.city?.name ?? cityName}</p>
@@ -148,10 +148,10 @@ function ChoiceCard({ contact, categoryLabel, cityName, viewLabel, onOpen }: { c
 }
 
 function DiscoveryPoster({ title, description, imageUrl, imagePosition = "center", onOpen }: { title: string; description: string; imageUrl: string; imagePosition?: string; onOpen: () => void }) {
-  return <button type="button" onClick={onOpen} className="group relative h-[236px] w-[184px] shrink-0 snap-start overflow-hidden rounded-[20px] bg-[#173B32] text-left shadow-[0_6px_16px_rgba(16,46,70,0.15)] transition active:scale-[0.98]">
+  return <button type="button" onClick={onOpen} className="group relative h-[236px] w-[184px] shrink-0 snap-start overflow-hidden rounded-[20px] border border-[#DDE6E1] bg-[#173B32] text-left transition active:scale-[0.98]">
     <img src={imageUrl} alt="" aria-hidden="true" loading="eager" decoding="async" className="absolute inset-0 h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]" style={{ objectPosition: imagePosition }} />
     <span className="absolute inset-0 bg-[linear-gradient(180deg,rgba(5,28,38,.06)_22%,rgba(5,28,38,.20)_48%,rgba(5,28,38,.92)_100%)]" />
-    <span className="absolute right-3 top-3 grid h-8 w-8 place-items-center rounded-full border border-white/50 bg-white/90 text-primary-700 shadow-sm"><ArrowIcon className="h-4 w-4" /></span>
+    <span className="absolute right-3 top-3 grid h-8 w-8 place-items-center rounded-full border border-white/70 bg-white/90 text-primary-700"><ArrowIcon className="h-4 w-4" /></span>
     <span className="absolute inset-x-0 bottom-0 z-10 block px-3.5 pb-3.5 pt-12 text-white">
       <span className="line-clamp-2 block text-[17px] font-extrabold leading-5 tracking-[-0.04em]">{title}</span>
       <span className="mt-1 line-clamp-2 block text-[11.5px] font-medium leading-[15px] text-white/85">{description}</span>
@@ -459,7 +459,7 @@ export default function MainScreen() {
 
   return <div className="min-h-screen bg-[radial-gradient(circle_at_30%_8%,rgba(226,241,231,.62),transparent_26%),#F8FAF7] pb-[82px] text-[#08234B]">
     {showCityPicker && <CityPickerOverlay cities={citiesData?.data ?? cities} onSelect={chooseCity} onClose={() => setShowCityPicker(false)} />}
-    <div className="mx-auto max-w-md overflow-x-hidden bg-[#F8FAF7] sm:shadow-[0_0_24px_rgba(15,47,45,0.06)]">
+    <div className="mx-auto max-w-md overflow-x-hidden bg-[#F8FAF7]">
       <section
         className="relative h-[260px] overflow-visible bg-[#E6F2E9]"
         role="region"
@@ -496,7 +496,7 @@ export default function MainScreen() {
         <div className="relative z-10 flex h-full flex-col px-4 pb-0 pt-4">
           <div className="relative z-30 flex items-center justify-between gap-2">
             <div className="relative min-w-0 flex-1">
-              <button type="button" onClick={openCityPicker} aria-describedby={showCityHint ? "city-picker-hint" : undefined} className="flex h-10 w-full min-w-0 items-center gap-2 rounded-[14px] border border-white/75 bg-white/72 px-3 text-left shadow-[0_2px_10px_rgba(9,60,45,.08)] backdrop-blur-sm transition active:scale-[0.98]">
+              <button type="button" onClick={openCityPicker} aria-describedby={showCityHint ? "city-picker-hint" : undefined} className="flex h-10 w-full min-w-0 items-center gap-2 rounded-[14px] border border-white/80 bg-white/72 px-3 text-left backdrop-blur-sm transition active:scale-[0.98]">
                 <PinIcon className="h-[18px] w-[18px] shrink-0 text-primary-700" />
                 <span className="truncate text-[14px] font-bold leading-none tracking-[-0.035em] text-[#08234B]">{selectedCityName}</span>
                 <svg viewBox="0 0 20 20" fill="currentColor" className="ml-auto h-4 w-4 shrink-0 text-primary-700"><path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.17l3.71-3.94a.75.75 0 111.09 1.03l-4.25 4.5a.75.75 0 01-1.09 0l-4.25-4.5a.75.75 0 01.02-1.05z" clipRule="evenodd" /></svg>
@@ -508,7 +508,7 @@ export default function MainScreen() {
                 </div>
               )}
             </div>
-            <div className="flex shrink-0 items-center gap-2"><LanguageToggle className="shadow-[0_3px_9px_rgba(4,44,37,0.06)]" /><a href={`https://wa.me/6282338588078?text=${encodeURIComponent(t("home.helpWhatsappText"))}`} target="_blank" rel="noopener noreferrer" className="inline-flex h-10 items-center gap-1.5 rounded-full bg-white/95 px-3 text-[13px] font-extrabold text-[#08234B] shadow-[0_3px_9px_rgba(4,44,37,0.10)] transition active:scale-95"><ChatIcon className="h-[18px] w-[18px]" /><span className="hidden min-[390px]:inline">{t("home.help")}</span></a></div>
+            <div className="flex shrink-0 items-center gap-2"><LanguageToggle /><a href={`https://wa.me/6282338588078?text=${encodeURIComponent(t("home.helpWhatsappText"))}`} target="_blank" rel="noopener noreferrer" className="inline-flex h-10 items-center gap-1.5 rounded-full border border-white/80 bg-white/95 px-3 text-[13px] font-extrabold text-[#08234B] transition active:scale-95"><ChatIcon className="h-[18px] w-[18px]" /><span className="hidden min-[390px]:inline">{t("home.help")}</span></a></div>
           </div>
 
           <div
@@ -552,10 +552,10 @@ export default function MainScreen() {
             {heroSlides.map((slide, index) => <button key={slide.id} type="button" onClick={() => goToHeroSlide(index)} aria-label={t("home.heroGoToSlide", { number: index + 1 })} aria-current={index === activeHeroSlide ? "true" : undefined} className={`h-1.5 rounded-full ${reduceMotion ? "" : "transition-all"} ${index === activeHeroSlide ? "w-4 bg-primary-700" : "w-1.5 bg-[#8CA99B]/65 hover:bg-[#668B79]"}`} />)}
           </div>}
 
-          <form onSubmit={(event) => { event.preventDefault(); goToSearch(); }} className="relative z-30 mt-auto flex h-14 translate-y-1/2 items-center rounded-[18px] bg-white p-1 shadow-[0_5px_14px_rgba(21,66,53,0.13)]">
+          <form onSubmit={(event) => { event.preventDefault(); goToSearch(); }} className="relative z-30 mt-auto flex h-14 translate-y-1/2 items-center rounded-[18px] border border-[#D9E3DD] bg-white p-1">
             <SearchIcon className="ml-3 h-6 w-6 shrink-0 text-[#8998B1]" />
             <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder={t("home.heroSearchPlaceholder")} className="min-w-0 flex-1 bg-transparent px-3 text-[16px] font-medium tracking-[-0.035em] text-[#08234B] outline-none placeholder:text-[#8D99AE]" />
-            <button aria-label="Cari" type="submit" className="grid h-12 w-14 shrink-0 place-items-center rounded-[15px] bg-primary-700 text-white shadow-[0_3px_8px_rgba(0,111,74,0.24)] transition hover:bg-primary-600 active:scale-95"><ArrowIcon className="h-6 w-6" /></button>
+            <button aria-label="Cari" type="submit" className="grid h-12 w-14 shrink-0 place-items-center rounded-[15px] bg-primary-700 text-white transition hover:bg-primary-600 active:scale-95"><ArrowIcon className="h-6 w-6" /></button>
           </form>
         </div>
       </section>
@@ -567,8 +567,8 @@ export default function MainScreen() {
       </section>
 
       <section className="mt-5">
-        <button type="button" onClick={() => setShowEmergency((value) => !value)} className="flex h-16 w-full items-center justify-between rounded-2xl bg-[linear-gradient(105deg,#fff7f7,#fff2f5)] px-3 text-left shadow-[0_3px_9px_rgba(126,52,67,0.07)] transition active:scale-[0.99]"><span className="flex items-center gap-3"><span className="grid h-10 w-10 place-items-center rounded-xl bg-[#FFE0E0]"><SirenIcon className="h-7 w-7" /></span><span><span className="block text-[15px] font-extrabold leading-5 tracking-[-0.035em] text-[#08234B]">{t("home.emergencyTitle")}</span><span className="block text-[12px] font-medium leading-4 text-[#8190AA]">{t("home.emergencySubtitle")}</span></span></span><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round" className={`h-5 w-5 text-[#95A0B8] transition-transform ${showEmergency ? "rotate-180" : ""}`} aria-hidden="true"><path d="m5 7.5 5 5 5-5" /></svg></button>
-        {showEmergency && <div className="mt-2 grid grid-cols-2 gap-2 rounded-xl bg-white p-2 shadow-[0_3px_9px_rgba(15,47,45,0.07)]">{[{ label: t("emergency.emergency"), query: "darurat" }, { label: t("emergency.fire"), query: "damkar" }, { label: t("emergency.ambulance"), query: "ambulans" }, { label: t("emergency.police"), query: "polisi" }].map((item) => <button key={item.query} type="button" onClick={() => navigate(`/search?q=${encodeURIComponent(item.query)}`)} className="rounded-[10px] bg-[#F7F9F5] px-3 py-3 text-center text-[13px] font-bold text-[#08234B] transition hover:bg-[#EEF6F0] active:scale-[0.98]">{item.label}</button>)}</div>}
+        <button type="button" onClick={() => setShowEmergency((value) => !value)} className="flex h-16 w-full items-center justify-between rounded-2xl border border-[#F4DFE2] bg-[linear-gradient(105deg,#fff7f7,#fff2f5)] px-3 text-left transition active:scale-[0.99]"><span className="flex items-center gap-3"><span className="grid h-10 w-10 place-items-center rounded-xl bg-[#FFE0E0]"><SirenIcon className="h-7 w-7" /></span><span><span className="block text-[15px] font-extrabold leading-5 tracking-[-0.035em] text-[#08234B]">{t("home.emergencyTitle")}</span><span className="block text-[12px] font-medium leading-4 text-[#8190AA]">{t("home.emergencySubtitle")}</span></span></span><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round" className={`h-5 w-5 text-[#95A0B8] transition-transform ${showEmergency ? "rotate-180" : ""}`} aria-hidden="true"><path d="m5 7.5 5 5 5-5" /></svg></button>
+        {showEmergency && <div className="mt-2 grid grid-cols-2 gap-2 rounded-xl border border-[#E1E8E3] bg-white p-2">{[{ label: t("emergency.emergency"), query: "darurat" }, { label: t("emergency.fire"), query: "damkar" }, { label: t("emergency.ambulance"), query: "ambulans" }, { label: t("emergency.police"), query: "polisi" }].map((item) => <button key={item.query} type="button" onClick={() => navigate(`/search?q=${encodeURIComponent(item.query)}`)} className="rounded-[10px] bg-[#F7F9F5] px-3 py-3 text-center text-[13px] font-bold text-[#08234B] transition hover:bg-[#EEF6F0] active:scale-[0.98]">{item.label}</button>)}</div>}
       </section>
 
       <section className="mt-7">
@@ -582,8 +582,8 @@ export default function MainScreen() {
       </section>}
 
       <section className="mt-5">
-        <button type="button" onClick={() => navigate("/jastip-kontak")} className="relative flex min-h-[112px] w-full items-center overflow-hidden rounded-2xl bg-[radial-gradient(circle_at_95%_0%,rgba(160,220,255,.7),transparent_36%),linear-gradient(120deg,#EAF4FF,#E8F8F0)] px-4 py-4 text-left shadow-[0_5px_13px_rgba(16,67,91,.08)] active:scale-[.99]">
-          <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-white/85 text-primary-700 shadow-[0_5px_12px_rgba(16,67,91,.10)]"><SearchIcon className="h-6 w-6" /></span>
+        <button type="button" onClick={() => navigate("/jastip-kontak")} className="relative flex min-h-[112px] w-full items-center overflow-hidden rounded-2xl border border-[#D7E7E3] bg-[radial-gradient(circle_at_95%_0%,rgba(160,220,255,.7),transparent_36%),linear-gradient(120deg,#EAF4FF,#E8F8F0)] px-4 py-4 text-left active:scale-[.99]">
+          <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl border border-white/80 bg-white/85 text-primary-700"><SearchIcon className="h-6 w-6" /></span>
           <span className="ml-3 min-w-0 flex-1"><span className="block text-[16px] font-extrabold leading-5 tracking-[-.04em] text-[#08234B]">{t("home.conciergeTitle")}</span><span className="mt-1 block text-[11.5px] font-medium leading-4 text-[#667990]">{t("home.conciergeDescription")}</span><span className="mt-2 inline-flex items-center gap-1 text-[12px] font-extrabold text-primary-700">{t("home.conciergeAction")} <ArrowIcon className="h-3.5 w-3.5" /></span></span>
         </button>
       </section>
@@ -593,7 +593,7 @@ export default function MainScreen() {
         {contactsLoading ? <div className="space-y-3"><div className="h-[160px] rounded-2xl shimmer" /><div className="h-[160px] rounded-2xl shimmer" /></div> : contacts.length ? <div className="space-y-3">{contacts.slice(0, 3).map((contact) => <ContactCard key={contact.id} contact={contact} />)}</div> : <div className="grid h-[144px] place-items-center rounded-2xl bg-white p-5 text-center text-[14px] text-[#71809B]">{t("home.noContactsInCity", { city: selectedCityName })}</div>}
       </section>
 
-      <section className="mb-5 mt-8 relative min-h-[170px] overflow-hidden rounded-2xl bg-[radial-gradient(circle_at_92%_12%,#15795c,transparent_32%),linear-gradient(120deg,#003f32,#007352)] px-4 py-4 text-white shadow-[0_6px_13px_rgba(0,91,69,0.20)]"><div className="relative z-10 max-w-[235px]"><h2 className="text-[20px] font-extrabold leading-6 tracking-[-0.045em]">{t("home.businessPromoTitle", { city: selectedCityName })}</h2><p className="mt-1 text-[13px] leading-[18px] text-white/90">{t("home.businessPromoDescription")}</p><Link to="/buat-katalog" className="mt-3 inline-flex h-10 min-w-[150px] items-center justify-center rounded-xl bg-white px-4 text-[13px] font-extrabold text-primary-700 transition active:scale-95">{t("home.businessPromoAction")}</Link></div><StoreIllustration /></section>
+      <section className="mb-5 mt-8 relative min-h-[170px] overflow-hidden rounded-2xl border border-[#176B56] bg-[radial-gradient(circle_at_92%_12%,#15795c,transparent_32%),linear-gradient(120deg,#003f32,#007352)] px-4 py-4 text-white"><div className="relative z-10 max-w-[235px]"><h2 className="text-[20px] font-extrabold leading-6 tracking-[-0.045em]">{t("home.businessPromoTitle", { city: selectedCityName })}</h2><p className="mt-1 text-[13px] leading-[18px] text-white/90">{t("home.businessPromoDescription")}</p><Link to="/buat-katalog" className="mt-3 inline-flex h-10 min-w-[150px] items-center justify-center rounded-xl bg-white px-4 text-[13px] font-extrabold text-primary-700 transition active:scale-95">{t("home.businessPromoAction")}</Link></div><StoreIllustration /></section>
       </div>
       <AllCategoriesSheet open={showAllCategories} onClose={() => setShowAllCategories(false)} onSelect={(slug) => { setShowAllCategories(false); navigate(`/search?category=${encodeURIComponent(slug)}`); }} />
     </div>

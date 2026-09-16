@@ -52,7 +52,7 @@ export function RecentContactsShimmer() {
 
 export function ContactCardShimmer() {
   return (
-    <div className="bg-white rounded-2xl border border-gray-100/80 shadow-[0_2px_8px_rgba(0,0,0,0.04)] p-4">
+    <div className="bg-white rounded-2xl border border-gray-200/80 p-4">
       <div className="flex gap-3.5">
         <div className="w-[84px] h-[84px] rounded-2xl shimmer flex-shrink-0" />
         <div className="flex-1 min-w-0 pt-1">
@@ -97,7 +97,7 @@ export function SearchResultsShimmer({
       )}
       <div className="space-y-2.5" aria-hidden="true">
         {Array.from({ length: count }).map((_, index) => (
-          <div key={index} className="flex items-center gap-3 rounded-2xl bg-white p-3 shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
+          <div key={index} className="flex items-center gap-3 rounded-2xl border border-gray-200/80 bg-white p-3">
             <div className="h-14 w-14 shrink-0 rounded-xl shimmer" />
             <div className="min-w-0 flex-1">
               <div className="h-3.5 w-3/5 rounded shimmer" />

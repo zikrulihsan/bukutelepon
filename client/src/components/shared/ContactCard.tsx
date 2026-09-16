@@ -33,7 +33,7 @@ export function ContactCard({ contact, hideSave, onBeforeNavigate }: ContactCard
   const description = lang === "en" ? contact.descriptionEn || contact.description : contact.description;
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-100/80 shadow-[0_2px_8px_rgba(0,0,0,0.04)] p-4">
+    <div className="bg-white rounded-2xl border border-gray-200/80 p-4">
       {/* Top: photo + info */}
       <div className="flex gap-3.5">
         {/* Photo */}

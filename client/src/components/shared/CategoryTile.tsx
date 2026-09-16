@@ -9,7 +9,7 @@ interface CategoryTileProps {
 
 function MoreIcon() {
   return (
-    <span className="absolute bottom-2 left-1/2 grid h-10 w-10 -translate-x-1/2 place-items-center rounded-full bg-white/70 text-[#344054] shadow-[0_4px_10px_rgba(50,61,78,0.08)]" aria-hidden="true">
+    <span className="absolute bottom-2 left-1/2 grid h-10 w-10 -translate-x-1/2 place-items-center rounded-full border border-white/80 bg-white/70 text-[#344054]" aria-hidden="true">
       <HiOutlineSquares2X2 className="h-[22px] w-[22px] stroke-[1.8]" />
     </span>
   );
@@ -29,7 +29,7 @@ export function CategoryTile({ slug, name, onClick }: CategoryTileProps) {
       onPointerEnter={() => { void preloadCategoryIcon(slug); }}
       onPointerDown={() => { void preloadCategoryIcon(slug); }}
       onFocus={() => { void preloadCategoryIcon(slug); }}
-      className={`relative flex h-[86px] min-w-0 flex-col items-center justify-start overflow-hidden rounded-[16px] bg-gradient-to-br ${background} px-1.5 pt-2.5 shadow-[0_4px_10px_rgba(11,49,45,0.08)] ring-1 ring-white/70 transition-transform active:scale-[0.98]`}
+      className={`relative flex h-[86px] min-w-0 flex-col items-center justify-start overflow-hidden rounded-[16px] border border-[#DDE6E1] bg-gradient-to-br ${background} px-1.5 pt-2.5 transition-transform active:scale-[0.98]`}
     >
       <span className="relative z-10 block w-full truncate text-[11.5px] font-extrabold leading-4 tracking-[-0.035em] text-[#08234B]">
         {name}
