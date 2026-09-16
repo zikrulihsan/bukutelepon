@@ -10,7 +10,7 @@ export function Navbar() {
   const location = useLocation();
   const { t } = useI18n();
 
-  if (HIDDEN_ROUTES.some((r) => location.pathname === r) || location.pathname.startsWith("/admin") || location.pathname.startsWith("/kontak") || location.pathname.startsWith("/catalog/")) {
+  if (HIDDEN_ROUTES.some((r) => location.pathname === r) || location.pathname.startsWith("/admin") || location.pathname.startsWith("/kontak") || location.pathname.startsWith("/catalog/") || location.pathname.startsWith("/katalog/")) {
     return null;
   }
 

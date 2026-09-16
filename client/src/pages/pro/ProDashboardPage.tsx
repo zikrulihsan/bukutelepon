@@ -27,6 +27,7 @@ import type {
   BusinessStatus,
   CatalogLayout,
   CatalogPreset,
+  CatalogTheme,
   Contact,
   ManagedBusiness,
   ManagedStorefrontItem,
@@ -49,6 +50,8 @@ type BusinessDraft = {
   coverUrl: string;
   catalogPreset: CatalogPreset;
   defaultItemLayout: CatalogLayout;
+  catalogTheme: CatalogTheme;
+  catalogAccent: string;
   status: BusinessStatus;
 };
 
@@ -83,6 +86,8 @@ const emptyBusiness: BusinessDraft = {
   coverUrl: "",
   catalogPreset: "RETAIL",
   defaultItemLayout: "CARD",
+  catalogTheme: "MODERN",
+  catalogAccent: "#0F766E",
   status: "DRAFT",
 };
 
@@ -123,6 +128,8 @@ function businessDraft(value: ManagedBusiness | null | undefined): BusinessDraft
     coverUrl: value.coverUrl ?? "",
     catalogPreset: value.catalogPreset,
     defaultItemLayout: value.defaultItemLayout,
+    catalogTheme: value.catalogTheme,
+    catalogAccent: value.catalogAccent,
     status: value.status,
   };
 }

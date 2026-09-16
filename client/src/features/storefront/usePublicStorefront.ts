@@ -39,6 +39,8 @@ function adaptBusiness(value: ManagedBusiness): StorefrontBusiness {
     logo: value.logoUrl ?? undefined,
     catalogPreset: value.catalogPreset.toLowerCase() as StorefrontBusiness["catalogPreset"],
     defaultItemLayout: value.defaultItemLayout.toLowerCase() as StorefrontBusiness["defaultItemLayout"],
+    catalogTheme: value.catalogTheme.toLowerCase() as StorefrontBusiness["catalogTheme"],
+    catalogAccent: value.catalogAccent,
   };
 }
 

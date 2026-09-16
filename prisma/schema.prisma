@@ -37,6 +37,13 @@ enum CatalogLayout {
   CARD
 }
 
+enum CatalogTheme {
+  MODERN
+  WARM
+  MINIMAL
+  BOLD
+}
+
 enum CatalogSectionType {
   ITEM_GROUP
   PROMOTION
@@ -132,6 +139,8 @@ model Business {
   coverUrl          String?
   catalogPreset     CatalogPreset  @default(RETAIL)
   defaultItemLayout CatalogLayout  @default(CARD)
+  catalogTheme      CatalogTheme   @default(MODERN)
+  catalogAccent     String         @default("#0F766E") @db.VarChar(7)
   status            BusinessStatus @default(DRAFT)
   createdAt         DateTime       @default(now())
   updatedAt         DateTime       @updatedAt

@@ -22,6 +22,7 @@ import type {
   CatalogPreset,
   CatalogSectionStatus,
   CatalogSectionType,
+  CatalogTheme,
   ManagedBusiness,
   ManagedCatalogSection,
 } from "../../types";
@@ -49,6 +50,13 @@ const presetOptions: Array<{ value: CatalogPreset; title: string; copy: string; 
   { value: "SERVICE", title: "Jasa", copy: "Layanan, paket, dan konsultasi", icon: "✂️" },
   { value: "RETAIL", title: "Retail", copy: "Produk visual dan koleksi", icon: "🛍️" },
   { value: "ACTIVITY", title: "Aktivitas", copy: "Jadwal, kapasitas, dan reservasi", icon: "🎟️" },
+];
+
+const themeOptions: Array<{ value: CatalogTheme; title: string; copy: string; colors: string[] }> = [
+  { value: "MODERN", title: "Modern", copy: "Sans-serif, bersih, dan kontras", colors: ["#0B1220", "#0F766E", "#ECFEFF"] },
+  { value: "WARM", title: "Warm", copy: "Organik, ramah, dan editorial", colors: ["#18392D", "#B56D3C", "#F5EFE4"] },
+  { value: "MINIMAL", title: "Minimal", copy: "Monokrom dan fokus pada isi", colors: ["#111111", "#6B7280", "#FFFFFF"] },
+  { value: "BOLD", title: "Bold", copy: "Ekspresif, gelap, dan penuh energi", colors: ["#22113D", "#F05A28", "#FFF2D8"] },
 ];
 
 const sectionTypeLabels: Record<CatalogSectionType, string> = {
@@ -113,18 +121,26 @@ export function CatalogStructureEditor({ business, userId }: { business: Managed
   const queryClient = useQueryClient();
   const [preset, setPreset] = useState<CatalogPreset>(business.catalogPreset);
   const [defaultLayout, setDefaultLayout] = useState<CatalogLayout>(business.defaultItemLayout);
+  const [theme, setTheme] = useState<CatalogTheme>(business.catalogTheme);
+  const [accent, setAccent] = useState(business.catalogAccent);
   const [draft, setDraft] = useState<SectionDraft | null>(null);
   const [uploading, setUploading] = useState(false);
   const [notice, setNotice] = useState("");
   const [failure, setFailure] = useState("");
   const categories = useMemo(() => [...new Set(business.items.map((item) => item.category))], [business.items]);
+  const validAccent = /^#[0-9A-F]{6}$/.test(accent);
 
-  useEffect(() => { setPreset(business.catalogPreset); setDefaultLayout(business.defaultItemLayout); }, [business.catalogPreset, business.defaultItemLayout]);
+  useEffect(() => {
+    setPreset(business.catalogPreset);
+    setDefaultLayout(business.defaultItemLayout);
+    setTheme(business.catalogTheme);
+    setAccent(business.catalogAccent);
+  }, [business.catalogAccent, business.catalogPreset, business.catalogTheme, business.defaultItemLayout]);
 
   const refresh = () => queryClient.invalidateQueries({ queryKey: ["pro", "business"] });
 
   const savePresentation = useMutation({
-    mutationFn: async () => (await apiClient.put("/pro/business/presentation", { catalogPreset: preset, defaultItemLayout: defaultLayout })).data,
+    mutationFn: async () => (await apiClient.put("/pro/business/presentation", { catalogPreset: preset, defaultItemLayout: defaultLayout, catalogTheme: theme, catalogAccent: accent })).data,
     onSuccess: (response: ApiResponse<ManagedBusiness>) => {
       queryClient.setQueryData(["pro", "business"], response);
       setNotice("Preset dan tampilan default tersimpan."); setFailure("");
@@ -189,9 +205,13 @@ export function CatalogStructureEditor({ business, userId }: { business: Managed
         <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
           {presetOptions.map((option) => <button key={option.value} type="button" onClick={() => setPreset(option.value)} className={`rounded-2xl border p-3 text-left transition ${preset === option.value ? "border-primary-500 bg-primary-50 ring-2 ring-primary-100" : "border-gray-200 hover:border-gray-300"}`}><span className="text-xl">{option.icon}</span><strong className="mt-2 block text-sm text-gray-900">{option.title}</strong><span className="mt-1 block text-[10px] leading-4 text-gray-500">{option.copy}</span></button>)}
         </div>
+        <div className="mt-6 border-t border-gray-100 pt-5"><p className="text-[10px] font-black uppercase tracking-[0.14em] text-primary-700">Tema visual</p><h3 className="mt-1 text-base font-bold text-gray-900">Pilih karakter desain</h3><p className="mt-1 text-xs text-gray-500">Tema mengubah tipografi, bentuk komponen, kepadatan, dan treatment warna.</p></div>
+        <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+          {themeOptions.map((option) => <button key={option.value} type="button" onClick={() => { setTheme(option.value); setAccent(option.colors[1]); }} className={`rounded-2xl border p-3 text-left transition ${theme === option.value ? "border-primary-500 bg-primary-50 ring-2 ring-primary-100" : "border-gray-200 hover:border-gray-300"}`}><span className="flex overflow-hidden rounded-full">{option.colors.map((color) => <span key={color} className="h-5 flex-1" style={{ backgroundColor: color }} />)}</span><strong className="mt-3 block text-sm text-gray-900">{option.title}</strong><span className="mt-1 block text-[10px] leading-4 text-gray-500">{option.copy}</span></button>)}
+        </div>
         <div className="mt-4 flex flex-col gap-3 border-t border-gray-100 pt-4 sm:flex-row sm:items-end sm:justify-between">
-          <label className={`${labelClass} sm:w-64`}>Tampilan grup baru<select value={defaultLayout} onChange={(event) => setDefaultLayout(event.target.value as CatalogLayout)} className={inputClass}><option value="ROW">Row / daftar</option><option value="CARD">Card / grid</option></select></label>
-          <button type="button" onClick={() => savePresentation.mutate()} disabled={savePresentation.isPending} className="rounded-xl bg-primary-700 px-5 py-3 text-sm font-bold text-white disabled:opacity-50">{savePresentation.isPending ? "Menyimpan…" : "Simpan tampilan"}</button>
+          <div className="grid flex-1 gap-3 sm:grid-cols-2"><label className={labelClass}>Tampilan grup baru<select value={defaultLayout} onChange={(event) => setDefaultLayout(event.target.value as CatalogLayout)} className={inputClass}><option value="ROW">Row / daftar</option><option value="CARD">Card / grid</option></select></label><label className={labelClass}>Warna aksen<div className="mt-1.5 flex h-[46px] items-center gap-2 rounded-xl border border-gray-200 bg-white px-2"><input type="color" value={accent} onChange={(event) => setAccent(event.target.value.toUpperCase())} className="h-8 w-10 cursor-pointer rounded border-0 bg-transparent p-0" /><input value={accent} onChange={(event) => setAccent(event.target.value.toUpperCase())} pattern="#[0-9A-Fa-f]{6}" className="min-w-0 flex-1 bg-transparent text-sm font-semibold uppercase text-gray-700 outline-none" /></div></label></div>
+          <button type="button" onClick={() => savePresentation.mutate()} disabled={savePresentation.isPending || !validAccent} className="rounded-xl bg-primary-700 px-5 py-3 text-sm font-bold text-white disabled:opacity-50">{savePresentation.isPending ? "Menyimpan…" : validAccent ? "Simpan tampilan" : "Cek warna aksen"}</button>
         </div>
       </div>
 

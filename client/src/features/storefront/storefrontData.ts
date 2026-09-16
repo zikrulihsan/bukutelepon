@@ -37,6 +37,8 @@ export interface StorefrontBusiness {
   logo?: string;
   catalogPreset: "restaurant" | "service" | "retail" | "activity";
   defaultItemLayout: "row" | "card";
+  catalogTheme: "modern" | "warm" | "minimal" | "bold";
+  catalogAccent: string;
 }
 
 export interface StorefrontSection {
@@ -80,6 +82,8 @@ export const business: StorefrontBusiness = {
   poster: "/storefront/toko-evi-poster.jpg",
   catalogPreset: "retail",
   defaultItemLayout: "card",
+  catalogTheme: "warm",
+  catalogAccent: "#245843",
 };
 
 export const storefrontItems: StorefrontItem[] = [

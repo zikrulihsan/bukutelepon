@@ -15,6 +15,7 @@ router.use(requirePro);
 
 const optionalUrl = z.string().url().max(1000).optional().nullable().or(z.literal(""));
 const optionalText = (max: number) => z.string().trim().max(max).optional().nullable();
+const catalogAccent = z.string().regex(/^#[0-9A-Fa-f]{6}$/, "Warna aksen harus memakai format hex, misalnya #0F766E");
 
 const businessSchema = z.object({
   name: z.string().trim().min(2).max(120),
@@ -30,12 +31,16 @@ const businessSchema = z.object({
   coverUrl: optionalUrl,
   catalogPreset: z.enum(["RESTAURANT", "SERVICE", "RETAIL", "ACTIVITY"]).default("RETAIL"),
   defaultItemLayout: z.enum(["ROW", "CARD"]).default("CARD"),
+  catalogTheme: z.enum(["MODERN", "WARM", "MINIMAL", "BOLD"]).default("MODERN"),
+  catalogAccent: catalogAccent.default("#0F766E"),
   status: z.enum(["DRAFT", "ACTIVE", "HIDDEN"]).default("DRAFT"),
 });
 
 const presentationSchema = z.object({
   catalogPreset: z.enum(["RESTAURANT", "SERVICE", "RETAIL", "ACTIVITY"]),
   defaultItemLayout: z.enum(["ROW", "CARD"]),
+  catalogTheme: z.enum(["MODERN", "WARM", "MINIMAL", "BOLD"]),
+  catalogAccent,
 });
 
 const optionalDate = z.string().datetime().optional().nullable().or(z.literal(""));
@@ -196,7 +201,7 @@ router.put("/business/presentation", async (req: AuthenticatedRequest, res, next
     const owned = await ownedBusiness(req.userId!);
     const business = await prisma.business.update({
       where: { id: owned.id },
-      data: input,
+      data: { ...input, catalogAccent: input.catalogAccent.toUpperCase() },
       include: {
         items: { orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }] },
         sections: { orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }] },
@@ -290,6 +295,8 @@ router.put("/business", async (req: AuthenticatedRequest, res, next) => {
       coverUrl: nullable(input.coverUrl),
       catalogPreset: input.catalogPreset,
       defaultItemLayout: input.defaultItemLayout,
+      catalogTheme: input.catalogTheme,
+      catalogAccent: input.catalogAccent.toUpperCase(),
       status: input.status,
     };
 

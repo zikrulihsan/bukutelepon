@@ -17,6 +17,7 @@ export type StorefrontPriceType = "FIXED" | "STARTING_FROM" | "CONTACT" | "FREE"
 export type StorefrontItemType = "PRODUCT" | "SERVICE" | "PACKAGE" | "PROMO";
 export type CatalogPreset = "RESTAURANT" | "SERVICE" | "RETAIL" | "ACTIVITY";
 export type CatalogLayout = "ROW" | "CARD";
+export type CatalogTheme = "MODERN" | "WARM" | "MINIMAL" | "BOLD";
 export type CatalogSectionType = "ITEM_GROUP" | "PROMOTION" | "ACTIVITY" | "INFORMATION";
 export type CatalogSectionStatus = "ACTIVE" | "HIDDEN";
 
@@ -93,6 +94,8 @@ export interface ManagedBusiness {
   coverUrl: string | null;
   catalogPreset: CatalogPreset;
   defaultItemLayout: CatalogLayout;
+  catalogTheme: CatalogTheme;
+  catalogAccent: string;
   status: BusinessStatus;
   createdAt: string;
   updatedAt: string;

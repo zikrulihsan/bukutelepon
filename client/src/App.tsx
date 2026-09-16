@@ -50,6 +50,7 @@ export default function App() {
                     <Route path="/catalog" element={<BusinessShowcasePage />} />
                     <Route path="/catalog/:itemSlug" element={<ProductDetailPage />} />
                     <Route path="/katalog" element={<ModularCatalogPage />} />
+                    <Route path="/katalog/:exampleType" element={<ModularCatalogPage />} />
                     <Route path="/search" element={<SearchPage />} />
                     <Route path="/saved" element={<SavedPage />} />
                     <Route path="/account" element={<AccountPage />} />
