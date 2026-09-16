@@ -53,10 +53,10 @@ const presetOptions: Array<{ value: CatalogPreset; title: string; copy: string; 
 ];
 
 const themeOptions: Array<{ value: CatalogTheme; title: string; copy: string; colors: string[] }> = [
-  { value: "MODERN", title: "Modern", copy: "Sans-serif, bersih, dan kontras", colors: ["#0B1220", "#0F766E", "#ECFEFF"] },
-  { value: "WARM", title: "Warm", copy: "Organik, ramah, dan editorial", colors: ["#18392D", "#B56D3C", "#F5EFE4"] },
-  { value: "MINIMAL", title: "Minimal", copy: "Monokrom dan fokus pada isi", colors: ["#111111", "#6B7280", "#FFFFFF"] },
-  { value: "BOLD", title: "Bold", copy: "Ekspresif, gelap, dan penuh energi", colors: ["#22113D", "#F05A28", "#FFF2D8"] },
+  { value: "MODERN", title: "Modern", copy: "Bersih, seimbang, dan serbaguna", colors: ["#08234B", "#0F766E", "#F8FAF7"] },
+  { value: "WARM", title: "Warm", copy: "Hangat dengan permukaan yang lembut", colors: ["#08234B", "#B56D3C", "#FAF8F3"] },
+  { value: "MINIMAL", title: "Minimal", copy: "Ringkas dan fokus pada isi", colors: ["#17212B", "#6B7280", "#F4F4F1"] },
+  { value: "BOLD", title: "Bold", copy: "Aksen lebih kuat, tetap profesional", colors: ["#08234B", "#F05A28", "#F8FAFC"] },
 ];
 
 const sectionTypeLabels: Record<CatalogSectionType, string> = {

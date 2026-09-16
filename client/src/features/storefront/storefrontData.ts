@@ -37,7 +37,7 @@ export interface StorefrontBusiness {
   logo?: string;
   catalogPreset: "restaurant" | "service" | "retail" | "activity";
   defaultItemLayout: "row" | "card";
-  catalogTheme: "modern" | "warm" | "minimal" | "bold";
+  catalogTheme: "modern" | "warm" | "minimal" | "bold" | "retro";
   catalogAccent: string;
 }
 

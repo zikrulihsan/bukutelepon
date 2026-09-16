@@ -30,90 +30,89 @@ function readableText(background: string): string {
 export function catalogThemeStyle(business: StorefrontBusiness): CatalogCssProperties {
   const accent = normalizeHex(business.catalogAccent);
   const accentText = readableText(accent);
+  const shared: CatalogCssProperties = {
+    "--catalog-bg": "#F8FAF7",
+    "--catalog-surface": "#FFFFFF",
+    "--catalog-surface-alt": "#F0F4F1",
+    "--catalog-text": "#08234B",
+    "--catalog-muted": "#71809B",
+    "--catalog-border": "#E2E8E4",
+    "--catalog-accent": accent,
+    "--catalog-accent-text": accentText,
+    "--catalog-soft": mix(accent, "#FFFFFF", 0.09),
+    "--catalog-dark": "#08234B",
+    "--catalog-highlight": mix(accent, "#F8FAF7", 0.055),
+    "--catalog-heading-font": "'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif",
+    "--catalog-radius-lg": "20px",
+    "--catalog-radius-md": "14px",
+    "--catalog-shadow": "0 4px 14px rgba(16,46,70,.07)",
+    "--catalog-hero-gradient": "linear-gradient(90deg, rgba(8,35,75,.72), rgba(8,35,75,.16))",
+    "--catalog-promo-gradient": `linear-gradient(120deg, ${mix(accent, "#FFFFFF", 0.07)}, #FFFFFF)`,
+  };
+
+  if (business.catalogTheme === "retro") {
+    return {
+      ...shared,
+      "--catalog-bg": "#F8F6F0",
+      "--catalog-surface-alt": "#F4F0E7",
+      "--catalog-border": "#E6E0D3",
+      "--catalog-muted": "#6E7788",
+      "--catalog-dark": "#28213A",
+      "--catalog-highlight": mix(accent, "#FBF9F4", 0.055),
+      "--catalog-soft": mix(accent, "#FFFFFF", 0.08),
+      "--catalog-hero-gradient": "linear-gradient(90deg, rgba(40,33,58,.70), rgba(40,33,58,.12))",
+      "--catalog-promo-gradient": `linear-gradient(120deg, ${mix(accent, "#FFFFFF", 0.07)}, #FFFFFF)`,
+    };
+  }
 
   if (business.catalogTheme === "minimal") {
     return {
+      ...shared,
       "--catalog-bg": "#F4F4F1",
       "--catalog-surface": "#FFFFFF",
       "--catalog-surface-alt": "#ECECE8",
-      "--catalog-text": "#111111",
-      "--catalog-muted": "#656565",
-      "--catalog-border": "#CFCFC9",
-      "--catalog-accent": accent,
-      "--catalog-accent-text": accentText,
+      "--catalog-text": "#17212B",
+      "--catalog-muted": "#68727D",
+      "--catalog-border": "#DFE1DD",
       "--catalog-soft": mix(accent, "#FFFFFF", 0.09),
-      "--catalog-dark": "#111111",
-      "--catalog-highlight": "#E8E8E3",
-      "--catalog-heading-font": "Inter, ui-sans-serif, system-ui, sans-serif",
-      "--catalog-radius-lg": "10px",
-      "--catalog-radius-md": "6px",
-      "--catalog-shadow": "0 1px 0 rgba(17,17,17,.12)",
-      "--catalog-hero-gradient": "linear-gradient(100deg, rgba(0,0,0,.88), rgba(0,0,0,.28))",
-      "--catalog-promo-gradient": `linear-gradient(120deg, ${mix(accent, "#FFFFFF", 0.94)}, ${mix(accent, "#111111", 0.62)})`,
+      "--catalog-dark": "#17212B",
+      "--catalog-highlight": "#ECEEEA",
+      "--catalog-radius-lg": "16px",
+      "--catalog-radius-md": "12px",
+      "--catalog-shadow": "0 3px 12px rgba(23,33,43,.06)",
+      "--catalog-hero-gradient": "linear-gradient(90deg, rgba(23,33,43,.70), rgba(23,33,43,.12))",
+      "--catalog-promo-gradient": "linear-gradient(120deg, #ECEEEA, #FFFFFF)",
     };
   }
 
   if (business.catalogTheme === "bold") {
     return {
-      "--catalog-bg": "#160F24",
-      "--catalog-surface": "#251739",
-      "--catalog-surface-alt": "#322048",
-      "--catalog-text": "#FFF8ED",
-      "--catalog-muted": "#C8BBD4",
-      "--catalog-border": "#49345F",
-      "--catalog-accent": accent,
-      "--catalog-accent-text": accentText,
-      "--catalog-soft": mix(accent, "#251739", 0.20),
-      "--catalog-dark": "#10091C",
-      "--catalog-highlight": "#3A2453",
-      "--catalog-heading-font": "Inter, ui-sans-serif, system-ui, sans-serif",
-      "--catalog-radius-lg": "22px",
-      "--catalog-radius-md": "16px",
-      "--catalog-shadow": `8px 10px 0 ${mix(accent, "#160F24", 0.30)}`,
-      "--catalog-hero-gradient": `linear-gradient(115deg, ${mix(accent, "#10091C", 0.22)}, rgba(16,9,28,.35))`,
-      "--catalog-promo-gradient": `linear-gradient(125deg, ${accent}, ${mix(accent, "#FFD166", 0.58)})`,
+      ...shared,
+      "--catalog-bg": mix(accent, "#F8FAFC", 0.035),
+      "--catalog-surface-alt": mix(accent, "#F5F7FA", 0.055),
+      "--catalog-border": mix(accent, "#E4E9F0", 0.055),
+      "--catalog-soft": mix(accent, "#FFFFFF", 0.09),
+      "--catalog-dark": mix(accent, "#08234B", 0.18),
+      "--catalog-highlight": mix(accent, "#F8FAFC", 0.06),
+      "--catalog-hero-gradient": `linear-gradient(90deg, ${mix(accent, "#08234B", 0.18)}CC, rgba(8,35,75,.12))`,
+      "--catalog-promo-gradient": `linear-gradient(120deg, ${mix(accent, "#FFFFFF", 0.08)}, #FFFFFF)`,
     };
   }
 
   if (business.catalogTheme === "warm") {
     return {
-      "--catalog-bg": "#F4EFE5",
-      "--catalog-surface": "#FFFCF6",
-      "--catalog-surface-alt": "#EBE2D3",
-      "--catalog-text": "#283D32",
-      "--catalog-muted": "#6F786F",
-      "--catalog-border": "#DDD3C3",
-      "--catalog-accent": accent,
-      "--catalog-accent-text": accentText,
-      "--catalog-soft": mix(accent, "#FFF8EB", 0.12),
-      "--catalog-dark": mix(accent, "#18392D", 0.32),
-      "--catalog-highlight": "#EFE4D2",
-      "--catalog-heading-font": "Georgia, Cambria, serif",
-      "--catalog-radius-lg": "30px",
-      "--catalog-radius-md": "20px",
-      "--catalog-shadow": "0 20px 55px rgba(61,47,30,.12)",
-      "--catalog-hero-gradient": "linear-gradient(110deg, rgba(21,50,38,.88), rgba(21,50,38,.18))",
-      "--catalog-promo-gradient": `linear-gradient(125deg, ${mix(accent, "#F4D8A3", 0.66)}, ${mix(accent, "#FFF8E9", 0.24)})`,
+      ...shared,
+      "--catalog-bg": "#FAF8F3",
+      "--catalog-surface-alt": "#F6F1E8",
+      "--catalog-border": "#ECE5D9",
+      "--catalog-muted": "#74766F",
+      "--catalog-soft": mix(accent, "#FFFFFF", 0.08),
+      "--catalog-dark": mix(accent, "#08234B", 0.17),
+      "--catalog-highlight": mix(accent, "#FBF8F2", 0.05),
+      "--catalog-hero-gradient": "linear-gradient(90deg, rgba(8,35,75,.68), rgba(8,35,75,.10))",
+      "--catalog-promo-gradient": `linear-gradient(120deg, ${mix(accent, "#FFFFFF", 0.065)}, #FFFFFF)`,
     };
   }
 
-  return {
-    "--catalog-bg": mix(accent, "#F7FAFC", 0.045),
-    "--catalog-surface": "#FFFFFF",
-    "--catalog-surface-alt": mix(accent, "#F2F7FA", 0.08),
-    "--catalog-text": "#102A43",
-    "--catalog-muted": "#627D98",
-    "--catalog-border": "#D9E2EC",
-    "--catalog-accent": accent,
-    "--catalog-accent-text": accentText,
-    "--catalog-soft": mix(accent, "#FFFFFF", 0.10),
-    "--catalog-dark": mix(accent, "#0B1220", 0.30),
-    "--catalog-highlight": mix(accent, "#E6F6F7", 0.10),
-    "--catalog-heading-font": "Inter, ui-sans-serif, system-ui, sans-serif",
-    "--catalog-radius-lg": "24px",
-    "--catalog-radius-md": "16px",
-    "--catalog-shadow": `0 20px 55px ${mix(accent, "#FFFFFF", 0.15)}33`,
-    "--catalog-hero-gradient": `linear-gradient(110deg, ${mix(accent, "#08111F", 0.26)}, rgba(8,17,31,.18))`,
-    "--catalog-promo-gradient": `linear-gradient(125deg, ${accent}, ${mix(accent, "#67E8F9", 0.50)})`,
-  };
+  return shared;
 }

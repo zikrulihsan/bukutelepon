@@ -204,9 +204,93 @@ const activitySections: StorefrontSection[] = [
   { id: "activity-info", type: "information", title: "Perlu trip privat?", subtitle: "Tanggal, kapasitas, dan rute dapat disusun untuk keluarga atau tim kecil.", category: "", layout: "row", image: "", badge: "CUSTOM TRIP", ctaLabel: "Diskusikan rute", ctaUrl: "", scheduleLabel: "", sortOrder: 5 },
 ];
 
-export type CatalogDemoKey = "restoran" | "jasa" | "retail" | "aktivitas";
+const ramyaBusiness: StorefrontBusiness = {
+  name: "Ramya Coffee & Eatery",
+  slug: "ramya-coffee-demo",
+  description: "Start your day with a smile and a cup of coffee. Espresso classics, signature drinks, dan pilihan non-coffee.",
+  whatsapp: "6281234567890",
+  whatsappDisplay: "Kontak perlu dilengkapi",
+  whatsappSecondary: "",
+  whatsappSecondaryDisplay: "",
+  instagram: "",
+  address: "Lokasi toko perlu dilengkapi",
+  mapsUrl: "https://www.google.com/maps/search/?api=1&query=Ramya+Coffee+%26+Eatery",
+  openingHours: "Jam buka perlu dilengkapi",
+  cover: "/storefront/discovery-coffee.webp",
+  poster: "/storefront/discovery-coffee.webp",
+  catalogPreset: "restaurant",
+  defaultItemLayout: "row",
+  catalogTheme: "retro",
+  catalogAccent: "#77345E",
+};
+
+type RamyaMenuRow = {
+  id: string;
+  name: string;
+  category: "Espresso Based" | "Signature" | "Flavored Coffee" | "Non-Coffee" | "Add-ons";
+  price: number;
+  badge?: string;
+};
+
+const ramyaMenuRows: RamyaMenuRow[] = [
+  { id: "ramya-espresso", name: "Espresso", category: "Espresso Based", price: 15000 },
+  { id: "ramya-americano", name: "Americano", category: "Espresso Based", price: 20000 },
+  { id: "ramya-latte", name: "Latte", category: "Espresso Based", price: 22000 },
+  { id: "ramya-piccolo", name: "Piccolo", category: "Espresso Based", price: 20000 },
+  { id: "ramya-mocha", name: "Mocha", category: "Espresso Based", price: 22000 },
+  { id: "ramya-cappuccino", name: "Cappuccino", category: "Espresso Based", price: 22000 },
+  { id: "ramya-o-presso", name: "O! Presso", category: "Signature", price: 28000, badge: "Signature" },
+  { id: "ramya-midnight-blueberry", name: "Midnight Blueberry", category: "Signature", price: 33000 },
+  { id: "ramya-berry-spark", name: "Berry Spark", category: "Signature", price: 28000 },
+  { id: "ramya-mont-blanc", name: "Mont Blanc", category: "Signature", price: 33000 },
+  { id: "ramya-coconut-dark", name: "Coconut Dark", category: "Signature", price: 25000 },
+  { id: "ramya-lychee-licious", name: "Lychee-Licious", category: "Signature", price: 25000 },
+  { id: "ramya-matcha-ceremonial", name: "Matcha Ceremonial", category: "Signature", price: 35000 },
+  { id: "ramya-butterscotch", name: "Butterscotch", category: "Flavored Coffee", price: 25000 },
+  { id: "ramya-cream-cheese", name: "Cream Cheese", category: "Flavored Coffee", price: 25000 },
+  { id: "ramya-pandan", name: "Pandan", category: "Flavored Coffee", price: 20000 },
+  { id: "ramya-vanilla", name: "Vanilla", category: "Flavored Coffee", price: 20000 },
+  { id: "ramya-caramel", name: "Caramel", category: "Flavored Coffee", price: 20000 },
+  { id: "ramya-palm-sugar", name: "Palm Sugar", category: "Flavored Coffee", price: 20000 },
+  { id: "ramya-chocolate", name: "Chocolate", category: "Non-Coffee", price: 20000 },
+  { id: "ramya-matcha-latte", name: "Matcha Latte", category: "Non-Coffee", price: 20000 },
+  { id: "ramya-matcha-blueberry", name: "Matcha Blueberry", category: "Non-Coffee", price: 25000 },
+  { id: "ramya-matcha-strawberry", name: "Matcha Strawberry", category: "Non-Coffee", price: 25000 },
+  { id: "ramya-matcha-cheese", name: "Matcha Cheese", category: "Non-Coffee", price: 25000 },
+  { id: "ramya-extra-shot", name: "Extra Shot", category: "Add-ons", price: 5000 },
+  { id: "ramya-flavored-syrup", name: "Flavored Syrup", category: "Add-ons", price: 5000 },
+  { id: "ramya-oat-milk", name: "Oat Milk", category: "Add-ons", price: 7000 },
+  { id: "ramya-cloud-foam", name: "Cloud Foam", category: "Add-ons", price: 5000 },
+];
+
+const ramyaItems: StorefrontItem[] = ramyaMenuRows.map((item) => demoItem({
+  id: item.id,
+  slug: item.id.replace("ramya-", ""),
+  name: item.name,
+  category: item.category,
+  shortDescription: item.category === "Signature" ? "Racikan khas Ramya" : item.category === "Add-ons" ? "Tambahan untuk minuman pilihan" : "Pilihan dari menu Ramya",
+  description: item.category === "Add-ons" ? `${item.name} dapat ditambahkan ke minuman pilihan.` : `${item.name} dari kategori ${item.category} di Ramya Coffee & Eatery.`,
+  price: item.price,
+  priceType: "fixed",
+  unit: item.category === "Add-ons" ? "tambahan" : "gelas",
+  badge: item.badge,
+  image: item.category === "Non-Coffee" ? "/storefront/permen-susu.jpg" : "/storefront/discovery-coffee.webp",
+}));
+
+const ramyaSections: StorefrontSection[] = [
+  { id: "ramya-tagline", type: "promotion", title: "Start your day with a smile", subtitle: "…and a cup of coffee.", category: "", layout: "card", image: "/storefront/discovery-coffee.webp", badge: "RAMYA COFFEE", ctaLabel: "Lihat signature", ctaUrl: "", scheduleLabel: "", sortOrder: 0 },
+  { id: "ramya-signature", type: "item_group", title: "Signature", subtitle: "Tujuh racikan khas yang menjadi karakter Ramya.", category: "Signature", layout: "card", image: "/storefront/discovery-coffee.webp", badge: "", ctaLabel: "", ctaUrl: "", scheduleLabel: "", sortOrder: 1 },
+  { id: "ramya-espresso-based", type: "item_group", title: "Espresso Based", subtitle: "Pilihan klasik berbasis espresso.", category: "Espresso Based", layout: "row", image: "/storefront/kopi-tambora.jpg", badge: "", ctaLabel: "", ctaUrl: "", scheduleLabel: "", sortOrder: 2 },
+  { id: "ramya-flavored-coffee", type: "item_group", title: "Flavored Coffee", subtitle: "Kopi dengan pilihan rasa yang familiar.", category: "Flavored Coffee", layout: "row", image: "/storefront/discovery-coffee.webp", badge: "", ctaLabel: "", ctaUrl: "", scheduleLabel: "", sortOrder: 3 },
+  { id: "ramya-non-coffee", type: "item_group", title: "Non-Coffee", subtitle: "Chocolate dan variasi matcha.", category: "Non-Coffee", layout: "card", image: "/storefront/permen-susu.jpg", badge: "", ctaLabel: "", ctaUrl: "", scheduleLabel: "", sortOrder: 4 },
+  { id: "ramya-add-ons", type: "item_group", title: "Add-ons", subtitle: "Personalisasi minuman sesuai selera.", category: "Add-ons", layout: "row", image: "/storefront/discovery-coffee.webp", badge: "", ctaLabel: "", ctaUrl: "", scheduleLabel: "", sortOrder: 5 },
+  { id: "ramya-info", type: "information", title: "Detail toko siap dilengkapi", subtitle: "Alamat, jam buka, nomor WhatsApp, Instagram, serta foto produk dapat dimasukkan oleh pemilik agar katalog siap dibagikan.", category: "", layout: "row", image: "", badge: "CONTOH KATALOG", ctaLabel: "Hubungi pengelola", ctaUrl: "", scheduleLabel: "", sortOrder: 6 },
+];
+
+export type CatalogDemoKey = "ramya" | "restoran" | "jasa" | "retail" | "aktivitas";
 
 export const catalogDemos: Record<CatalogDemoKey, { business: StorefrontBusiness; items: StorefrontItem[]; sections: StorefrontSection[] }> = {
+  ramya: { business: ramyaBusiness, items: ramyaItems, sections: ramyaSections },
   restoran: { business: modularDemoBusiness, items: modularDemoItems, sections: modularDemoSections },
   jasa: { business: serviceBusiness, items: serviceItems, sections: serviceSections },
   retail: { business: retailBusiness, items: retailItems, sections: retailSections },
