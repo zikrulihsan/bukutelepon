@@ -26,6 +26,7 @@ import {
   type StorefrontItem,
 } from "../../features/storefront/storefrontData";
 import { usePublicStorefront } from "../../features/storefront/usePublicStorefront";
+import { region } from "../../config/region";
 
 function ProductCard({ item, whatsapp, onOpen }: { item: StorefrontItem; whatsapp: string; onOpen: () => void }) {
   const { quantities, addItem, setQuantity } = useInquiry();
@@ -33,7 +34,7 @@ function ProductCard({ item, whatsapp, onOpen }: { item: StorefrontItem; whatsap
   const supportsQuantity = itemSupportsQuantity(item);
   const isService = item.type === "service";
   const serviceWhatsappUrl = `https://wa.me/${whatsapp}?text=${encodeURIComponent([
-    "Halo, saya melihat etalase Anda di CariKontak.",
+    `Halo, saya melihat etalase Anda di ${region.appName}.`,
     "",
     `Saya tertarik dengan layanan ${item.name}.`,
     "Mohon informasi jadwal, area layanan, biaya, dan langkah selanjutnya.",
@@ -171,7 +172,7 @@ export default function BusinessShowcasePage() {
   }
 
   async function shareStore() {
-    const payload = { title: business.name, text: `Lihat etalase ${business.name} di CariKontak`, url: window.location.href };
+    const payload = { title: business.name, text: `Lihat etalase ${business.name} di ${region.appName}`, url: window.location.href };
     try {
       if (navigator.share) await navigator.share(payload);
       else {
@@ -184,7 +185,7 @@ export default function BusinessShowcasePage() {
     }
   }
 
-  const directWhatsapp = `https://wa.me/${business.whatsapp}?text=${encodeURIComponent(`Halo, saya melihat etalase ${business.name} di CariKontak.`)}`;
+  const directWhatsapp = `https://wa.me/${business.whatsapp}?text=${encodeURIComponent(`Halo, saya melihat etalase ${business.name} di ${region.appName}.`)}`;
 
   if (isLoading && requestedSlug !== "toko-evi") {
     return <BrandLoadingScreen label="Memuat katalog..." />;
@@ -202,7 +203,7 @@ export default function BusinessShowcasePage() {
         <div className="absolute inset-x-0 top-0 mx-auto flex max-w-6xl items-center justify-between px-4 py-4 sm:px-7 sm:py-6">
           <button onClick={() => navigate("/")} className="flex items-center gap-2 rounded-full border border-white/25 bg-[#142A20]/55 px-3 py-2 text-white shadow-sm backdrop-blur-md transition hover:bg-[#142A20]/75">
             <span className="grid h-7 w-7 place-items-center rounded-full bg-white/95 p-0.5"><BrandLogo decorative className="h-full w-full" /></span>
-            <span className="text-xs font-extrabold tracking-tight">CariKontak</span>
+            <span className="text-xs font-extrabold tracking-tight">{region.appName}</span>
           </button>
           <button onClick={shareStore} className="grid h-10 w-10 place-items-center rounded-full border border-white/25 bg-[#142A20]/55 text-white backdrop-blur-md transition hover:bg-[#142A20]/75" aria-label="Bagikan etalase">
             <HiArrowUpTray className="h-5 w-5" />
@@ -347,7 +348,7 @@ export default function BusinessShowcasePage() {
 
         <footer className="mt-16 border-t border-[#DDD6C8] py-8 text-center">
           <p className="text-[10px] font-extrabold uppercase tracking-[0.22em] text-[#9A8C7B]">Etalase didukung oleh</p>
-          <button onClick={() => navigate("/")} className="mt-2 font-serif text-lg font-black text-[#254F3D]">CariKontak</button>
+          <button onClick={() => navigate("/")} className="mt-2 font-serif text-lg font-black text-[#254F3D]">{region.appName}</button>
           <p className="mt-1 text-[11px] text-[#8C948E]">Temukan. Pilih. Hubungi.</p>
         </footer>
       </main>

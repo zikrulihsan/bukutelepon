@@ -6,6 +6,7 @@ import { authenticate, AuthenticatedRequest } from "../../middleware/authenticat
 import { requireRole } from "../../middleware/requireRole";
 import { AppError } from "../../middleware/errorHandler";
 import { deleteContactImage, deleteHeroImage } from "../../utils/storage";
+import { getRegionCityId } from "../../utils/region";
 
 const router = Router();
 
@@ -183,17 +184,18 @@ const adminCreateContactSchema = z.object({
   description: z.string().max(500).optional(),
   descriptionEn: z.string().max(500).optional(),
   imageUrl: z.string().url().optional().or(z.literal("")),
-  cityId: z.string().uuid(),
   categoryId: z.string().uuid(),
 });
 
 router.post("/contacts", async (req: AuthenticatedRequest, res, next) => {
   try {
     const data = adminCreateContactSchema.parse(req.body);
+    const cityId = await getRegionCityId();
 
     const contact = await prisma.contact.create({
       data: {
         ...data,
+        cityId,
         submittedById: req.userId!,
         status: "APPROVED",
       },
@@ -215,13 +217,13 @@ const bulkContactSchema = z.object({
       address: z.string().max(500).optional(),
     })
   ).min(1).max(100),
-  cityId: z.string().uuid(),
   categoryId: z.string().uuid(),
 });
 
 router.post("/contacts/bulk", async (req: AuthenticatedRequest, res, next) => {
   try {
-    const { contacts, cityId, categoryId } = bulkContactSchema.parse(req.body);
+    const { contacts, categoryId } = bulkContactSchema.parse(req.body);
+    const cityId = await getRegionCityId();
 
     const created = await prisma.contact.createMany({
       data: contacts.map((c) => ({
@@ -295,7 +297,6 @@ const adminEditContactSchema = z.object({
   description: z.string().max(500).optional().nullable(),
   descriptionEn: z.string().max(500).optional().nullable(),
   imageUrl: z.string().url().optional().nullable().or(z.literal("")),
-  cityId: z.string().uuid().optional(),
   categoryId: z.string().uuid().optional(),
   status: z.enum(["PENDING", "APPROVED", "REJECTED"]).optional(),
 });

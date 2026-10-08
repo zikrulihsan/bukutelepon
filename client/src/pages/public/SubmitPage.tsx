@@ -86,7 +86,7 @@ type Tab = "riwayat" | "manual" | "import";
 export default function SubmitPage() {
   const { t, categoryName, formatDate } = useI18n();
   const { user, loading: authLoading } = useAuth();
-  const { citySlug } = useCity();
+  const { citySlug, city } = useCity();
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -306,7 +306,7 @@ export default function SubmitPage() {
 
   async function handleBulkSubmit() {
     const selected = imported.filter((c) => c.selected);
-    if (selected.length === 0 || !importCityId || !importCategoryId) return;
+    if (selected.length === 0 || !importCategoryId) return;
     setBulkLoading(true);
     setBulkError("");
     try {
@@ -451,12 +451,7 @@ export default function SubmitPage() {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className={labelClass}>{t("form.city")} *</label>
-                  <select required value={form.cityId} onChange={(e) => update("cityId", e.target.value)} className="form-input appearance-none">
-                    <option value="">{t("form.selectCity")}</option>
-                    {citiesData?.data.map((city) => (
-                      <option key={city.id} value={city.id}>{city.name}</option>
-                    ))}
-                  </select>
+                  <input type="text" readOnly value={city.name} aria-readonly="true" className="form-input bg-gray-50 text-gray-600" />
                 </div>
                 <div>
                   <label className={labelClass}>{t("form.category")} *</label>
@@ -594,16 +589,7 @@ export default function SubmitPage() {
 
                 <div className="px-4 py-4 bg-gray-50 border-t border-gray-200 space-y-3">
                   <div className="grid grid-cols-2 gap-2">
-                    <select
-                      value={importCityId}
-                      onChange={(e) => setImportCityId(e.target.value)}
-                      className="form-input h-10 text-xs"
-                    >
-                      <option value="">{t("import.selectCityRequired")}</option>
-                      {citiesData?.data.map((c) => (
-                        <option key={c.id} value={c.id}>{c.name}</option>
-                      ))}
-                    </select>
+                    <input type="text" readOnly value={city.name} aria-readonly="true" className="form-input h-10 text-xs bg-white text-gray-600" />
                     <select
                       value={importCategoryId}
                       onChange={(e) => setImportCategoryId(e.target.value)}
@@ -618,7 +604,7 @@ export default function SubmitPage() {
                   <button
                     type="button"
                     onClick={handleBulkSubmit}
-                    disabled={selectedCount === 0 || !importCityId || !importCategoryId || bulkLoading}
+                    disabled={selectedCount === 0 || !importCategoryId || bulkLoading}
                     className="w-full h-11 bg-primary-700 text-white rounded-xl text-sm font-semibold active:scale-[0.98] transition-all disabled:opacity-50 flex items-center justify-center gap-2"
                   >
                     {bulkLoading && <ImSpinner2 className="animate-spin h-4 w-4" />}

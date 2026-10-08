@@ -1,3 +1,7 @@
+import { region } from "../config/region";
+
+const APP = region.appName;
+
 export type Lang = "id" | "en";
 
 export const LANGUAGES: { code: Lang; label: string; nativeLabel: string }[] = [
@@ -17,7 +21,7 @@ const id = {
   "nav.saved": "Tersimpan",
   "nav.contribute": "Kontribusi",
   "nav.account": "Akun",
-  "nav.brand": "CariKontak",
+  "nav.brand": APP,
 
   // ── Common ──
   "common.back": "Kembali",
@@ -71,7 +75,7 @@ const id = {
 
   // ── Home / MainScreen ──
   "home.help": "Bantuan",
-  "home.helpWhatsappText": "Permisi admin cari kontak, saya ingin bertanya",
+  "home.helpWhatsappText": `Permisi admin ${APP}, saya ingin bertanya`,
   "home.nearYou": "sekitarmu",
   "home.thisCity": "kota ini",
   "home.searchInCity": "Cari kontak di {city}...",
@@ -82,10 +86,9 @@ const id = {
   "home.heroSubtitle": "Temukan kontak usaha, layanan, dan tempat penting di sekitarmu, lalu langsung hubungi.",
   "home.heroSearchPlaceholder": "Cari rental mobil, rumah sakit, oleh-oleh...",
   "home.heroReady": "Siap dihubungi",
-  "home.heroCarouselLabel": "Promo dan pencarian CariKontak",
+  "home.heroCarouselLabel": `Promo dan pencarian ${APP}`,
   "home.heroSlideLabel": "Promo {current} dari {total}: {title}",
   "home.heroGoToSlide": "Tampilkan promo {number}",
-  "home.selectCity": "Pilih Kota",
   "home.statContacts": "kontak",
   "home.statCategories": "kategori",
   "home.statThisWeek": "minggu ini",
@@ -106,15 +109,15 @@ const id = {
   "home.discoveryTravelDescription": "Cari transportasi untuk perjalananmu.",
   "home.discoveryDeliveryTitle": "Jastip & delivery",
   "home.discoveryDeliveryDescription": "Titip belanja dan antar kebutuhan harian.",
-  "home.carikontakRecommendations": "Rekomendasi",
+  "home.recommendations": "Rekomendasi",
   "home.noRecommendations": "Belum ada rekomendasi terverifikasi di kota ini.",
-  "home.latestInCariKontak": "Terbaru di CariKontak",
+  "home.latestInApp": `Terbaru di ${APP}`,
   "home.noContactsInCity": "Belum ada kontak di {city}",
   "home.businessPromoTitle": "Punya usaha di {city}?",
   "home.businessPromoDescription": "Jangan cuma bagikan nomor WhatsApp. Buat halaman usaha dengan katalog, lokasi, dan lainnya.",
   "home.businessPromoAction": "Daftarkan Usaha",
   "home.conciergeTitle": "Tidak menemukan yang Anda cari?",
-  "home.conciergeDescription": "Ceritakan kontak yang dibutuhkan. Tim CariKontak akan membantu mencarikannya.",
+  "home.conciergeDescription": `Ceritakan kontak yang dibutuhkan. Tim ${APP} akan membantu mencarikannya.`,
   "home.conciergeAction": "Minta kami carikan",
 
   // ── Emergency numbers ──
@@ -138,7 +141,7 @@ const id = {
   "search.shareAria": "Bagikan hasil pencarian ini",
   "search.shareCopied": "Link disalin",
   "search.shareSubject": "{keyword} di {city}",
-  "search.shareText": "Nomor telepon & alamat {subject} — cek di CariKontak:",
+  "search.shareText": `Nomor telepon & alamat {subject} — cek di ${APP}:`,
 
   // ── Contact card / detail actions ──
   "contact.whatsapp": "WhatsApp",
@@ -180,11 +183,6 @@ const id = {
   "saved.subtitle": "Kontak yang kamu simpan untuk akses cepat",
   "saved.emptyTitle": "Belum ada kontak tersimpan",
   "saved.emptyHint": "Simpan kontak dari halaman beranda untuk akses cepat",
-
-  // ── City picker ──
-  "city.pickTitle": "Pilih Kota",
-  "city.pickSubtitle": "Temukan kontak di kota kamu",
-  "city.pickerHint": "Lokasi awal diatur ke {city}. Ketuk di sini untuk mengganti kota dan mulai mencari kontak.",
 
   // ── Auth ──
   "auth.login": "Masuk",
@@ -241,7 +239,7 @@ const id = {
   "onboarding.button": "Mengerti!",
 
   // ── PWA install banner ──
-  "pwa.title": "Pasang CariKontak",
+  "pwa.title": `Pasang ${APP}`,
   "pwa.subtitle": "Akses lebih cepat · Bisa dipakai offline",
   "pwa.install": "Pasang",
   "pwa.iosTitle": "Pasang di iPhone kamu",
@@ -274,7 +272,6 @@ const id = {
   "form.phone": "Nomor Telepon",
   "form.phonePlaceholder": "Contoh: 021-1234567",
   "form.city": "Kota",
-  "form.selectCity": "Pilih Kota",
   "form.category": "Kategori",
   "form.selectCategory": "Pilih Kategori",
   "form.address": "Alamat",
@@ -296,7 +293,6 @@ const id = {
   "import.selectedCount": "{selected}/{total} dipilih",
   "import.selectedOf": "{selected} dari {total} dipilih",
   "import.removeAll": "Hapus Semua",
-  "import.selectCityRequired": "Pilih kota *",
   "import.selectCategoryRequired": "Pilih kategori *",
   "import.sendCount": "Kirim {count} Kontak",
   "import.reviewNote": "Kontak akan ditinjau admin sebelum ditampilkan",
@@ -374,7 +370,7 @@ const id = {
   "admin.heroPromoChooseImage": "Pilih gambar",
   "admin.heroPromoDestination": "Tujuan klik",
   "admin.heroPromoDestinationHint": "Gunakan path internal seperti /search atau URL HTTPS.",
-  "admin.heroPromoTokenHint": "Gunakan {city} untuk menampilkan kota aktif pengguna.",
+  "admin.heroPromoTokenHint": "Gunakan {city} untuk nama kota dan {brand} untuk nama aplikasi. Di tautan, {whatsapp} menjadi nomor WhatsApp admin.",
   "admin.heroPromoActive": "Aktif",
   "admin.heroPromoInactive": "Nonaktif",
   "admin.heroPromoMoveUp": "Naikkan",
@@ -399,7 +395,7 @@ const en: Record<TranslationKey, string> = {
   "nav.saved": "Saved",
   "nav.contribute": "Contribute",
   "nav.account": "Account",
-  "nav.brand": "CariKontak",
+  "nav.brand": APP,
 
   // ── Common ──
   "common.back": "Back",
@@ -453,7 +449,7 @@ const en: Record<TranslationKey, string> = {
 
   // ── Home / MainScreen ──
   "home.help": "Help",
-  "home.helpWhatsappText": "Hello CariKontak admin, I have a question",
+  "home.helpWhatsappText": `Hello ${APP} admin, I have a question`,
   "home.nearYou": "your area",
   "home.thisCity": "this city",
   "home.searchInCity": "Search contacts in {city}...",
@@ -464,10 +460,9 @@ const en: Record<TranslationKey, string> = {
   "home.heroSubtitle": "Find local businesses, services, and essential places around you, then get in touch right away.",
   "home.heroSearchPlaceholder": "Search car rentals, hospitals, souvenirs...",
   "home.heroReady": "Ready to contact",
-  "home.heroCarouselLabel": "CariKontak promotions and search",
+  "home.heroCarouselLabel": `${APP} promotions and search`,
   "home.heroSlideLabel": "Promotion {current} of {total}: {title}",
   "home.heroGoToSlide": "Show promotion {number}",
-  "home.selectCity": "Select City",
   "home.statContacts": "contacts",
   "home.statCategories": "categories",
   "home.statThisWeek": "this week",
@@ -488,15 +483,15 @@ const en: Record<TranslationKey, string> = {
   "home.discoveryTravelDescription": "Find transport for your next trip.",
   "home.discoveryDeliveryTitle": "Personal shopper & delivery",
   "home.discoveryDeliveryDescription": "Get daily essentials shopped and delivered.",
-  "home.carikontakRecommendations": "Recommendations",
+  "home.recommendations": "Recommendations",
   "home.noRecommendations": "No verified recommendations in this city yet.",
-  "home.latestInCariKontak": "Latest on CariKontak",
+  "home.latestInApp": `Latest on ${APP}`,
   "home.noContactsInCity": "No contacts in {city} yet",
   "home.businessPromoTitle": "Own a business in {city}?",
   "home.businessPromoDescription": "Don't just share a WhatsApp number. Create a business page with a catalog, location, and more.",
   "home.businessPromoAction": "List Your Business",
   "home.conciergeTitle": "Can't find what you're looking for?",
-  "home.conciergeDescription": "Tell us which contact you need. The CariKontak team will help find it.",
+  "home.conciergeDescription": `Tell us which contact you need. The ${APP} team will help find it.`,
   "home.conciergeAction": "Ask us to find it",
 
   // ── Emergency numbers ──
@@ -520,7 +515,7 @@ const en: Record<TranslationKey, string> = {
   "search.shareAria": "Share these search results",
   "search.shareCopied": "Link copied",
   "search.shareSubject": "{keyword} in {city}",
-  "search.shareText": "Phone numbers & addresses for {subject} — see them on CariKontak:",
+  "search.shareText": `Phone numbers & addresses for {subject} — see them on ${APP}:`,
 
   // ── Contact card / detail actions ──
   "contact.whatsapp": "WhatsApp",
@@ -562,11 +557,6 @@ const en: Record<TranslationKey, string> = {
   "saved.subtitle": "Contacts you saved for quick access",
   "saved.emptyTitle": "No saved contacts yet",
   "saved.emptyHint": "Save contacts from the home page for quick access",
-
-  // ── City picker ──
-  "city.pickTitle": "Select City",
-  "city.pickSubtitle": "Find contacts in your city",
-  "city.pickerHint": "Your starting location is {city}. Tap here to change city and start finding contacts.",
 
   // ── Auth ──
   "auth.login": "Sign In",
@@ -623,7 +613,7 @@ const en: Record<TranslationKey, string> = {
   "onboarding.button": "Got it!",
 
   // ── PWA install banner ──
-  "pwa.title": "Install CariKontak",
+  "pwa.title": `Install ${APP}`,
   "pwa.subtitle": "Faster access · Works offline",
   "pwa.install": "Install",
   "pwa.iosTitle": "Install on your iPhone",
@@ -656,7 +646,6 @@ const en: Record<TranslationKey, string> = {
   "form.phone": "Phone Number",
   "form.phonePlaceholder": "e.g. 021-1234567",
   "form.city": "City",
-  "form.selectCity": "Select City",
   "form.category": "Category",
   "form.selectCategory": "Select Category",
   "form.address": "Address",
@@ -678,7 +667,6 @@ const en: Record<TranslationKey, string> = {
   "import.selectedCount": "{selected}/{total} selected",
   "import.selectedOf": "{selected} of {total} selected",
   "import.removeAll": "Remove All",
-  "import.selectCityRequired": "Select city *",
   "import.selectCategoryRequired": "Select category *",
   "import.sendCount": "Submit {count} Contacts",
   "import.reviewNote": "Contacts are reviewed by an admin before they appear",
@@ -756,7 +744,7 @@ const en: Record<TranslationKey, string> = {
   "admin.heroPromoChooseImage": "Choose image",
   "admin.heroPromoDestination": "Click destination",
   "admin.heroPromoDestinationHint": "Use an internal path such as /search or an HTTPS URL.",
-  "admin.heroPromoTokenHint": "Use {city} to display the user's active city.",
+  "admin.heroPromoTokenHint": "Use {city} for the city name and {brand} for the app name. In links, {whatsapp} becomes the admin WhatsApp number.",
   "admin.heroPromoActive": "Active",
   "admin.heroPromoInactive": "Inactive",
   "admin.heroPromoMoveUp": "Move up",

@@ -27,6 +27,7 @@ import {
   type StorefrontSection,
 } from "../../features/storefront/storefrontData";
 import { usePublicStorefront } from "../../features/storefront/usePublicStorefront";
+import { region } from "../../config/region";
 
 const presetLabels: Record<StorefrontBusiness["catalogPreset"], string> = {
   restaurant: "Menu & pengalaman",
@@ -105,7 +106,7 @@ export default function ModularCatalogPage() {
   useEffect(() => { trackStorefrontEvent("profile_view"); }, []);
 
   async function shareCatalog() {
-    const payload = { title: business.name, text: `Lihat katalog ${business.name} di CariKontak`, url: window.location.href };
+    const payload = { title: business.name, text: `Lihat katalog ${business.name} di ${region.appName}`, url: window.location.href };
     try {
       if (navigator.share) await navigator.share(payload);
       else { await navigator.clipboard.writeText(window.location.href); setShared(true); window.setTimeout(() => setShared(false), 1600); }
@@ -125,7 +126,7 @@ export default function ModularCatalogPage() {
   if (managedMode && remote.isLoading) return <BrandLoadingScreen label="Memuat katalog..." />;
   if (managedMode && remote.notFound) return <div className="grid min-h-screen place-items-center bg-[#F4F0E7] px-6 text-center"><div><h1 className="font-serif text-3xl font-black text-[#1D3C2F]">Katalog tidak ditemukan</h1><p className="mt-2 text-sm text-[#6E7A72]">Katalog belum diterbitkan atau alamatnya berubah.</p></div></div>;
 
-  const directWhatsapp = `https://wa.me/${business.whatsapp}?text=${encodeURIComponent(`Halo, saya melihat katalog ${business.name} di CariKontak.`)}`;
+  const directWhatsapp = `https://wa.me/${business.whatsapp}?text=${encodeURIComponent(`Halo, saya melihat katalog ${business.name} di ${region.appName}.`)}`;
 
   return (
     <div id="catalog-theme-page" data-catalog-theme={business.catalogTheme} style={catalogThemeStyle(business)} className="min-h-screen bg-[var(--catalog-bg)] pb-32 text-[var(--catalog-text)] transition-colors duration-300">
@@ -139,7 +140,7 @@ export default function ModularCatalogPage() {
         <img src={business.cover} alt={`Sampul ${business.name}`} className="h-full w-full object-cover" />
         <div className="absolute inset-0" style={{ background: "var(--catalog-hero-gradient)" }} />
         <div className="absolute inset-x-0 top-0 flex items-center justify-between p-4 sm:p-7">
-          <a href="/" className="flex items-center gap-2 rounded-xl border border-white/25 bg-[#08234B]/70 px-3 py-2 text-xs font-bold text-white backdrop-blur"><span className="grid h-7 w-7 place-items-center rounded-full bg-white"><BrandLogo decorative className="h-6 w-6" /></span>CariKontak</a>
+          <a href="/" className="flex items-center gap-2 rounded-xl border border-white/25 bg-[#08234B]/70 px-3 py-2 text-xs font-bold text-white backdrop-blur"><span className="grid h-7 w-7 place-items-center rounded-full bg-white"><BrandLogo decorative className="h-6 w-6" /></span>{region.appName}</a>
           <button type="button" onClick={shareCatalog} className="grid h-10 w-10 place-items-center rounded-xl border border-white/25 bg-[#08234B]/70 text-white backdrop-blur" aria-label="Bagikan katalog"><HiArrowUpTray className="h-5 w-5" /></button>
         </div>
         {shared && <span className="absolute right-4 top-16 rounded-full bg-[var(--catalog-surface)] px-3 py-2 text-xs font-bold text-[var(--catalog-accent)] shadow-xl sm:right-7 sm:top-20">Link tersalin</span>}
@@ -233,7 +234,7 @@ export default function ModularCatalogPage() {
           })}
         </div>
 
-        <footer className="mt-12 border-t border-[var(--catalog-border)] py-8 text-center"><p className="text-[9px] font-bold uppercase tracking-[0.16em] text-[var(--catalog-muted)]">Katalog didukung oleh</p><a href="/" className="catalog-heading mt-2 block text-base font-extrabold text-[#08234B]">CariKontak</a></footer>
+        <footer className="mt-12 border-t border-[var(--catalog-border)] py-8 text-center"><p className="text-[9px] font-bold uppercase tracking-[0.16em] text-[var(--catalog-muted)]">Katalog didukung oleh</p><a href="/" className="catalog-heading mt-2 block text-base font-extrabold text-[#08234B]">{region.appName}</a></footer>
       </main>
 
       {totalCount > 0 && !drawerOpen && <div className="fixed inset-x-0 bottom-0 z-40 px-3 pb-[calc(12px+env(safe-area-inset-bottom))]"><button type="button" onClick={() => setDrawerOpen(true)} className="mx-auto flex w-full max-w-xl items-center gap-3 rounded-2xl bg-[#08234B] px-4 py-3 text-left text-white shadow-[0_8px_24px_rgba(8,35,75,.20)]"><span className="relative grid h-10 w-10 place-items-center rounded-xl bg-white/10"><HiShoppingBag className="h-5 w-5" /><span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-[var(--catalog-accent)] px-1 text-[10px] font-bold text-[var(--catalog-accent-text)]">{totalCount}</span></span><span className="min-w-0 flex-1"><strong className="block text-sm">Lihat daftar pilihan</strong><small className="block text-[10px] text-white/65">Kirim melalui WhatsApp</small></span><span className="text-xs font-bold text-white/80">{hasUnpriced ? "Tanya harga" : new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(totalPrice)}</span><HiChevronRight className="h-4 w-4" /></button></div>}

@@ -13,7 +13,8 @@
  * "summary".
  */
 
-const SITE_NAME = "CariKontak";
+/** Used only when the shell lacks og:site_name; the real name comes from the region config at build time. */
+const DEFAULT_SITE_NAME = "Direktori Kontak";
 const THUMB_PATH = "/og-thumb.jpg";
 /** Under ~300px, chat apps render the small inline card instead of the block. */
 const THUMB_SIZE = "192";
@@ -46,6 +47,17 @@ function titleCase(value: string): string {
     .join(" ");
 }
 
+/** Reads a `<meta>` value the Vite build wrote into the SPA shell. */
+function metaContent(html: string, attr: "name" | "property", key: string): string {
+  const match = html.match(new RegExp(`<meta\\s+${attr}="${key}"\\s+content="([^"]*)"`, "i"));
+  if (!match) return "";
+  return match[1]
+    .replace(/&quot;/g, '"')
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&amp;/g, "&");
+}
+
 function escapeHtml(value: string): string {
   return value
     .replace(/&/g, "&amp;")
@@ -54,34 +66,41 @@ function escapeHtml(value: string): string {
     .replace(/"/g, "&quot;");
 }
 
-function buildPreview(url: URL): Preview {
+interface Site {
+  name: string;
+  /** The single city this deployment serves, from the shell's app:region meta. */
+  region: string;
+}
+
+function buildPreview(url: URL, site: Site): Preview {
   const origin = url.origin;
   const keyword = titleCase(
     normalize(url.searchParams.get("q"), 60) || normalize(url.searchParams.get("category"), 40)
   );
-  const region = titleCase(normalize(url.searchParams.get("city"), 40));
+  const region = site.region || titleCase(normalize(url.searchParams.get("city"), 40));
 
   let title: string;
   let description: string;
 
   if (keyword && region) {
-    title = `${keyword} di ${region} — ${SITE_NAME}`;
+    title = `${keyword} di ${region} — ${site.name}`;
     description = `Nomor telepon & alamat ${keyword} di ${region}, lengkap dengan ulasan warga. Gratis, tanpa perlu daftar.`;
   } else if (keyword) {
-    title = `${keyword} — ${SITE_NAME}`;
+    title = `${keyword} — ${site.name}`;
     description = `Nomor telepon & alamat ${keyword} dari direktori kontak warga. Gratis, tanpa perlu daftar.`;
   } else if (region) {
-    title = `Kontak Penting di ${region} — ${SITE_NAME}`;
+    title = `Kontak Penting di ${region} — ${site.name}`;
     description = `Cari nomor telepon rumah sakit, pemadam, PLN, dan layanan lain di ${region}. Gratis, tanpa perlu daftar.`;
   } else {
-    title = `${SITE_NAME} — Direktori Kontak Kota`;
+    title = `${site.name} — Direktori Kontak Kota`;
     description = "Temukan dan bagikan kontak penting di kotamu.";
   }
 
   return { title, description, url: url.href, image: `${origin}${THUMB_PATH}` };
 }
 
-function renderHead(preview: Preview): string {
+function renderHead(preview: Preview, siteName: string): string {
+  const site = escapeHtml(siteName);
   const title = escapeHtml(preview.title);
   const description = escapeHtml(preview.description);
   const url = escapeHtml(preview.url);
@@ -92,7 +111,7 @@ function renderHead(preview: Preview): string {
     `<meta name="description" content="${description}" />`,
     `<link rel="canonical" href="${url}" />`,
     `<meta property="og:type" content="website" />`,
-    `<meta property="og:site_name" content="${SITE_NAME}" />`,
+    `<meta property="og:site_name" content="${site}" />`,
     `<meta property="og:locale" content="id_ID" />`,
     `<meta property="og:title" content="${title}" />`,
     `<meta property="og:description" content="${description}" />`,
@@ -101,7 +120,7 @@ function renderHead(preview: Preview): string {
     `<meta property="og:image:type" content="image/jpeg" />`,
     `<meta property="og:image:width" content="${THUMB_SIZE}" />`,
     `<meta property="og:image:height" content="${THUMB_SIZE}" />`,
-    `<meta property="og:image:alt" content="${SITE_NAME}" />`,
+    `<meta property="og:image:alt" content="${site}" />`,
     `<meta name="twitter:card" content="summary" />`,
     `<meta name="twitter:title" content="${title}" />`,
     `<meta name="twitter:description" content="${description}" />`,
@@ -129,10 +148,14 @@ export default async function searchPreview(
   }
 
   const html = await response.text();
-  const preview = buildPreview(new URL(request.url));
+  const site: Site = {
+    name: metaContent(html, "property", "og:site_name") || DEFAULT_SITE_NAME,
+    region: metaContent(html, "name", "app:region"),
+  };
+  const preview = buildPreview(new URL(request.url), site);
   const body = stripStaticHead(html).replace(
     /<\/head>/i,
-    `\n  ${renderHead(preview)}\n</head>`
+    `\n  ${renderHead(preview, site.name)}\n</head>`
   );
 
   const headers = new Headers(response.headers);

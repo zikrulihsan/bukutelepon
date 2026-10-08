@@ -4,6 +4,7 @@ import { HiOutlineShare } from "react-icons/hi";
 import { useI18n } from "../../i18n/LanguageContext";
 import { useLocation } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
+import { region } from "../../config/region";
 
 const DISMISSED_KEY = "pwa_install_dismissed";
 const DISMISSED_EXPIRY_DAYS = 7;
@@ -180,7 +181,7 @@ export function PWAInstallBanner() {
             <div className="flex-shrink-0">
               <img
                 src="/pwa-192-v2.png"
-                alt="CariKontak"
+                alt={region.appName}
                 className="w-11 h-11 rounded-[13px] shadow-md"
                 onError={(e) => {
                   // Fallback in dev if icon isn't available yet

@@ -7,7 +7,6 @@ import { useCity } from "../../context/CityContext";
 import { useCategories } from "../../context/CategoriesContext";
 import { useContactsData } from "../../context/ContactsContext";
 import { filterContacts } from "../../lib/localContacts";
-import { CityPickerOverlay } from "../../components/shared/CityPickerOverlay";
 import { AllCategoriesSheet } from "../../components/shared/AllCategoriesSheet";
 import { CategoryPhoto } from "../../components/shared/CategoryPhoto";
 import { CategoryTile } from "../../components/shared/CategoryTile";
@@ -17,6 +16,7 @@ import { LanguageToggle } from "../../components/shared/LanguageToggle";
 import { BrandLoadingScreen } from "../../components/shared/BrandLoadingScreen";
 import { isSaved, toggleSaved } from "../../lib/saved";
 import { useI18n } from "../../i18n/LanguageContext";
+import { adminWhatsappUrl, region } from "../../config/region";
 import type { ApiResponse, City, Contact, HeroPromotion, PaginatedResponse } from "../../types";
 
 const CATEGORY_FALLBACK = [
@@ -41,13 +41,12 @@ const HOME_CATEGORY_IMAGES = [
   "/category-icons/transport.webp",
 ];
 const HOME_CRITICAL_IMAGES = [
-  "/hero-sumbawa-v2.webp",
+  region.heroImage,
   ...HOME_CATEGORY_IMAGES,
   "/storefront/discovery-coffee.webp",
   "/storefront/discovery-souvenir.webp",
   "/storefront/discovery-delivery.webp",
 ];
-const CITY_HINT_STORAGE_KEY = "ck_city_picker_hint_seen_v1";
 
 interface LocalizedHeroSlide {
   id: string;
@@ -58,8 +57,15 @@ interface LocalizedHeroSlide {
   href: string;
 }
 
-function fillCityToken(value: string | null | undefined, city: string): string {
-  return (value ?? "").replace(/\{city\}/g, city);
+/**
+ * Promotions are stored region-neutral: `{city}` and `{brand}` become this
+ * instance's city and app name, and `{whatsapp}` (for links) its admin number.
+ */
+function fillRegionTokens(value: string | null | undefined, city: string, encode = false): string {
+  const tokens: Record<string, string> = { city, brand: region.appName, whatsapp: region.adminWhatsapp };
+  return (value ?? "").replace(/\{(city|brand|whatsapp)\}/g, (_, name: string) =>
+    encode ? encodeURIComponent(tokens[name]) : tokens[name]
+  );
 }
 
 function preloadImage(source: string): Promise<void> {
@@ -169,17 +175,9 @@ function SectionHeading({ title, onMore }: { title: string; onMore?: () => void 
 
 export default function MainScreen() {
   const navigate = useNavigate();
-  const { citySlug, city, cities, setCity, setCities } = useCity();
+  const { citySlug, city, setCities } = useCity();
   const { categories, isLoading: categoriesLoading } = useCategories();
   const { categoryName, lang, t } = useI18n();
-  const [showCityPicker, setShowCityPicker] = useState(false);
-  const [showCityHint, setShowCityHint] = useState(() => {
-    try {
-      return localStorage.getItem(CITY_HINT_STORAGE_KEY) !== "1";
-    } catch {
-      return true;
-    }
-  });
   const [showEmergency, setShowEmergency] = useState(false);
   const [showAllCategories, setShowAllCategories] = useState(false);
   const [query, setQuery] = useState("");
@@ -229,19 +227,6 @@ export default function MainScreen() {
     };
   }, []);
 
-  // Show the city hint only once, briefly, on the first homepage visit. Mark
-  // it as seen when rendered rather than waiting for the user to open it.
-  useEffect(() => {
-    if (!showCityHint) return;
-    try {
-      localStorage.setItem(CITY_HINT_STORAGE_KEY, "1");
-    } catch {
-      // The hint still auto-dismisses if storage is unavailable.
-    }
-    const timer = window.setTimeout(() => setShowCityHint(false), 4500);
-    return () => window.clearTimeout(timer);
-  }, [showCityHint]);
-
   useEffect(() => { if (citiesData?.data) setCities(citiesData.data); }, [citiesData, setCities]);
   const { contacts: allContacts, isCacheReady } = useContactsData();
   const {
@@ -284,7 +269,7 @@ export default function MainScreen() {
     ...displayCategories.slice(0, 7),
     { slug: "all", name: t("home.seeAll") },
   ];
-  const selectedCityName = city?.name ?? "Sumbawa Besar";
+  const selectedCityName = city.name;
   const heroSlides = useMemo<LocalizedHeroSlide[]>(() => {
     if (!heroPromotionsData?.data.length) {
       return [{
@@ -292,18 +277,18 @@ export default function MainScreen() {
         title: t("home.heroTitleFirst"),
         highlight: t("home.heroTitleAccent", { city: selectedCityName }),
         description: t("home.heroSubtitle"),
-        imageUrl: "/hero-sumbawa-v2.webp",
+        imageUrl: region.heroImage,
         href: "/search",
       }];
     }
 
     return heroPromotionsData.data.map((promotion) => ({
       id: promotion.id,
-      title: fillCityToken(lang === "en" && promotion.titleEn?.trim() ? promotion.titleEn : promotion.title, selectedCityName),
-      highlight: fillCityToken(lang === "en" && promotion.highlightEn?.trim() ? promotion.highlightEn : promotion.highlight, selectedCityName),
-      description: fillCityToken(lang === "en" && promotion.descriptionEn?.trim() ? promotion.descriptionEn : promotion.description, selectedCityName),
+      title: fillRegionTokens(lang === "en" && promotion.titleEn?.trim() ? promotion.titleEn : promotion.title, selectedCityName),
+      highlight: fillRegionTokens(lang === "en" && promotion.highlightEn?.trim() ? promotion.highlightEn : promotion.highlight, selectedCityName),
+      description: fillRegionTokens(lang === "en" && promotion.descriptionEn?.trim() ? promotion.descriptionEn : promotion.description, selectedCityName),
       imageUrl: promotion.imageUrl,
-      href: promotion.href,
+      href: fillRegionTokens(promotion.href, selectedCityName, true),
     }));
   }, [heroPromotionsData, lang, selectedCityName, t]);
   const carouselSlides = useMemo(() => {
@@ -319,20 +304,10 @@ export default function MainScreen() {
   const initialAssetsReady = criticalImagesReady || loaderDeadlineReached;
   const showInitialLoader = !loaderDeadlineReached && (!minimumLoaderElapsed || !initialAssetsReady || !initialDataReady);
   const goToSearch = (keyword = query) => { const value = keyword.trim(); navigate(value ? `/search?q=${encodeURIComponent(value)}` : "/search"); };
-  const chooseCity = (nextCity: City) => { setCity(nextCity); setShowCityPicker(false); };
-  const openCityPicker = () => {
-    setShowCityPicker(true);
-    setShowCityHint(false);
-    try {
-      localStorage.setItem(CITY_HINT_STORAGE_KEY, "1");
-    } catch {
-      // The city picker remains available when storage is unavailable.
-    }
-  };
   const discoveryTopics = [
     { id: "coffee", title: t("home.discoveryCoffeeTitle"), description: t("home.discoveryCoffeeDescription"), imageUrl: "/storefront/discovery-coffee.webp", href: "/search?q=kopi" },
     { id: "souvenirs", title: t("home.discoverySouvenirTitle"), description: t("home.discoverySouvenirDescription"), imageUrl: "/storefront/discovery-souvenir.webp", href: "/search?q=oleh-oleh" },
-    { id: "travel", title: t("home.discoveryTravelTitle"), description: t("home.discoveryTravelDescription"), imageUrl: "/hero-sumbawa-v2.webp", imagePosition: "62% center", href: "/search?q=travel" },
+    { id: "travel", title: t("home.discoveryTravelTitle"), description: t("home.discoveryTravelDescription"), imageUrl: region.heroImage, imagePosition: "62% center", href: "/search?q=travel" },
     { id: "delivery", title: t("home.discoveryDeliveryTitle"), description: t("home.discoveryDeliveryDescription"), imageUrl: "/storefront/discovery-delivery.webp", imagePosition: "68% center", href: "/search?category=jasa" },
   ];
 
@@ -458,7 +433,6 @@ export default function MainScreen() {
   if (showInitialLoader) return <BrandLoadingScreen label={t("home.loadingMessage")} fixed />;
 
   return <div className="min-h-screen bg-[radial-gradient(circle_at_30%_8%,rgba(226,241,231,.62),transparent_26%),#F8FAF7] pb-[82px] text-[#08234B]">
-    {showCityPicker && <CityPickerOverlay cities={citiesData?.data ?? cities} onSelect={chooseCity} onClose={() => setShowCityPicker(false)} />}
     <div className="mx-auto max-w-md overflow-x-hidden bg-[#F8FAF7]">
       <section
         className="relative h-[260px] overflow-visible bg-[#E6F2E9]"
@@ -483,7 +457,7 @@ export default function MainScreen() {
                 fetchPriority={index === (heroSlides.length > 1 ? 1 : 0) ? "high" : "auto"}
                 decoding="async"
                 onError={(event) => {
-                  if (!event.currentTarget.src.endsWith("/hero-sumbawa-v2.webp")) event.currentTarget.src = "/hero-sumbawa-v2.webp";
+                  if (!event.currentTarget.src.endsWith(region.heroImage)) event.currentTarget.src = region.heroImage;
                 }}
                 className="h-full w-full object-cover object-[58%_center]"
               />
@@ -496,19 +470,12 @@ export default function MainScreen() {
         <div className="relative z-10 flex h-full flex-col px-4 pb-0 pt-4">
           <div className="relative z-30 flex items-center justify-between gap-2">
             <div className="relative min-w-0 flex-1">
-              <button type="button" onClick={openCityPicker} aria-describedby={showCityHint ? "city-picker-hint" : undefined} className="flex h-10 w-full min-w-0 items-center gap-2 rounded-[14px] border border-white/80 bg-white/72 px-3 text-left backdrop-blur-sm transition active:scale-[0.98]">
+              <div className="flex h-10 w-full min-w-0 items-center gap-2 rounded-[14px] border border-white/80 bg-white/72 px-3 text-left backdrop-blur-sm">
                 <PinIcon className="h-[18px] w-[18px] shrink-0 text-primary-700" />
                 <span className="truncate text-[14px] font-bold leading-none tracking-[-0.035em] text-[#08234B]">{selectedCityName}</span>
-                <svg viewBox="0 0 20 20" fill="currentColor" className="ml-auto h-4 w-4 shrink-0 text-primary-700"><path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.17l3.71-3.94a.75.75 0 111.09 1.03l-4.25 4.5a.75.75 0 01-1.09 0l-4.25-4.5a.75.75 0 01.02-1.05z" clipRule="evenodd" /></svg>
-              </button>
-              {showCityHint && (
-                <div id="city-picker-hint" role="tooltip" className="absolute left-0 top-12 z-40 w-[230px] rounded-xl bg-[#08234B] px-3 py-2.5 text-[11px] font-semibold leading-4 text-white shadow-[0_8px_24px_rgba(8,35,75,.24)]">
-                  <span className="absolute -top-1.5 left-5 h-3 w-3 rotate-45 bg-[#08234B]" aria-hidden="true" />
-                  <span className="relative">{t("city.pickerHint", { city: selectedCityName })}</span>
-                </div>
-              )}
+              </div>
             </div>
-            <div className="flex shrink-0 items-center gap-2"><LanguageToggle /><a href={`https://wa.me/6282338588078?text=${encodeURIComponent(t("home.helpWhatsappText"))}`} target="_blank" rel="noopener noreferrer" className="inline-flex h-10 items-center gap-1.5 rounded-full border border-white/80 bg-white/95 px-3 text-[13px] font-extrabold text-[#08234B] transition active:scale-95"><ChatIcon className="h-[18px] w-[18px]" /><span className="hidden min-[390px]:inline">{t("home.help")}</span></a></div>
+            <div className="flex shrink-0 items-center gap-2"><LanguageToggle /><a href={adminWhatsappUrl(t("home.helpWhatsappText"))} target="_blank" rel="noopener noreferrer" className="inline-flex h-10 items-center gap-1.5 rounded-full border border-white/80 bg-white/95 px-3 text-[13px] font-extrabold text-[#08234B] transition active:scale-95"><ChatIcon className="h-[18px] w-[18px]" /><span className="hidden min-[390px]:inline">{t("home.help")}</span></a></div>
           </div>
 
           <div
@@ -577,7 +544,7 @@ export default function MainScreen() {
       </section>
 
       {recommendedContacts.length > 0 && <section className="mt-7">
-        <SectionHeading title={t("home.carikontakRecommendations")} onMore={() => navigate("/search?all=1")} />
+        <SectionHeading title={t("home.recommendations")} onMore={() => navigate("/search?all=1")} />
         <div className="-mr-4 flex snap-x snap-mandatory gap-2.5 overflow-x-auto pb-2 pr-4 scrollbar-hide">{recommendedContacts.map((contact) => <ChoiceCard key={contact.id} contact={contact} categoryLabel={categoryName(contact.category)} cityName={selectedCityName} viewLabel={t("home.view")} onOpen={() => navigate(`/kontak/${contact.id}`)} />)}</div>
       </section>}
 
@@ -589,7 +556,7 @@ export default function MainScreen() {
       </section>
 
       <section className="mt-8">
-        <SectionHeading title={t("home.latestInCariKontak")} onMore={() => navigate("/search?all=1")} />
+        <SectionHeading title={t("home.latestInApp")} onMore={() => navigate("/search?all=1")} />
         {contactsLoading ? <div className="space-y-3"><div className="h-[160px] rounded-2xl shimmer" /><div className="h-[160px] rounded-2xl shimmer" /></div> : contacts.length ? <div className="space-y-3">{contacts.slice(0, 3).map((contact) => <ContactCard key={contact.id} contact={contact} />)}</div> : <div className="grid h-[144px] place-items-center rounded-2xl bg-white p-5 text-center text-[14px] text-[#71809B]">{t("home.noContactsInCity", { city: selectedCityName })}</div>}
       </section>
 

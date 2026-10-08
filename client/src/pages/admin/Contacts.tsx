@@ -6,8 +6,9 @@ import { uploadContactImage, UploadError } from "../../lib/uploadImage";
 import { useCategories } from "../../context/CategoriesContext";
 import { Button } from "../../components/ui/Button";
 import { Badge } from "../../components/ui/Badge";
-import type { ApiResponse, CatalogLinkRequest, Contact, City, Category, PaginatedResponse } from "../../types";
+import type { ApiResponse, CatalogLinkRequest, Contact, Category, PaginatedResponse } from "../../types";
 import { useI18n } from "../../i18n/LanguageContext";
+import { region } from "../../config/region";
 
 interface EditForm {
   name: string;
@@ -51,11 +52,6 @@ export default function AdminContacts() {
   const catalogLinkRequests = useQuery<ApiResponse<CatalogLinkRequest[]>>({
     queryKey: ["admin", "catalog-link-requests", "PENDING"],
     queryFn: async () => (await apiClient.get("/admin/catalog-link-requests", { params: { status: "PENDING" } })).data,
-  });
-
-  const { data: citiesData } = useQuery<{ success: boolean; data: City[] }>({
-    queryKey: ["cities"],
-    queryFn: async () => (await apiClient.get("/cities")).data,
   });
 
   const { categories: categoriesData } = useCategories();
@@ -165,7 +161,6 @@ export default function AdminContacts() {
     if (editForm) setEditForm({ ...editForm, imageUrl: "" });
   }
 
-  const cities = citiesData?.data ?? [];
   const categories = categoriesData ?? [];
   const inputClass = "w-full rounded-xl border border-gray-300 px-3 py-1.5 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none";
 
@@ -249,9 +244,7 @@ export default function AdminContacts() {
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <label className="block text-xs font-medium text-gray-500 mb-1">{t("form.city")}</label>
-                      <select value={editForm.cityId} onChange={(e) => setEditForm({ ...editForm, cityId: e.target.value })} className={`${inputClass} bg-white`}>
-                        {cities.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-                      </select>
+                      <input type="text" readOnly value={region.cityName} aria-readonly="true" className={`${inputClass} bg-gray-50 text-gray-600`} />
                     </div>
                     <div>
                       <label className="block text-xs font-medium text-gray-500 mb-1">{t("form.category")}</label>

@@ -317,7 +317,7 @@ export default function ProDashboardPage() {
             <div className="grid gap-5 sm:grid-cols-2">
               <label className={labelClass}>WhatsApp utama *<input required value={businessForm.whatsapp} onChange={(e) => setBusinessForm({ ...businessForm, whatsapp: e.target.value })} className={inputClass} placeholder="081909020111" /></label>
               <label className={labelClass}>WhatsApp alternatif<input value={businessForm.alternateWhatsapp} onChange={(e) => setBusinessForm({ ...businessForm, alternateWhatsapp: e.target.value })} className={inputClass} /></label>
-              <label className={labelClass}>Instagram<input value={businessForm.instagram} onChange={(e) => setBusinessForm({ ...businessForm, instagram: e.target.value })} className={inputClass} placeholder="oleh_oleh.sumbawa" /></label>
+              <label className={labelClass}>Instagram<input value={businessForm.instagram} onChange={(e) => setBusinessForm({ ...businessForm, instagram: e.target.value })} className={inputClass} placeholder="namausaha" /></label>
               <label className={labelClass}>Jam operasional<input value={businessForm.openingHours} onChange={(e) => setBusinessForm({ ...businessForm, openingHours: e.target.value })} className={inputClass} placeholder="Senin–Minggu, 08.00–21.00" /></label>
             </div>
             <label className={labelClass}>Alamat toko<textarea maxLength={500} value={businessForm.address} onChange={(e) => setBusinessForm({ ...businessForm, address: e.target.value })} className={`${inputClass} min-h-20 resize-y`} /></label>

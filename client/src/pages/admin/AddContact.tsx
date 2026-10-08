@@ -1,10 +1,11 @@
 import { useState, useRef } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "../../lib/axios";
 import { uploadContactImage, UploadError } from "../../lib/uploadImage";
 import { useCategories } from "../../context/CategoriesContext";
-import type { City, Category } from "../../types";
+import type { Category } from "../../types";
 import { useI18n } from "../../i18n/LanguageContext";
+import { region } from "../../config/region";
 
 interface ImportedContact {
   name: string;
@@ -104,7 +105,6 @@ export default function AdminAddContact() {
     website: "",
     description: "",
     descriptionEn: "",
-    cityId: "",
     categoryId: "",
   });
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -116,18 +116,11 @@ export default function AdminAddContact() {
 
   // Import state
   const [imported, setImported] = useState<ImportedContact[]>([]);
-  const [importCityId, setImportCityId] = useState("");
   const [importCategoryId, setImportCategoryId] = useState("");
   const [bulkSuccess, setBulkSuccess] = useState("");
 
-  const { data: citiesData } = useQuery<{ success: boolean; data: City[] }>({
-    queryKey: ["cities"],
-    queryFn: async () => (await apiClient.get("/cities")).data,
-  });
-
   const { categories: categoriesData } = useCategories();
 
-  const cities = citiesData?.data ?? [];
   const categories = categoriesData ?? [];
 
   // Single create mutation
@@ -146,7 +139,7 @@ export default function AdminAddContact() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin"] });
       setSuccess(true);
-      setForm({ name: "", phone: "", address: "", website: "", description: "", descriptionEn: "", cityId: form.cityId, categoryId: form.categoryId });
+      setForm({ name: "", phone: "", address: "", website: "", description: "", descriptionEn: "", categoryId: form.categoryId });
       setImageFile(null);
       setImagePreview(null);
       setTimeout(() => setSuccess(false), 3000);
@@ -155,7 +148,7 @@ export default function AdminAddContact() {
 
   // Bulk import mutation
   const bulkMutation = useMutation({
-    mutationFn: async (data: { contacts: { name: string; phone: string; address?: string }[]; cityId: string; categoryId: string }) => {
+    mutationFn: async (data: { contacts: { name: string; phone: string; address?: string }[]; categoryId: string }) => {
       return (await apiClient.post("/admin/contacts/bulk", data)).data;
     },
     onSuccess: (data) => {
@@ -271,11 +264,10 @@ export default function AdminAddContact() {
 
   function handleBulkSubmit() {
     const selected = imported.filter((c) => c.selected);
-    if (selected.length === 0 || !importCityId || !importCategoryId) return;
+    if (selected.length === 0 || !importCategoryId) return;
 
     bulkMutation.mutate({
       contacts: selected.map(({ name, phone, address }) => ({ name, phone, address })),
-      cityId: importCityId,
       categoryId: importCategoryId,
     });
   }
@@ -390,16 +382,7 @@ export default function AdminAddContact() {
             {/* Bulk submit */}
             <div className="px-4 py-4 bg-gray-50 border-t border-gray-200 space-y-3">
               <div className="grid grid-cols-2 gap-3">
-                <select
-                  value={importCityId}
-                  onChange={(e) => setImportCityId(e.target.value)}
-                  className="rounded-xl border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none bg-white"
-                >
-                  <option value="">{t("import.selectCityRequired")}</option>
-                  {cities.map((c) => (
-                    <option key={c.id} value={c.id}>{c.name}</option>
-                  ))}
-                </select>
+                <input type="text" readOnly value={region.cityName} aria-readonly="true" className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm bg-gray-50 text-gray-600" />
                 <select
                   value={importCategoryId}
                   onChange={(e) => setImportCategoryId(e.target.value)}
@@ -415,7 +398,7 @@ export default function AdminAddContact() {
               <button
                 type="button"
                 onClick={handleBulkSubmit}
-                disabled={selectedCount === 0 || !importCityId || !importCategoryId || bulkMutation.isPending}
+                disabled={selectedCount === 0 || !importCategoryId || bulkMutation.isPending}
                 className="w-full bg-primary-700 text-white font-semibold py-2.5 rounded-xl hover:bg-primary-800 transition-colors disabled:opacity-50"
               >
                 {bulkMutation.isPending
@@ -494,17 +477,7 @@ export default function AdminAddContact() {
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">{t("form.city")} *</label>
-              <select
-                required
-                value={form.cityId}
-                onChange={(e) => setForm({ ...form, cityId: e.target.value })}
-                className="w-full rounded-xl border border-gray-300 px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none bg-white"
-              >
-                <option value="">{t("form.selectCity")}</option>
-                {cities.map((c) => (
-                  <option key={c.id} value={c.id}>{c.name}</option>
-                ))}
-              </select>
+              <input type="text" readOnly value={region.cityName} aria-readonly="true" className="w-full rounded-xl border border-gray-300 px-4 py-2.5 text-sm bg-gray-50 text-gray-600" />
             </div>
 
             <div>

@@ -4,14 +4,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <meta name="description" content="CariKontak.id - Direktori kontak publik berbasis kota di Indonesia" />
-  <title>CariKontak.com - Berbagi Kemudahan</title>
+  <meta name="description" content="__APP_DESCRIPTION__" />
+  <title>__APP_NAME__ - __APP_TAGLINE__</title>
 
   <!-- Favicon -->
   <link rel="icon" type="image/png" sizes="64x64" href="/favicon.png" />
   <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon-v2.png" />
   <link rel="preload" as="image" href="/brand-logo.png" type="image/png" />
-  <link rel="preload" as="image" href="/hero-sumbawa-v2.webp" type="image/webp" fetchpriority="high" />
+  <link rel="preload" as="image" href="__HERO_IMAGE__" fetchpriority="high" />
   <link rel="preload" as="image" href="/category-icons/service.webp" type="image/webp" />
   <link rel="preload" as="image" href="/category-icons/health.webp" type="image/webp" />
   <link rel="preload" as="image" href="/category-icons/kuliner.webp" type="image/webp" />
@@ -28,12 +28,12 @@
 
   <!-- PWA -->
   <link rel="manifest" href="/manifest.webmanifest" />
-  <meta name="theme-color" content="#0d3b2e" />
+  <meta name="theme-color" content="__THEME_COLOR__" />
 
   <!-- iOS PWA -->
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="CariKontak" />
+  <meta name="apple-mobile-web-app-title" content="__APP_NAME__" />
 
   <!-- Android / Chrome -->
   <meta name="mobile-web-app-capable" content="yes" />
@@ -44,20 +44,21 @@
        a small 192px square. /search gets its own per-keyword tags from the
        netlify/edge-functions/search-preview.ts edge function. -->
   <meta property="og:type" content="website" />
-  <meta property="og:site_name" content="CariKontak" />
+  <meta property="og:site_name" content="__APP_NAME__" />
+  <meta name="app:region" content="__REGION_NAME__" />
   <meta property="og:locale" content="id_ID" />
-  <meta property="og:title" content="CariKontak — Direktori Kontak Kota" />
-  <meta property="og:description" content="Temukan dan bagikan kontak penting di kotamu." />
-  <meta property="og:url" content="https://carikontak.com/" />
-  <meta property="og:image" content="https://carikontak.com/og-thumb.jpg" />
+  <meta property="og:title" content="__APP_NAME__ — Direktori Kontak __REGION_NAME__" />
+  <meta property="og:description" content="__APP_DESCRIPTION__" />
+  <meta property="og:url" content="__APP_URL__/" />
+  <meta property="og:image" content="__APP_URL__/og-thumb.jpg" />
   <meta property="og:image:type" content="image/jpeg" />
   <meta property="og:image:width" content="192" />
   <meta property="og:image:height" content="192" />
-  <meta property="og:image:alt" content="CariKontak" />
+  <meta property="og:image:alt" content="__APP_NAME__" />
   <meta name="twitter:card" content="summary" />
-  <meta name="twitter:title" content="CariKontak — Direktori Kontak Kota" />
-  <meta name="twitter:description" content="Temukan dan bagikan kontak penting di kotamu." />
-  <meta name="twitter:image" content="https://carikontak.com/og-thumb.jpg" />
+  <meta name="twitter:title" content="__APP_NAME__ — Direktori Kontak __REGION_NAME__" />
+  <meta name="twitter:description" content="__APP_DESCRIPTION__" />
+  <meta name="twitter:image" content="__APP_URL__/og-thumb.jpg" />
 </head>
 
 <body class="bg-[#f4f7f6] text-gray-900 antialiased">
