@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { business, itemSupportsQuantity, storefrontItems, type StorefrontBusiness, type StorefrontItem } from "./storefrontData";
+import { region } from "../../config/region";
 
 type InquiryMap = Record<string, number>;
 
@@ -48,7 +49,7 @@ export function InquiryProvider({ children }: { children: ReactNode }) {
     const totalPrice = selectedItems.reduce((sum, item) => sum + item.price * (itemSupportsQuantity(item) ? quantities[item.id] : 1), 0);
     const hasUnpriced = selectedItems.some((item) => item.priceType === "contact");
     const message = [
-      "Halo, saya melihat etalase Anda di CariKontak.",
+      `Halo, saya melihat etalase Anda di ${region.appName}.`,
       "",
       "Saya tertarik dengan:",
       ...selectedItems.map((item) => `• ${itemSupportsQuantity(item) ? `${quantities[item.id]}x ` : ""}${item.name}`),

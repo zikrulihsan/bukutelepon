@@ -16,6 +16,7 @@ import { StorefrontImage } from "../../features/storefront/StorefrontImage";
 import { formatPrice, itemAvailabilityLabel, itemSupportsQuantity, itemTypeLabel } from "../../features/storefront/storefrontData";
 import { usePublicStorefront } from "../../features/storefront/usePublicStorefront";
 import { BrandLoadingScreen } from "../../components/shared/BrandLoadingScreen";
+import { region } from "../../config/region";
 
 export default function ProductDetailPage() {
   const { itemSlug } = useParams();
@@ -60,7 +61,7 @@ export default function ProductDetailPage() {
 
   const relatedItems = storefrontItems.filter((entry) => entry.id !== product.id && entry.category === product.category).slice(0, 3);
   const directMessage = [
-    "Halo, saya melihat etalase Anda di CariKontak.",
+    `Halo, saya melihat etalase Anda di ${region.appName}.`,
     "",
     `Saya tertarik dengan ${supportsQuantity ? `${quantity}x ` : ""}${product.name}${variant ? ` (${variant})` : ""}.`,
     supportsQuantity

@@ -4,7 +4,8 @@
  * written into the HTML response at the edge.
  */
 
-const SITE_NAME = "CariKontak";
+/** Used only when the shell lacks og:site_name; the real name comes from the region config at build time. */
+const DEFAULT_SITE_NAME = "Direktori Kontak";
 
 interface Preview {
   title: string;
@@ -53,6 +54,17 @@ function clean(value: unknown, max: number): string {
   if (typeof value !== "string") return "";
   const normalized = value.replace(/\s+/g, " ").trim();
   return normalized.length > max ? `${normalized.slice(0, max - 1)}…` : normalized;
+}
+
+/** Reads a `<meta>` value the Vite build wrote into the SPA shell. */
+function metaContent(html: string, attr: "name" | "property", key: string): string {
+  const match = html.match(new RegExp(`<meta\\s+${attr}="${key}"\\s+content="([^"]*)"`, "i"));
+  if (!match) return "";
+  return match[1]
+    .replace(/&quot;/g, '"')
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&amp;/g, "&");
 }
 
 function escapeHtml(value: string): string {
@@ -150,7 +162,7 @@ export async function buildPreview(url: URL): Promise<Preview> {
     : buildStorefrontPreview(url);
 }
 
-function renderHead(preview: Preview): string {
+function renderHead(preview: Preview, siteName: string): string {
   const title = escapeHtml(preview.title);
   const description = escapeHtml(preview.description);
   const url = escapeHtml(preview.url);
@@ -159,7 +171,7 @@ function renderHead(preview: Preview): string {
     `<meta name="description" content="${description}" />`,
     `<link rel="canonical" href="${url}" />`,
     `<meta property="og:type" content="${preview.type ?? "website"}" />`,
-    `<meta property="og:site_name" content="${SITE_NAME}" />`,
+    `<meta property="og:site_name" content="${escapeHtml(siteName)}" />`,
     `<meta property="og:locale" content="id_ID" />`,
     `<meta property="og:title" content="${title}" />`,
     `<meta property="og:description" content="${description}" />`,
@@ -204,7 +216,8 @@ export default async function detailPreview(
 
   const preview = await buildPreview(new URL(request.url));
   const html = await response.text();
-  const body = stripStaticHead(html).replace(/<\/head>/i, `\n  ${renderHead(preview)}\n</head>`);
+  const siteName = metaContent(html, "property", "og:site_name") || DEFAULT_SITE_NAME;
+  const body = stripStaticHead(html).replace(/<\/head>/i, `\n  ${renderHead(preview, siteName)}\n</head>`);
   const headers = new Headers(response.headers);
   headers.delete("content-length");
   headers.delete("etag");

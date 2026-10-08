@@ -1,47 +1,37 @@
-import { createContext, useContext, useState, useEffect, type ReactNode } from "react";
+import { createContext, useContext, useState, type ReactNode } from "react";
 import type { City } from "../types";
+import { region } from "../config/region";
 
+/**
+ * Each deployment serves exactly one city (see config/region.ts), so the city
+ * is fixed rather than user-selectable. `cities` still holds the API's city
+ * list so forms can resolve the region's database id.
+ */
 interface CityContextValue {
-  citySlug: string | null;
-  city: City | null;
-  setCity: (city: City) => void;
-  clearCity: () => void;
+  citySlug: string;
+  city: City;
   cities: City[];
   setCities: (cities: City[]) => void;
 }
 
 const CityContext = createContext<CityContextValue | null>(null);
 
-const STORAGE_KEY = "bukutelepon_city";
-const DEFAULT_CITY_SLUG = "sumbawa-besar";
+const FALLBACK_CITY: City = {
+  id: "",
+  name: region.cityName,
+  province: region.province,
+  slug: region.citySlug,
+  imageUrl: null,
+  createdAt: "",
+  updatedAt: "",
+};
 
 export function CityProvider({ children }: { children: ReactNode }) {
-  const [citySlug, setCitySlug] = useState<string | null>(() => {
-    try {
-      return localStorage.getItem(STORAGE_KEY) || DEFAULT_CITY_SLUG;
-    } catch {
-      return DEFAULT_CITY_SLUG;
-    }
-  });
   const [cities, setCities] = useState<City[]>([]);
-  const city = cities.find((c) => c.slug === citySlug) ?? null;
-
-  function setCity(c: City) {
-    setCitySlug(c.slug);
-    try {
-      localStorage.setItem(STORAGE_KEY, c.slug);
-    } catch { /* noop */ }
-  }
-
-  function clearCity() {
-    setCitySlug(null);
-    try {
-      localStorage.removeItem(STORAGE_KEY);
-    } catch { /* noop */ }
-  }
+  const city = cities.find((c) => c.slug === region.citySlug) ?? FALLBACK_CITY;
 
   return (
-    <CityContext.Provider value={{ citySlug, city, setCity, clearCity, cities, setCities }}>
+    <CityContext.Provider value={{ citySlug: region.citySlug, city, cities, setCities }}>
       {children}
     </CityContext.Provider>
   );

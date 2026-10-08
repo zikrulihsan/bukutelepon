@@ -5,6 +5,7 @@ import { authenticate, AuthenticatedRequest } from "../../middleware/authenticat
 import { submitLimiter, apiLimiter } from "../../middleware/rateLimiter";
 import { sanitize } from "../../middleware/sanitize";
 import { AppError } from "../../middleware/errorHandler";
+import { getRegionCityId } from "../../utils/region";
 
 const router = Router();
 
@@ -40,7 +41,6 @@ const createContactSchema = z.object({
   description: z.string().max(500).optional(),
   descriptionEn: z.string().max(500).optional(),
   imageUrl: z.string().url().optional().or(z.literal("")),
-  cityId: z.string().uuid(),
   categoryId: z.string().uuid(),
 });
 
@@ -276,10 +276,12 @@ router.post(
   async (req: AuthenticatedRequest, res, next) => {
     try {
       const data = createContactSchema.parse(req.body);
+      const cityId = await getRegionCityId();
 
       const contact = await prisma.contact.create({
         data: {
           ...data,
+          cityId,
           submittedById: req.userId!,
           status: "PENDING",
         },
@@ -307,7 +309,6 @@ const bulkSubmitSchema = z.object({
       address: z.string().max(500).optional(),
     })
   ).min(1).max(50),
-  cityId: z.string().uuid(),
   categoryId: z.string().uuid(),
 });
 
@@ -317,7 +318,8 @@ router.post(
   submitLimiter,
   async (req: AuthenticatedRequest, res, next) => {
     try {
-      const { contacts, cityId, categoryId } = bulkSubmitSchema.parse(req.body);
+      const { contacts, categoryId } = bulkSubmitSchema.parse(req.body);
+      const cityId = await getRegionCityId();
 
       const created = await prisma.contact.createMany({
         data: contacts.map((c) => ({

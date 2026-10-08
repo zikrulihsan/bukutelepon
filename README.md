@@ -3,18 +3,23 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
 [![Node.js](https://img.shields.io/badge/node-%3E%3D20-brightgreen)](https://nodejs.org)
 
-**Buku Telepon** is a community-driven public contact directory for Indonesian cities. Users can search, submit, and review public contacts — from hospitals and government offices to restaurants and local services.
+**Buku Telepon** is a community-driven public contact directory for a single Indonesian city or region. Users can search, submit, and review public contacts — from hospitals and government offices to restaurants and local services.
 
-> *Think of it as a modern, crowdsourced Yellow Pages for Indonesia.*
+> *Think of it as a modern, crowdsourced Yellow Pages for your city.*
+
+Each deployment serves **one region with its own database**. Want one for your
+city? Fork this repository, fill in the region settings, and deploy — the app
+name, city, and admin contact all come from your configuration. See
+**[docs/region-setup.md](docs/region-setup.md)** (Bahasa Indonesia).
 
 ---
 
 ## ✨ Features
 
-- 🔍 **Search & Browse** — Find public contacts by city, category, or keyword
+- 🔍 **Search & Browse** — Find public contacts by category or keyword
 - 📝 **Community Contributions** — Registered users can submit new contacts
 - ⭐ **Reviews & Ratings** — Rate and review contacts to help others
-- 🏙️ **Multi-city Support** — Browse contacts across Indonesian cities
+- 🏙️ **One Region per Deployment** — Name, city, and admin contact come from env; ready to fork for another region
 - 🛡️ **Moderation System** — Admin approval workflow for submissions and reviews
 - 📱 **Mobile-first UI** — Responsive design optimized for mobile devices
 - 🔐 **Authentication** — Supabase-powered auth with email/password
@@ -103,6 +108,9 @@ Edit `.env` and fill in the required values:
 | `VITE_SUPABASE_URL` | Supabase URL for the client |
 | `VITE_SUPABASE_ANON_KEY` | Supabase anon key for the client |
 | `GUEST_VIEW_THRESHOLD` | Number of contacts a guest can view before being prompted to register |
+| `VITE_APP_NAME`, `VITE_APP_TAGLINE`, `VITE_APP_DESCRIPTION`, `VITE_APP_URL`, `VITE_THEME_COLOR` | Branding for this instance (UI, page title, PWA, share previews) |
+| `VITE_REGION_NAME`, `VITE_REGION_SLUG`, `VITE_REGION_PROVINCE` | The single city this instance serves (read by client **and** server) |
+| `VITE_ADMIN_WHATSAPP` | Admin WhatsApp number, digits only (e.g. `6281234567890`) |
 
 ### 3. Install Dependencies
 
@@ -123,11 +131,11 @@ cd client && npm install && cd ..
 # Generate Prisma client
 npx prisma generate
 
-# Run database migrations
-npx prisma migrate dev
+# Run database migrations (creates tables, default categories, storage buckets)
+npx prisma migrate deploy
 
-# (Optional) Seed the database with sample data
-cd server && npm run db:seed && cd ..
+# (Optional) Seed placeholder data for the configured region
+cd server && set -a && . ../.env && set +a && npm run db:seed && cd ..
 ```
 
 ### 5. Start Development Servers
@@ -165,8 +173,8 @@ This starts:
 | `GET` | `/api/contacts/:id` | — | Get contact details with reviews |
 | `POST` | `/api/contacts` | ✅ | Submit a new contact |
 | `POST` | `/api/contacts/bulk` | ✅ | Bulk submit contacts |
-| `GET` | `/api/cities` | — | List all cities |
-| `GET` | `/api/cities/:slug` | — | Get city details |
+| `GET` | `/api/cities` | — | The instance's region city (single item) |
+| `GET` | `/api/cities/:slug` | — | Region city details (404 for any other slug) |
 | `GET` | `/api/categories` | — | List all categories |
 | `GET` | `/api/reviews?contactId=` | — | List reviews for a contact |
 | `POST` | `/api/reviews` | ✅ | Submit a review |
@@ -196,7 +204,7 @@ This starts:
 
 Search results are shareable: the **Bagikan** button on `/search` copies (or hands
 to the native share sheet) a link that carries the keyword, category, and city —
-e.g. `https://carikontak.com/search?q=rumah%20sakit&city=bandung`.
+e.g. `https://carikontak.com/search?q=rumah%20sakit&city=sumbawa-besar`.
 
 WhatsApp, Telegram, and friends never run the SPA's JavaScript, so the card they
 draw comes from the HTML `<head>`. `client/netlify/edge-functions/search-preview.ts`
@@ -204,9 +212,12 @@ rewrites that head at the CDN edge for every `/search` request:
 
 | Shared link | Preview title |
 |---|---|
-| `/search?q=rumah sakit&city=bandung` | **Rumah Sakit di Bandung — CariKontak** |
-| `/search?q=pemadam kebakaran` | **Pemadam Kebakaran — CariKontak** |
-| `/search?city=bandung` | **Kontak Penting di Bandung — CariKontak** |
+| `/search?q=rumah sakit` | **Rumah Sakit di Sumbawa Besar — CariKontak** |
+| `/search?category=darurat` | **Darurat di Sumbawa Besar — CariKontak** |
+| `/search` | **Kontak Penting di Sumbawa Besar — CariKontak** |
+
+The app name and city come from the `og:site_name` and `app:region` tags the
+build writes into `index.html` from the region settings.
 
 The card is intentionally the **compact, single-line** kind rather than the big
 square block. Chat apps pick the shape from the image: `og:image` points at

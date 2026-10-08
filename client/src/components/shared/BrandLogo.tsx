@@ -1,10 +1,11 @@
+import { region } from "../../config/region";
 interface BrandLogoProps {
   className?: string;
   decorative?: boolean;
   alt?: string;
 }
 
-export function BrandLogo({ className = "", decorative = false, alt = "CariKontak" }: BrandLogoProps) {
+export function BrandLogo({ className = "", decorative = false, alt = region.appName }: BrandLogoProps) {
   return (
     <img
       src="/brand-logo.png"

@@ -14,8 +14,8 @@ import { FaWhatsapp } from "react-icons/fa";
 import { useCity } from "../../context/CityContext";
 import { useI18n } from "../../i18n/LanguageContext";
 import { BrandLogo } from "../../components/shared/BrandLogo";
+import { adminWhatsappUrl, region } from "../../config/region";
 
-const WHATSAPP_NUMBER = "6282338588078";
 
 export default function ContactConciergePage() {
   const navigate = useNavigate();
@@ -27,14 +27,14 @@ export default function ContactConciergePage() {
 
   const copy = lang === "en" ? {
     back: "Back",
-    badge: "CARIKONTAK CONCIERGE",
+    badge: `${region.appName.toUpperCase()} CONCIERGE`,
     title: "Can't find the contact you need?",
     accent: "Let us search for it.",
     description: "Tell us the business, service, or professional you are looking for. Our team will help research and verify the contact.",
     stepTitle: "How it works",
     steps: [
       ["Share what you need", "Tell us the name, type of service, and area."],
-      ["We research it", "The CariKontak team searches available trusted sources."],
+      ["We research it", `The ${region.appName} team searches available trusted sources.`],
       ["Receive it on WhatsApp", "We send the best available contact directly to you."],
     ],
     formTitle: "Request a contact search",
@@ -44,12 +44,12 @@ export default function ContactConciergePage() {
     requestLabel: "What are you looking for?",
     requestPlaceholder: "Example: reliable AC repair available today",
     areaLabel: "Area or city",
-    areaPlaceholder: "Example: Sumbawa Besar",
+    areaPlaceholder: `Example: ${region.cityName}`,
     action: "Send request via WhatsApp",
-    note: "Your request is sent directly to the CariKontak team. Sending the form does not guarantee that every contact can be found.",
+    note: `Your request is sent directly to the ${region.appName} team. Sending the form does not guarantee that every contact can be found.`,
     emergency: "For emergencies, use the emergency contacts on the homepage.",
-    handledBy: "Handled directly by the CariKontak team",
-    whatsappIntro: "Hello CariKontak team, please help me find a contact.",
+    handledBy: `Handled directly by the ${region.appName} team`,
+    whatsappIntro: `Hello ${region.appName} team, please help me find a contact.`,
   } : {
     back: "Kembali",
     badge: "JASTIP CARI KONTAK",
@@ -59,7 +59,7 @@ export default function ContactConciergePage() {
     stepTitle: "Cara kerjanya",
     steps: [
       ["Ceritakan kebutuhan", "Sebutkan nama, jenis layanan, dan wilayah pencarian."],
-      ["Kami bantu telusuri", "Tim CariKontak mencari dari sumber yang tersedia dan tepercaya."],
+      ["Kami bantu telusuri", `Tim ${region.appName} mencari dari sumber yang tersedia dan tepercaya.`],
       ["Terima lewat WhatsApp", "Kontak terbaik yang tersedia akan kami kirim langsung."],
     ],
     formTitle: "Titip pencarian kontak",
@@ -69,12 +69,12 @@ export default function ContactConciergePage() {
     requestLabel: "Apa yang Anda cari?",
     requestPlaceholder: "Contoh: jasa servis AC yang bisa datang hari ini",
     areaLabel: "Wilayah atau kota",
-    areaPlaceholder: "Contoh: Sumbawa Besar",
+    areaPlaceholder: `Contoh: ${region.cityName}`,
     action: "Kirim permintaan lewat WhatsApp",
-    note: "Permintaan dikirim langsung ke tim CariKontak. Pengiriman formulir tidak menjamin semua kontak dapat ditemukan.",
+    note: `Permintaan dikirim langsung ke tim ${region.appName}. Pengiriman formulir tidak menjamin semua kontak dapat ditemukan.`,
     emergency: "Untuk kondisi darurat, gunakan daftar kontak darurat di halaman utama.",
-    handledBy: "Ditangani langsung oleh tim CariKontak",
-    whatsappIntro: "Halo tim CariKontak, saya ingin titip pencarian kontak.",
+    handledBy: `Ditangani langsung oleh tim ${region.appName}`,
+    whatsappIntro: `Halo tim ${region.appName}, saya ingin titip pencarian kontak.`,
   };
 
   const submitRequest = (event: React.FormEvent<HTMLFormElement>) => {
@@ -87,7 +87,7 @@ export default function ContactConciergePage() {
       `${copy.requestLabel}: ${request.trim()}`,
       `${copy.areaLabel}: ${area.trim()}`,
     ].join("\n");
-    window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`, "_blank", "noopener,noreferrer");
+    window.open(adminWhatsappUrl(message), "_blank", "noopener,noreferrer");
   };
 
   const stepIcons = [HiOutlineClipboardDocumentList, HiMagnifyingGlass, HiOutlineChatBubbleLeftRight];
@@ -99,7 +99,7 @@ export default function ContactConciergePage() {
           <button type="button" onClick={() => navigate(-1)} className="inline-flex items-center gap-2 text-[13px] font-extrabold text-[#53667F] active:scale-95">
             <HiArrowLeft className="h-5 w-5" /> {copy.back}
           </button>
-          <span className="inline-flex items-center gap-1.5 text-[16px] font-extrabold tracking-[-.04em] text-primary-700"><BrandLogo decorative className="h-7 w-7" />CariKontak</span>
+          <span className="inline-flex items-center gap-1.5 text-[16px] font-extrabold tracking-[-.04em] text-primary-700"><BrandLogo decorative className="h-7 w-7" />{region.appName}</span>
         </div>
       </header>
 

@@ -1,4 +1,4 @@
-# Deploy CariKontak di Netlify
+# Deploy di Netlify
 
 ## Yang berjalan di mana
 
@@ -26,6 +26,12 @@ Tambahkan di Netlify UI dengan scope **Builds** dan **Functions**:
 | `VITE_SUPABASE_ANON_KEY` | Publishable/anon key Supabase |
 | `CLIENT_URL` | `https://carikontak.com` |
 | `GUEST_VIEW_THRESHOLD` | Misalnya `3` |
+| `VITE_APP_NAME`, `VITE_APP_TAGLINE`, `VITE_APP_DESCRIPTION`, `VITE_APP_URL`, `VITE_THEME_COLOR` | Identitas aplikasi untuk wilayah ini |
+| `VITE_REGION_NAME`, `VITE_REGION_SLUG`, `VITE_REGION_PROVINCE` | Kota yang dilayani; dibaca client saat build **dan** server saat berjalan |
+| `VITE_ADMIN_WHATSAPP` | Nomor WhatsApp admin, hanya angka, mis. `6281234567890` |
+
+Variabel wilayah wajib diberi scope **Builds** dan **Functions**. Panduan
+lengkap untuk daerah baru ada di [region-setup.md](./region-setup.md).
 
 `VITE_API_URL` sengaja tidak diisi karena API kini memakai relative path `/api` pada domain yang sama.
 

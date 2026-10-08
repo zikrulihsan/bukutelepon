@@ -18,18 +18,19 @@ import {
 } from "react-icons/hi2";
 import { useAuth } from "../../hooks/useAuth";
 import { BrandLogo } from "../../components/shared/BrandLogo";
+import { adminWhatsappUrl, region } from "../../config/region";
 
 type BusinessKind = "shop" | "cafe" | "service";
 
-const whatsappBase = "https://wa.me/6282338588078";
+const whatsappBase = adminWhatsappUrl();
 const activationMessage = `${whatsappBase}?text=${encodeURIComponent(
-  "Halo, saya ingin berkonsultasi dan mengajukan aktivasi Katalog Pro CariKontak.",
+  `Halo, saya ingin berkonsultasi dan mengajukan aktivasi Katalog Pro ${region.appName}.`,
 )}`;
 const starterMessage = `${whatsappBase}?text=${encodeURIComponent(
-  "Halo, saya ingin mendapat kabar saat paket Starter CariKontak tersedia.",
+  `Halo, saya ingin mendapat kabar saat paket Starter ${region.appName} tersedia.`,
 )}`;
 const businessMessage = `${whatsappBase}?text=${encodeURIComponent(
-  "Halo, saya ingin mendiskusikan kebutuhan paket Business CariKontak.",
+  `Halo, saya ingin mendiskusikan kebutuhan paket Business ${region.appName}.`,
 )}`;
 
 const businessTabs: Array<{
@@ -94,7 +95,7 @@ const faqs = [
   ],
   [
     "Saya sudah punya Instagram. Mengapa masih perlu katalog?",
-    "Instagram cocok untuk berbagi konten. Katalog CariKontak menyusun produk, layanan, harga, kontak, dan lokasi dalam satu halaman yang mudah dicari dan dibagikan.",
+    `Instagram cocok untuk berbagi konten. Katalog ${region.appName} menyusun produk, layanan, harga, kontak, dan lokasi dalam satu halaman yang mudah dicari dan dibagikan.`,
   ],
   [
     "Apakah pelanggan harus memasang aplikasi?",
@@ -102,7 +103,7 @@ const faqs = [
   ],
   [
     "Paket apa saja yang akan tersedia?",
-    "CariKontak disiapkan dalam empat pilihan: Gratis, Starter, Pro, dan Business. Saat ini aktivasi katalog dilakukan melalui paket Pro; paket Starter dan Business masih disiapkan.",
+    `${region.appName} disiapkan dalam empat pilihan: Gratis, Starter, Pro, dan Business. Saat ini aktivasi katalog dilakukan melalui paket Pro; paket Starter dan Business masih disiapkan.`,
   ],
   [
     "Bagaimana proses aktivasi Katalog Pro?",
@@ -113,8 +114,8 @@ const faqs = [
     "Ya. Setelah akun Pro aktif, informasi katalog dapat diperbarui melalui dasbor tanpa mengganti tautan yang sudah dibagikan.",
   ],
   [
-    "Apakah pembayaran pelanggan diproses oleh CariKontak?",
-    "Belum. CariKontak membantu pelanggan menemukan, memahami, dan menghubungi bisnis. Transaksi tetap dilakukan langsung dengan pemilik bisnis.",
+    `Apakah pembayaran pelanggan diproses oleh ${region.appName}?`,
+    `Belum. ${region.appName} membantu pelanggan menemukan, memahami, dan menghubungi bisnis. Transaksi tetap dilakukan langsung dengan pemilik bisnis.`,
   ],
 ];
 
@@ -123,7 +124,7 @@ function BrandMark() {
     <span className="inline-flex items-center gap-2.5">
       <BrandLogo decorative className="h-10 w-10" />
       <span className="text-[18px] font-extrabold tracking-[-0.035em] text-[#102a43]">
-        CariKontak
+        {region.appName}
       </span>
     </span>
   );
@@ -211,7 +212,7 @@ function HeroCards() {
         </div>
         <div className="relative -mt-4 p-5 pt-0">
           <p className="text-[10px] font-extrabold uppercase tracking-[0.12em] text-[#8de0bd]">Layanan & hasil kerja</p>
-          <h3 className="mt-1 text-[17px] font-extrabold tracking-[-0.025em]">Sumbawa Interior</h3>
+          <h3 className="mt-1 text-[17px] font-extrabold tracking-[-0.025em]">{region.cityName} Interior</h3>
           <p className="mt-3 text-[11px] font-semibold text-[#d7efe7]">Kitchen set · Renovasi · Partisi</p>
         </div>
       </article>
@@ -230,8 +231,8 @@ function PhonePreview({ kind }: { kind: BusinessKind }) {
               <img src="/storefront/discovery-souvenir.webp" alt="" className="h-28 w-full object-cover" />
               <span className="absolute bottom-2 left-2 rounded-full bg-white/90 px-2 py-1 text-[9px] font-extrabold text-[#08745a]">Buka hari ini</span>
             </div>
-            <h4 className="mt-3 text-[15px] font-extrabold">Oleh-Oleh Khas Sumbawa</h4>
-            <p className="mt-1 text-[9px] font-semibold text-[#7b8996]">Sumbawa Besar · Produk lokal</p>
+            <h4 className="mt-3 text-[15px] font-extrabold">Oleh-Oleh Khas {region.cityName}</h4>
+            <p className="mt-1 text-[9px] font-semibold text-[#7b8996]">{region.cityName} · Produk lokal</p>
             {[['Madu Hutan', 'Rp85.000'], ['Susu Kuda Liar', 'Rp65.000'], ['Permen Susu', 'Rp25.000']].map(([name, price]) => (
               <div key={name} className="mt-2 flex items-center gap-2 rounded-xl bg-[#f5f7f3] p-2.5 text-[10px] font-bold">
                 <span className="min-w-0 flex-1">{name}</span>
@@ -249,7 +250,7 @@ function PhonePreview({ kind }: { kind: BusinessKind }) {
               <span className="absolute bottom-2 left-2 rounded-full bg-white/90 px-2 py-1 text-[9px] font-extrabold text-[#815523]">Buka sampai 22.00</span>
             </div>
             <h4 className="mt-3 text-[15px] font-extrabold">Kopi Ruang</h4>
-            <p className="mt-1 text-[9px] font-semibold text-[#7b8996]">Kedai kopi · Sumbawa Besar</p>
+            <p className="mt-1 text-[9px] font-semibold text-[#7b8996]">Kedai kopi · {region.cityName}</p>
             <p className="mt-4 text-[9px] font-extrabold uppercase tracking-wider text-[#966225]">Menu favorit</p>
             {[['Es Kopi Susu', 'Rp20.000'], ['Americano', 'Rp18.000'], ['Matcha', 'Rp25.000']].map(([name, price]) => (
               <p key={name} className="flex justify-between border-b border-[#eef0ec] py-2.5 text-[10px] font-semibold"><span>{name}</span><span>{price}</span></p>
@@ -265,8 +266,8 @@ function PhonePreview({ kind }: { kind: BusinessKind }) {
           <>
             <div className="rounded-2xl bg-[#113d35] p-4 text-white">
               <span className="grid h-9 w-9 place-items-center rounded-xl bg-white/10"><HiBriefcase className="h-5 w-5" /></span>
-              <h4 className="mt-3 text-[15px] font-extrabold">Sumbawa Interior</h4>
-              <p className="mt-1 text-[9px] font-medium text-white/65">Interior · Renovasi · Sumbawa</p>
+              <h4 className="mt-3 text-[15px] font-extrabold">{region.cityName} Interior</h4>
+              <p className="mt-1 text-[9px] font-medium text-white/65">Interior · Renovasi · {region.cityName}</p>
             </div>
             <p className="mt-4 text-[10px] font-extrabold">Layanan</p>
             <div className="mt-2 flex flex-wrap gap-1.5">
@@ -312,9 +313,9 @@ export default function CatalogPlansPage() {
     const description = document.querySelector<HTMLMetaElement>('meta[name="description"]');
     const previousDescription = description?.content;
 
-    document.title = "Buat Katalog Bisnis Online | CariKontak";
+    document.title = `Buat Katalog Bisnis Online | ${region.appName}`;
     if (description) {
-      description.content = "Tampilkan produk, layanan, harga, lokasi, dan WhatsApp bisnismu dalam satu katalog online CariKontak.";
+      description.content = `Tampilkan produk, layanan, harga, lokasi, dan WhatsApp bisnismu dalam satu katalog online ${region.appName}.`;
     }
 
     return () => {
@@ -327,7 +328,7 @@ export default function CatalogPlansPage() {
     <div className="min-h-screen overflow-hidden bg-[#fbfcf8] text-[#102a43] selection:bg-[#bfead8]">
       <header className="relative z-40 border-b border-[#e6ece8] bg-[#fbfcf8]/95 backdrop-blur lg:sticky lg:top-0">
         <div className="mx-auto flex h-[72px] max-w-7xl items-center justify-between px-5 sm:px-8 lg:px-10">
-          <Link to="/" aria-label="Kembali ke beranda CariKontak"><BrandMark /></Link>
+          <Link to="/" aria-label={`Kembali ke beranda ${region.appName}`}><BrandMark /></Link>
           <nav className="hidden items-center gap-7 lg:flex" aria-label="Navigasi halaman katalog">
             <a href="#contoh" className="text-[13px] font-bold text-[#53697d] hover:text-[#08745a]">Contoh</a>
             <a href="#manfaat" className="text-[13px] font-bold text-[#53697d] hover:text-[#08745a]">Manfaat</a>
@@ -373,7 +374,7 @@ export default function CatalogPlansPage() {
           <div className="relative mx-auto grid min-h-[680px] max-w-7xl items-center gap-10 px-5 py-14 sm:px-8 lg:grid-cols-[1fr_.95fr] lg:px-10 lg:py-20">
             <div className="max-w-2xl">
               <span className="inline-flex items-center gap-2 rounded-full border border-[#cbe5d8] bg-white/75 px-3.5 py-2 text-[11px] font-extrabold uppercase tracking-[0.12em] text-[#08745a] shadow-sm">
-                <HiSparkles className="h-4 w-4" /> Katalog bisnis CariKontak
+                <HiSparkles className="h-4 w-4" /> Katalog bisnis {region.appName}
               </span>
               <h1 className="mt-6 text-[42px] font-extrabold leading-[1.04] tracking-[-0.052em] text-[#102a43] sm:text-[62px] lg:text-[68px]">
                 Satu halaman untuk produk, layanan, dan <span className="text-[#08745a]">kontak bisnismu.</span>
@@ -388,7 +389,7 @@ export default function CatalogPlansPage() {
                 </a>
               </div>
               <p className="mt-4 text-[12px] font-semibold leading-5 text-[#6f8190]">
-                Akun CariKontak gratis <span className="mx-1.5 text-[#bdc8c1]">·</span> Pro Rp29.000 per bulan atau Rp299.000 per tahun
+                Akun {region.appName} gratis <span className="mx-1.5 text-[#bdc8c1]">·</span> Pro Rp29.000 per bulan atau Rp299.000 per tahun
               </p>
             </div>
             <HeroCards />
@@ -479,7 +480,7 @@ export default function CatalogPlansPage() {
             <div className="overflow-hidden rounded-[28px] border border-[#dee7e1] bg-[#f6f4ed] shadow-[0_22px_55px_rgba(16,42,67,.1)]">
               <img src="/storefront/toko-evi-poster.jpg" alt="Tampilan katalog Toko Evi" className="h-72 w-full object-cover sm:h-96" />
               <div className="flex items-center justify-between bg-white p-5">
-                <div><p className="text-[14px] font-extrabold">Toko Evi</p><p className="mt-1 text-[11px] font-semibold text-[#748592]">Oleh-oleh khas Sumbawa</p></div>
+                <div><p className="text-[14px] font-extrabold">Toko Evi</p><p className="mt-1 text-[11px] font-semibold text-[#748592]">Oleh-oleh khas {region.cityName}</p></div>
                 <span className="rounded-full bg-[#e5f5ee] px-3 py-2 text-[10px] font-extrabold text-[#08745a]">KATALOG PRO</span>
               </div>
             </div>
@@ -497,7 +498,7 @@ export default function CatalogPlansPage() {
             <div className="mt-10 grid gap-5 md:grid-cols-2 xl:grid-cols-4 xl:items-stretch">
               <article className="flex flex-col rounded-[26px] border border-[#dce6e0] bg-white p-6">
                 <p className="text-[11px] font-extrabold uppercase tracking-[0.12em] text-[#08745a]">Gratis</p>
-                <p className="mt-3 min-h-12 text-[13px] font-semibold leading-6 text-[#66798b]">Untuk memakai fitur dasar CariKontak.</p>
+                <p className="mt-3 min-h-12 text-[13px] font-semibold leading-6 text-[#66798b]">Untuk memakai fitur dasar {region.appName}.</p>
                 <div className="mt-5 flex items-end gap-2"><strong className="text-[34px] font-extrabold tracking-[-0.04em]">Rp0</strong><span className="mb-1.5 text-[11px] font-bold text-[#718392]">selamanya</span></div>
                 <FeatureList items={["Simpan kontak penting", "Tambahkan data usaha ke direktori", "Pantau status pengajuan"]} />
                 <div className="mt-auto pt-7"><PrimaryAction href="/register">Buat Akun Gratis</PrimaryAction></div>
@@ -585,7 +586,7 @@ export default function CatalogPlansPage() {
 
         <section className="px-5 py-8 sm:px-8">
           <div className="mx-auto max-w-7xl overflow-hidden rounded-[30px] bg-[radial-gradient(circle_at_85%_10%,#16745d,transparent_25%),linear-gradient(120deg,#082f29,#0d5745)] px-6 py-14 text-center text-white sm:px-10 lg:py-20">
-            <Eyebrow light>Katalog bisnis CariKontak</Eyebrow>
+            <Eyebrow light>Katalog bisnis {region.appName}</Eyebrow>
             <h2 className="mx-auto mt-4 max-w-3xl text-[36px] font-extrabold leading-[1.1] tracking-[-0.045em] sm:text-[54px]">Buat bisnismu lebih mudah dipahami dan dihubungi.</h2>
             <p className="mx-auto mt-5 max-w-2xl text-[15px] font-medium leading-7 text-[#c2d9d1]">Ceritakan kebutuhanmu. Tim kami akan membantu proses aktivasi Katalog Pro.</p>
             <div className="mt-8"><PrimaryAction href={activationMessage} light>Konsultasikan Katalog</PrimaryAction></div>
@@ -597,7 +598,7 @@ export default function CatalogPlansPage() {
       <footer className="px-5 py-10 sm:px-8">
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-5 border-t border-[#e1e9e4] pt-8 sm:flex-row">
           <Link to="/" aria-label="Kembali ke beranda"><BrandMark /></Link>
-          <p className="text-center text-[11px] font-semibold leading-5 text-[#748592]">© {new Date().getFullYear()} CariKontak. Temukan, pahami, lalu hubungi.</p>
+          <p className="text-center text-[11px] font-semibold leading-5 text-[#748592]">© {new Date().getFullYear()} {region.appName}. Temukan, pahami, lalu hubungi.</p>
           <div className="flex gap-5 text-[11px] font-bold text-[#627686]"><Link to="/search">Cari Bisnis</Link><a href="#harga">Harga</a></div>
         </div>
       </footer>

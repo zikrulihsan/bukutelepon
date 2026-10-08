@@ -1,7 +1,5 @@
 import { useState, useEffect, useLayoutEffect, useRef, useMemo, useCallback } from "react";
 import { useSearchParams, useNavigate, useLocation } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
-import { apiClient } from "../../lib/axios";
 import { buildSearchShareUrl } from "../../lib/searchShare";
 import { useCity } from "../../context/CityContext";
 import { useCategories } from "../../context/CategoriesContext";
@@ -13,7 +11,6 @@ import { CategoryChipsShimmer, SearchResultsShimmer } from "../../components/sha
 import { HiChevronLeft, HiMagnifyingGlass, HiXMark, HiCheckBadge, HiCheck } from "react-icons/hi2";
 import { HiFilter, HiOutlineShare } from "react-icons/hi";
 import { useI18n } from "../../i18n/LanguageContext";
-import type { City } from "../../types";
 
 type SearchScrollSnapshot = {
   top: number;
@@ -34,7 +31,7 @@ function readSearchScrollSnapshot(key: string): SearchScrollSnapshot | null {
 
 export default function SearchPage() {
   const { t, categoryName } = useI18n();
-  const { citySlug, city, setCity, cities, setCities } = useCity();
+  const { citySlug, city } = useCity();
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -63,37 +60,6 @@ export default function SearchPage() {
   const [showFilterMenu, setShowFilterMenu] = useState(false);
   const [shareCopied, setShareCopied] = useState(false);
   const filterRef = useRef<HTMLDivElement>(null);
-
-  // A shared link carries its own region — adopt it once so the receiver sees
-  // the same results as the sender, then let the usual city context take over.
-  const [cityFromLink, setCityFromLink] = useState(() => {
-    const shared = searchParams.get("city") || "";
-    return shared && shared !== citySlug ? shared : "";
-  });
-
-  const { data: citiesData, isError: citiesError, isFetched: citiesFetched } = useQuery<{ success: boolean; data: City[] }>({
-    queryKey: ["cities"],
-    queryFn: async () => (await apiClient.get("/cities")).data,
-    enabled: !!cityFromLink && cities.length === 0,
-  });
-
-  useEffect(() => {
-    if (!cityFromLink) return;
-    const known = cities.length > 0 ? cities : citiesData?.data;
-    if (!known || known.length === 0) {
-      // Nothing to match against and nothing more on the way — stop waiting,
-      // or the loading placeholders would never give way to results.
-      if (citiesFetched || citiesError) setCityFromLink("");
-      return;
-    }
-
-    const match = known.find((c) => c.slug === cityFromLink);
-    if (match) {
-      if (cities.length === 0) setCities(known);
-      setCity(match);
-    }
-    setCityFromLink("");
-  }, [cityFromLink, cities, citiesData, citiesFetched, citiesError, setCities, setCity]);
 
   // Close filter menu on outside click
   useEffect(() => {
@@ -131,12 +97,10 @@ export default function SearchPage() {
 
   const hasFilter = showAll || !!searchQuery || !!activeCategory || !!verifiedFilter;
 
-  // First paint of the page: the contact cache is still downloading, the chips
-  // have nothing to render, or a shared link's city has yet to resolve. Show
-  // placeholders rather than an empty screen that fills in a beat later.
-  const resolvingSharedCity = !!cityFromLink && !citiesError;
+  // First paint of the page: the contact cache is still downloading or the
+  // chips have nothing to render. Show placeholders rather than an empty screen that fills in a beat later.
   const initialLoading =
-    contactsLoading || (categoriesLoading && categories.length === 0) || resolvingSharedCity;
+    contactsLoading || (categoriesLoading && categories.length === 0);
 
   const {
     data: infiniteData,
